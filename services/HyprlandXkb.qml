@@ -75,7 +75,7 @@ Singleton {
     // Find out available layouts and current active layout. Should only be necessary on init
     Process {
         id: fetchLayoutsProc
-        running: true
+        running: !NiriData.isNiri
         command: ["hyprctl", "-j", "devices"]
 
         stdout: StdioCollector {
@@ -94,6 +94,7 @@ Singleton {
     // Update the layout name when it changes
     Connections {
         target: Hyprland
+        enabled: !NiriData.isNiri
         function onRawEvent(event) {
             if (event.name === "activelayout") {
                 if (root.needsLayoutRefresh) {

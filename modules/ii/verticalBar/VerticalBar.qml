@@ -249,17 +249,17 @@ Scope {
         function open(): void { GlobalStates.barOpen = true }
     }
 
-    GlobalShortcut {
+    NiriSafeShortcut {
         name: "barToggle"
         description: "Toggles bar on press"
         onPressed: { GlobalStates.barOpen = !GlobalStates.barOpen; }
     }
-    GlobalShortcut {
+    NiriSafeShortcut {
         name: "barOpen"
         description: "Opens bar on press"
         onPressed: { GlobalStates.barOpen = true; }
     }
-    GlobalShortcut {
+    NiriSafeShortcut {
         name: "barClose"
         description: "Closes bar on press"
         onPressed: { GlobalStates.barOpen = false; }

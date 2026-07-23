@@ -27,7 +27,8 @@ ShellRoot {
         target: Config
         function onReadyChanged() {
             if (!Config.ready) return
-            if (Config.options.hyprland.autostartApps.enable &&
+            if (!NiriData.isNiri &&
+                Config.options.hyprland.autostartApps.enable &&
                 Config.options.hyprland.autostartApps.apps.length > 0) {
                 autostartProc.running = true
             }

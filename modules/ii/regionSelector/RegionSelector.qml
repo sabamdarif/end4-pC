@@ -1,5 +1,6 @@
 pragma ComponentBehavior: Bound
 import qs
+import qs.services
 import qs.modules.common
 import QtQuick
 import Quickshell
@@ -105,27 +106,27 @@ Scope {
         }
     }
 
-    GlobalShortcut {
+    NiriSafeShortcut {
         name: "regionScreenshot"
         description: "Takes a screenshot of the selected region"
         onPressed: root.screenshot()
     }
-    GlobalShortcut {
+    NiriSafeShortcut {
         name: "regionSearch"
         description: "Searches the selected region"
         onPressed: root.search()
     }
-    GlobalShortcut {
+    NiriSafeShortcut {
         name: "regionOcr"
         description: "Recognizes text in the selected region"
         onPressed: root.ocr()
     }
-    GlobalShortcut {
+    NiriSafeShortcut {
         name: "regionRecord"
         description: "Records the selected region"
         onPressed: root.record()
     }
-    GlobalShortcut {
+    NiriSafeShortcut {
         name: "regionRecordWithSound"
         description: "Records the selected region with sound"
         onPressed: root.recordWithSound()

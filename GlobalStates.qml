@@ -51,7 +51,7 @@ Singleton {
         }
     }
 
-    GlobalShortcut {
+    NiriSafeShortcut {
         name: "workspaceNumber"
         description: "Hold to show workspace numbers, release to show icons"
 
@@ -70,7 +70,7 @@ Singleton {
         }
     }
 
-    GlobalShortcut {
+    NiriSafeShortcut {
         name: "centeredWallpaperToggle"
         description: "Toggles centered wallpaper"
         onPressed: {

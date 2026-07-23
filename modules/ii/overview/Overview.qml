@@ -18,8 +18,8 @@ Scope {
     PanelWindow {
         id: panelWindow
         property string searchingText: ""
-        readonly property HyprlandMonitor monitor: Hyprland.monitorFor(panelWindow.screen)
-        property bool monitorIsFocused: (Hyprland.focusedMonitor?.id == monitor?.id)
+        readonly property var monitor: NiriData.isNiri ? null : Hyprland.monitorFor(panelWindow.screen)
+        property bool monitorIsFocused: NiriData.isNiri ? true : (Hyprland.focusedMonitor?.id == monitor?.id)
         visible: GlobalStates.overviewOpen
 
         WlrLayershell.namespace: "quickshell:overview"
@@ -81,11 +81,19 @@ Scope {
                 if (event.key === Qt.Key_Escape) {
                     GlobalStates.overviewOpen = false;
                 } else if (event.key === Qt.Key_Left) {
-                    if (!panelWindow.searchingText)
-                        Hyprland.dispatch("workspace r-1");
+                    if (!panelWindow.searchingText) {
+                        if (NiriData.isNiri)
+                            NiriData.focusWorkspaceUp();
+                        else
+                            Hyprland.dispatch("workspace r-1");
+                    }
                 } else if (event.key === Qt.Key_Right) {
-                    if (!panelWindow.searchingText)
-                        Hyprland.dispatch("workspace r+1");
+                    if (!panelWindow.searchingText) {
+                        if (NiriData.isNiri)
+                            NiriData.focusWorkspaceDown();
+                        else
+                            Hyprland.dispatch("workspace r+1");
+                    }
                 }
             }
 
@@ -175,7 +183,7 @@ Scope {
         }
     }
 
-    GlobalShortcut {
+    NiriSafeShortcut {
         name: "searchToggle"
         description: "Toggles search on press"
 
@@ -183,7 +191,7 @@ Scope {
             GlobalStates.overviewOpen = !GlobalStates.overviewOpen;
         }
     }
-    GlobalShortcut {
+    NiriSafeShortcut {
         name: "overviewWorkspacesClose"
         description: "Closes overview on press"
 
@@ -191,7 +199,7 @@ Scope {
             GlobalStates.overviewOpen = false;
         }
     }
-    GlobalShortcut {
+    NiriSafeShortcut {
         name: "overviewWorkspacesToggle"
         description: "Toggles overview on press"
 
@@ -199,7 +207,7 @@ Scope {
             GlobalStates.overviewOpen = !GlobalStates.overviewOpen;
         }
     }
-    GlobalShortcut {
+    NiriSafeShortcut {
         name: "searchToggleRelease"
         description: "Toggles search on release"
 
@@ -215,7 +223,7 @@ Scope {
             GlobalStates.overviewOpen = !GlobalStates.overviewOpen;
         }
     }
-    GlobalShortcut {
+    NiriSafeShortcut {
         name: "searchToggleReleaseInterrupt"
         description: "Interrupts possibility of search being toggled on release. " + "This is necessary because GlobalShortcut.onReleased in quickshell triggers whether or not you press something else while holding the key. " + "To make sure this works consistently, use binditn = MODKEYS, catchall in an automatically triggered submap that includes everything."
 
@@ -223,7 +231,7 @@ Scope {
             GlobalStates.superReleaseMightTrigger = false;
         }
     }
-    GlobalShortcut {
+    NiriSafeShortcut {
         name: "overviewClipboardToggle"
         description: "Toggle clipboard query on overview widget"
 
@@ -232,7 +240,7 @@ Scope {
         }
     }
 
-    GlobalShortcut {
+    NiriSafeShortcut {
         name: "overviewEmojiToggle"
         description: "Toggle emoji query on overview widget"
 
@@ -241,7 +249,7 @@ Scope {
         }
     }
 
-    GlobalShortcut {
+    NiriSafeShortcut {
         name: "overviewSymbolsToggle"
         description: "Toggle material symbols search on overview widget"
 

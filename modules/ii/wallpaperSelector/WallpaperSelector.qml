@@ -82,7 +82,7 @@ Scope {
         }
     }
 
-    GlobalShortcut {
+    NiriSafeShortcut {
         name: "wallpaperSelectorToggle"
         description: "Toggle wallpaper selector"
         onPressed: {
@@ -90,7 +90,7 @@ Scope {
         }
     }
 
-    GlobalShortcut {
+    NiriSafeShortcut {
         name: "wallpaperSelectorRandom"
         description: "Select random wallpaper in current folder"
         onPressed: {

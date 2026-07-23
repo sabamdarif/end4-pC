@@ -13,7 +13,7 @@ NestableObject {
     property bool set
     property var value
 
-    Component.onCompleted: fetch()
+    Component.onCompleted: { if (!NiriData.isNiri) fetch() }
 
     onValueChanged: {
         if (root.fetching) return
@@ -27,6 +27,7 @@ NestableObject {
     }
 
     function fetch() {
+        if (NiriData.isNiri) return;
         fetchProc.command = fetchProc.baseCommand.concat([root.key]);
         fetchProc.running = true;
     }

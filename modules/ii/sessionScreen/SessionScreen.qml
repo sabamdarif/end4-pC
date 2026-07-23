@@ -308,7 +308,7 @@ Scope {
         }
     }
 
-    GlobalShortcut {
+    NiriSafeShortcut {
         name: "sessionToggle"
         description: "Toggles session screen on press"
 
@@ -317,7 +317,7 @@ Scope {
         }
     }
 
-    GlobalShortcut {
+    NiriSafeShortcut {
         name: "sessionOpen"
         description: "Opens session screen on press"
 
@@ -326,7 +326,7 @@ Scope {
         }
     }
 
-    GlobalShortcut {
+    NiriSafeShortcut {
         name: "sessionClose"
         description: "Closes session screen on press"
 

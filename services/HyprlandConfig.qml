@@ -56,6 +56,7 @@ Singleton {
 
     Connections {
         target: Hyprland
+        enabled: !NiriData.isNiri
         function onRawEvent(event) {
             if (event.name == "configreloaded") {
                 root.reloaded()

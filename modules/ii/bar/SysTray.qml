@@ -58,6 +58,22 @@ Item {
         }
     }
 
+    // Niri fallback: dismiss tray when focus shifts away
+    Connections {
+        target: NiriData
+        enabled: NiriData.isNiri
+        function onFocusedWindowIdChanged() {
+            if (focusGrab.active) {
+                root.trayOverflowOpen = false
+                if (root.activeMenu) {
+                    root.activeMenu.close()
+                    root.activeMenu = null
+                }
+                focusGrab.active = false
+            }
+        }
+    }
+
     Rectangle {
         id: pill
         visible: false

@@ -134,7 +134,7 @@ Scope {
         function close(): void  { GlobalStates.settingsOpen = false; }
     }
 
-    GlobalShortcut {
+    NiriSafeShortcut {
         name: "settingsToggle"
         description: "Toggles settings panel"
         onPressed: GlobalStates.settingsOpen = !GlobalStates.settingsOpen;

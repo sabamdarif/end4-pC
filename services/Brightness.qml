@@ -220,7 +220,7 @@ Singleton {
             property string screenName: modelData.name
             property string screenshotPath: `${root.screenshotDir}/screenshot-${screenName}.png`
             Connections {
-                enabled: Config.options.light.antiFlashbang.enable && Appearance.m3colors.darkmode
+                enabled: !NiriData.isNiri && Config.options.light.antiFlashbang.enable && Appearance.m3colors.darkmode
                 target: Hyprland
                 function onRawEvent(event) {
                     if (["activewindowv2", "windowtitlev2"].includes(event.name)) {
@@ -276,13 +276,13 @@ Singleton {
         }
     }
 
-    GlobalShortcut {
+    NiriSafeShortcut {
         name: "brightnessIncrease"
         description: "Increase brightness"
         onPressed: root.increaseBrightness()
     }
 
-    GlobalShortcut {
+    NiriSafeShortcut {
         name: "brightnessDecrease"
         description: "Decrease brightness"
         onPressed: root.decreaseBrightness()

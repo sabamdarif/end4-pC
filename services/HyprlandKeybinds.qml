@@ -28,6 +28,7 @@ Singleton {
 
     Connections {
         target: Hyprland
+        enabled: !NiriData.isNiri
 
         function onRawEvent(event) {
             if (event.name == "configreloaded") {
@@ -39,7 +40,7 @@ Singleton {
 
     Process {
         id: getDefaultKeybinds
-        running: true
+        running: !NiriData.isNiri
         command: [root.keybindParserPath, "--path", root.defaultKeybindConfigPath]
         
         stdout: SplitParser {
@@ -55,7 +56,7 @@ Singleton {
 
     Process {
         id: getUserKeybinds
-        running: true
+        running: !NiriData.isNiri
         command: [root.keybindParserPath, "--path", root.userKeybindConfigPath]
         
         stdout: SplitParser {

@@ -56,7 +56,19 @@ Scope {
             Connections {
                 target: GlobalStates
                 function onOverlayOpenChanged() {
-                    delayedGrabTimer.restart();
+                    if (!NiriData.isNiri)
+                        delayedGrabTimer.restart();
+                }
+            }
+
+            // Niri fallback: dismiss overlay when focus shifts away
+            Connections {
+                target: NiriData
+                enabled: NiriData.isNiri
+                function onFocusedWindowIdChanged() {
+                    if (GlobalStates.overlayOpen && NiriData.focusedWindowId !== -1) {
+                        GlobalStates.overlayOpen = false;
+                    }
                 }
             }
 
@@ -83,7 +95,7 @@ Scope {
         }
     }
 
-    GlobalShortcut {
+    NiriSafeShortcut {
         name: "overlayToggle"
         description: "Toggles overlay on press"
 

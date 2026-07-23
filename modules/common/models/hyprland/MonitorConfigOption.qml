@@ -10,7 +10,7 @@ NestableObject {
 
     property var monitors: []
 
-    Component.onCompleted: fetchProc.running = true
+    Component.onCompleted: { if (!NiriData.isNiri) fetchProc.running = true }
 
     function updateMonitor(index, changes) {
         let m = root.monitors.slice()

@@ -86,6 +86,7 @@ Singleton {
 
     Connections {
         target: Hyprland
+        enabled: !NiriData.isNiri
 
         function onRawEvent(event) {
             // console.log("Hyprland raw event:", event.name);
