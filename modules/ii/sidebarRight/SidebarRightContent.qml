@@ -247,11 +247,15 @@ Item {
                                     toggled: false
                                     buttonIcon: "restart_alt"
                                     onClicked: {
-                                        Quickshell.execDetached(["hyprctl", "reload"])
+                                        if (NiriData.isNiri) {
+                                            Quickshell.execDetached(["niri", "msg", "action", "load-config-file"]);
+                                        } else {
+                                            Quickshell.execDetached(["hyprctl", "reload"]);
+                                        }
                                         Quickshell.reload(true);
                                     }
                                     StyledToolTip {
-                                        text: Translation.tr("Reload Hyprland & Quickshell")
+                                        text: NiriData.isNiri ? Translation.tr("Reload Niri & Quickshell") : Translation.tr("Reload Hyprland & Quickshell")
                                     }
                                 }
                                 QuickToggleButton {
@@ -503,11 +507,15 @@ Item {
                 toggled: false
                 buttonIcon: "restart_alt"
                 onClicked: {
-                    Quickshell.execDetached(["hyprctl", "reload"])
+                    if (NiriData.isNiri) {
+                        Quickshell.execDetached(["niri", "msg", "action", "load-config-file"]);
+                    } else {
+                        Quickshell.execDetached(["hyprctl", "reload"]);
+                    }
                     Quickshell.reload(true);
                 }
                 StyledToolTip {
-                    text: Translation.tr("Reload Hyprland & Quickshell")
+                    text: NiriData.isNiri ? Translation.tr("Reload Niri & Quickshell") : Translation.tr("Reload Hyprland & Quickshell")
                 }
             }
             QuickToggleButton {
