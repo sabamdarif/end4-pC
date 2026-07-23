@@ -47,6 +47,38 @@ Item {
                 color: root.isMaterial ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer1
             }
         }
+        Revealer {
+            reveal: Hyprsunset.temperatureActive
+            MaterialSymbol {
+                text: Config.options.light.night.automatic ? "night_sight_auto" : "bedtime"
+                iconSize: Appearance.font.pixelSize.larger
+                color: root.isMaterial ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer1
+            }
+        }
+        Revealer {
+            reveal: Idle.inhibit
+            MaterialSymbol {
+                text: "coffee"
+                iconSize: Appearance.font.pixelSize.larger
+                color: root.isMaterial ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer1
+            }
+        }
+        Revealer {
+            reveal: EasyEffects.active
+            MaterialSymbol {
+                text: "graphic_eq"
+                iconSize: Appearance.font.pixelSize.larger
+                color: root.isMaterial ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer1
+            }
+        }
+        Revealer {
+            reveal: HyprlandAntiFlashbangShader.enabled
+            MaterialSymbol {
+                text: !HyprlandAntiFlashbangShader.weak ? "flash_off" : "sunny_snowing"
+                iconSize: Appearance.font.pixelSize.larger
+                color: root.isMaterial ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer1
+            }
+        }
         Loader {
             source: "HyprlandXkbIndicator.qml"
             onLoaded: item.color = root.isMaterial ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer1
