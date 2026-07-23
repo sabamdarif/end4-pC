@@ -30,6 +30,10 @@ Singleton {
         return active?.output ?? Quickshell.screens[0]?.name ?? "";
     }
     property int workspaceCount: Math.max(1, workspaces.length)
+    property int focusedWindowId: {
+        const focused = windows.find(w => w.is_focused);
+        return focused ? focused.id : -1;
+    }
 
     function updateWorkspaces() {
         if (!isNiri) return;

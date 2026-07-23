@@ -39,9 +39,12 @@ Singleton {
         }
     }
 
+    property int lastWindowIdOnOpen: -1
+
     function addDismissable(window) {
         if (root.dismissable.indexOf(window) === -1) {
             root.dismissable.push(window);
+            root.lastWindowIdOnOpen = NiriData.focusedWindowId;
         }
     }
 
@@ -69,4 +72,19 @@ Singleton {
         }
     }
 
+    Connections {
+        target: NiriData
+        function onFocusedWindowIdChanged() {
+            if (NiriData.isNiri && root.dismissable.length > 0) {
+                if (NiriData.focusedWindowId !== root.lastWindowIdOnOpen && NiriData.focusedWindowId !== -1) {
+                    root.dismiss();
+                }
+            }
+        }
+        function onActiveWorkspaceIdxChanged() {
+            if (NiriData.isNiri && root.dismissable.length > 0) {
+                root.dismiss();
+            }
+        }
+    }
 }
