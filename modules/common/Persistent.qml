@@ -83,6 +83,15 @@ Singleton {
                 property bool inhibit: false
             }
 
+            property JsonObject nightLight: JsonObject {
+                property bool userEnabled: false
+                property bool manualOverride: false
+                property bool manualActive: false
+                property int manualActiveHour: -1
+                property int manualActiveMinute: -1
+                property bool userDisabled: false
+            }
+
             property JsonObject record: JsonObject {
                 property bool enable: false
             }

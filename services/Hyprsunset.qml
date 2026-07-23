@@ -18,11 +18,10 @@ Singleton {
 
     property string from: Config.options?.light?.night?.from ?? "19:00" 
     property string to: Config.options?.light?.night?.to ?? "06:30"
-    property bool automatic: Config.options?.light?.night?.automatic && (Config?.ready ?? true)
+    property bool automatic: Config.options?.light?.night?.automatic ?? true
     property int colorTemperature: Config.options?.light?.night?.colorTemperature ?? 5000
     property int gamma: 100
     property bool shouldBeOn
-    property bool firstEvaluation: true
     property bool temperatureActive: false
 
     property int fromHour: Number(from.split(":")[0])
@@ -33,15 +32,16 @@ Singleton {
     property int clockHour: DateTime.clock.hours
     property int clockMinute: DateTime.clock.minutes
 
-    property var manualActive
-    property int manualActiveHour
-    property int manualActiveMinute
-
     onClockMinuteChanged: reEvaluate()
-    onAutomaticChanged: {
-        root.manualActive = undefined;
-        root.firstEvaluation = true;
-        reEvaluate();
+    onAutomaticChanged: reEvaluate()
+
+    Connections {
+        target: Persistent
+        function onReadyChanged() {
+            if (Persistent.ready) {
+                reEvaluate();
+            }
+        }
     }
 
     function inBetween(t, from, to) {
@@ -57,26 +57,31 @@ Singleton {
         const t = clockHour * 60 + clockMinute;
         const from = fromHour * 60 + fromMinute;
         const to = toHour * 60 + toMinute;
-        const manualActive = manualActiveHour * 60 + manualActiveMinute;
 
-        if (root.manualActive !== undefined && (inBetween(from, manualActive, t) || inBetween(to, manualActive, t))) {
-            root.manualActive = undefined;
-        }
         root.shouldBeOn = inBetween(t, from, to);
-        if (firstEvaluation) {
-            firstEvaluation = false;
-            root.ensureState();
-        }
+        ensureState();
     }
 
     onShouldBeOnChanged: ensureState()
+
     function ensureState() {
-        if (!root.automatic || root.manualActive !== undefined)
-            return;
-        if (root.shouldBeOn) {
-            root.enableTemperature();
-        } else {
+        if (!Persistent.ready) return;
+
+        const isUserEnabled = Persistent.states.nightLight?.userEnabled ?? false;
+
+        if (!isUserEnabled) {
             root.disableTemperature();
+            return;
+        }
+
+        if (root.automatic) {
+            if (root.shouldBeOn) {
+                root.enableTemperature();
+            } else {
+                root.disableTemperature();
+            }
+        } else {
+            root.enableTemperature();
         }
     }
 
@@ -84,7 +89,7 @@ Singleton {
         const gammaFloat = (root.gamma / 100).toFixed(2);
 
         if (root.temperatureActive) {
-            if (root.automatic && root.manualActive === undefined) {
+            if (root.automatic) {
                 const cmd = `pkill -x wlsunset 2>/dev/null; exec wlsunset -t ${root.colorTemperature} -T 6500 -s ${root.from} -S ${root.to} -g ${gammaFloat}`;
                 Quickshell.execDetached(["bash", "-c", cmd]);
             } else {
@@ -110,7 +115,9 @@ Singleton {
         if (!root.useWlsunset) {
             root.startHyprsunset();
         }
-        root.ensureState();
+        if (Persistent.ready) {
+            ensureState();
+        }
     }
 
     Timer {
@@ -167,29 +174,34 @@ Singleton {
             onStreamFinished: {
                 const output = stateCollector.text.trim();
                 if (root.useWlsunset) {
-                    root.temperatureActive = (output.length > 0);
+                    const isRunning = (output.length > 0);
+                    if (Persistent.ready && !Persistent.states.nightLight?.userEnabled) {
+                        if (isRunning) root.disableTemperature();
+                    } else {
+                        root.temperatureActive = isRunning;
+                    }
                 } else {
                     if (output.length == 0 || output.startsWith("Couldn't"))
                         root.temperatureActive = false;
                     else
-                        root.temperatureActive = (output != "6500"); // 6500 is the default when off
+                        root.temperatureActive = (output != "6500");
                 }
             }
         }
     }
 
     function toggleTemperature(active = undefined) {
-        if (root.manualActive === undefined) {
-            root.manualActive = root.temperatureActive;
-            root.manualActiveHour = root.clockHour;
-            root.manualActiveMinute = root.clockMinute;
-        }
+        if (!Persistent.ready) return;
 
-        root.manualActive = active !== undefined ? active : !root.manualActive;
-        if (root.manualActive) {
-            root.enableTemperature();
+        const currentEnabled = Persistent.states.nightLight?.userEnabled ?? false;
+        const targetState = (active !== undefined) ? active : !currentEnabled;
+
+        Persistent.states.nightLight.userEnabled = targetState;
+
+        if (targetState) {
+            ensureState();
         } else {
-            root.disableTemperature();
+            disableTemperature();
         }
     }
 
