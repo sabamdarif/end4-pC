@@ -14,7 +14,7 @@ import Quickshell.Hyprland
 ButtonMouseArea {
     id: root
 
-    readonly property HyprlandMonitor monitor: Hyprland.monitorFor(root.QsWindow.window?.screen)
+    readonly property var monitor: NiriData.isNiri ? null : Hyprland.monitorFor(root.QsWindow.window?.screen)
     WorkspaceModel {
         id: wsModel
         monitor: root.monitor
@@ -30,7 +30,7 @@ ButtonMouseArea {
     property real workspaceIconSizeShrinked: workspaceButtonWidth * 0.55
     property real workspaceIconOpacityShrinked: 1
     property real workspaceIconMarginShrinked: -4
-    property int workspaceIndexInGroup: (monitor?.activeWorkspace?.id - 1) % wsModel.shownCount
+    property int workspaceIndexInGroup: NiriData.isNiri ? (wsModel.activeWorkspace - 1) % wsModel.shownCount : ((monitor?.activeWorkspace?.id - 1) % wsModel.shownCount)
     property real specialTextSize: workspaceButtonWidth * 0.5
 
     Layout.alignment: vertical ? Qt.AlignHCenter : Qt.AlignVCenter
@@ -54,7 +54,11 @@ ButtonMouseArea {
     }
 
     function switchWorkspaceToHovered() {
-        Hyprland.dispatch(`hl.dsp.focus({workspace = ${wsModel.getWorkspaceIdAt(hoverIndex)}})`);
+        if (NiriData.isNiri) {
+            NiriData.focusWorkspace(wsModel.getWorkspaceIdAt(hoverIndex));
+        } else {
+            Hyprland.dispatch(`hl.dsp.focus({workspace = ${wsModel.getWorkspaceIdAt(hoverIndex)}})`);
+        }
     }
     onPressed: mouse => {
         if (mouse.button == Qt.LeftButton)
@@ -63,10 +67,17 @@ ButtonMouseArea {
             GlobalStates.overviewOpen = !GlobalStates.overviewOpen;
     }
     onWheel: event => {
-        if (event.angleDelta.y < 0)
-            Hyprland.dispatch(`hl.dsp.focus({workspace = "r+1"})`);
-        else if (event.angleDelta.y > 0)
-            Hyprland.dispatch(`hl.dsp.focus({workspace = "r-1"})`);
+        if (NiriData.isNiri) {
+            if (event.angleDelta.y < 0)
+                NiriData.focusWorkspaceDown();
+            else if (event.angleDelta.y > 0)
+                NiriData.focusWorkspaceUp();
+        } else {
+            if (event.angleDelta.y < 0)
+                Hyprland.dispatch(`hl.dsp.focus({workspace = "r+1"})`);
+            else if (event.angleDelta.y > 0)
+                Hyprland.dispatch(`hl.dsp.focus({workspace = "r-1"})`);
+        }
     }
 
     // Indications
@@ -210,7 +221,7 @@ ButtonMouseArea {
                 delegate: WorkspaceItem {
                     id: wsApp
                     property var biggestWindow: wsModel.biggestWindow[index]
-                    property var mainAppIconSource: Quickshell.iconPath(AppSearch.guessIcon(biggestWindow?.class), "image-missing")
+                    property var mainAppIconSource: Quickshell.iconPath(AppSearch.guessIcon(biggestWindow?.app_id ?? biggestWindow?.class), "image-missing")
 
                     AppIcon {
                         id: appIcon

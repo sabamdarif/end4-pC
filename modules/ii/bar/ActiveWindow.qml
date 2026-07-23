@@ -16,16 +16,16 @@ import Qt5Compat.GraphicalEffects
 Item {
     id: root
     property bool vertical: false
-    readonly property HyprlandMonitor monitor: Hyprland.monitorFor(root.QsWindow.window?.screen)
+    readonly property var monitor: NiriData.isNiri ? null : Hyprland.monitorFor(root.QsWindow.window?.screen)
     readonly property Toplevel activeWindow: ToplevelManager.activeToplevel
     property string activeWindowAddress: `0x${activeWindow?.HyprlandToplevel?.address}`
-    property bool focusingThisMonitor: HyprlandData.activeWorkspace?.monitor == monitor?.name
-    property var biggestWindow: HyprlandData.biggestWindowForWorkspace(monitor?.activeWorkspace?.id ?? 1)
+    property bool focusingThisMonitor: NiriData.isNiri ? true : (HyprlandData.activeWorkspace?.monitor == monitor?.name)
+    property var biggestWindow: NiriData.isNiri ? NiriData.biggestWindowForWorkspace(NiriData.activeWorkspaceId) : HyprlandData.biggestWindowForWorkspace(monitor?.activeWorkspace?.id ?? 1)
 
     property string activeAppClass: {
         if (!root.focusingThisMonitor || !root.activeWindow?.activated)
-            return root.biggestWindow?.class ?? ""
-        return root.activeWindow?.appId ?? root.biggestWindow?.class ?? ""
+            return root.biggestWindow?.app_id ?? root.biggestWindow?.class ?? ""
+        return root.activeWindow?.appId ?? root.biggestWindow?.app_id ?? root.biggestWindow?.class ?? ""
     }
 
     property var mainAppIconSource: {
@@ -37,7 +37,7 @@ Item {
 
     Component.onCompleted: {
         console.log("appId:", root.activeWindow?.appId)
-        console.log("class:", root.biggestWindow?.class)
+        console.log("class:", root.biggestWindow?.app_id ?? root.biggestWindow?.class)
         console.log("guessIcon:", AppSearch.guessIcon(root.activeAppClass))
         console.log("iconPath:", root.mainAppIconSource)
     }
@@ -78,7 +78,7 @@ Item {
             elide: Text.ElideRight
             text: root.focusingThisMonitor && root.activeWindow?.activated && root.biggestWindow ?
                 root.activeWindow?.appId :
-                (root.biggestWindow?.class) ?? Translation.tr("Desktop")
+                (root.biggestWindow?.app_id ?? root.biggestWindow?.class) ?? Translation.tr("Desktop")
         }
         StyledText {
             Layout.fillWidth: true
@@ -87,7 +87,7 @@ Item {
             elide: Text.ElideRight
             text: root.focusingThisMonitor && root.activeWindow?.activated && root.biggestWindow ?
                 root.activeWindow?.title :
-                (root.biggestWindow?.title) ?? `${Translation.tr("Workspace")} ${monitor?.activeWorkspace?.id ?? 1}`
+                (root.biggestWindow?.title) ?? `${Translation.tr("Workspace")} ${NiriData.isNiri ? NiriData.activeWorkspaceIdx : (monitor?.activeWorkspace?.id ?? 1)}`
         }
     }
 }
