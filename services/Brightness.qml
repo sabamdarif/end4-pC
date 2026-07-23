@@ -35,8 +35,8 @@ Singleton {
     }
 
     function increaseBrightness(): void {
-        // if gamma is not yet 100, first increase gamma (Hyprland only, hyprctl not available on Niri)
-        if (!NiriData.isNiri && Hyprsunset.gamma !== 100) {
+        // if gamma is not yet 100, first increase gamma
+        if (Hyprsunset.gamma !== 100) {
             Hyprsunset.setGamma(Hyprsunset.gamma + 5);
             return;
         }
@@ -52,8 +52,8 @@ Singleton {
         const monitor = monitors.find(m => focusedName === m.screen.name);
         if (monitor && monitor.brightness > 0) 
             monitor.setBrightness(monitor.brightness - 0.05);
-        // if brightness is 0, then decrease gamma (Hyprland only, hyprctl not available on Niri)
-        else if (!NiriData.isNiri) {
+        // if brightness is 0, then decrease gamma
+        else {
             Hyprsunset.setGamma(Hyprsunset.gamma - 5);
         }
     }
@@ -112,7 +112,7 @@ Singleton {
         property real brightness
         property real brightnessMultiplier: 1.0
         property real multipliedBrightness: Math.max(0, Math.min(1, brightness * (Config.options.light.antiFlashbang.enable ? brightnessMultiplier : 1)))
-        property bool ready: true
+        property bool ready: false
         property bool animateChanges: !monitor.isDdc
 
         onBrightnessChanged: {

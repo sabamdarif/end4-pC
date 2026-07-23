@@ -7,14 +7,13 @@ import Quickshell.Io
 import Quickshell.Hyprland
 
 /**
- * Simple hyprsunset service with automatic mode.
- * In theory we don't need this because hyprsunset has a config file, but it somehow doesn't work.
- * It should also be possible to control it via hyprctl, but it doesn't work consistently either so we're just killing and launching.
+ * Night light service supporting both hyprsunset (Hyprland) and wlsunset (Niri / Wayland).
  */
 Singleton {
     id: root
     signal gammaChangeAttempt()
 
+    readonly property bool useWlsunset: NiriData.isNiri || Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE") === ""
     readonly property real gammaLowerLimit: 25
 
     property string from: Config.options?.light?.night?.from ?? "19:00" 
@@ -72,7 +71,6 @@ Singleton {
 
     onShouldBeOnChanged: ensureState()
     function ensureState() {
-        // console.log("[Hyprsunset] Ensuring state:", root.shouldBeOn, "Automatic mode:", root.automatic);
         if (!root.automatic || root.manualActive !== undefined)
             return;
         if (root.shouldBeOn) {
@@ -82,12 +80,36 @@ Singleton {
         }
     }
 
+    function applyWlsunset() {
+        const gammaFloat = (root.gamma / 100).toFixed(2);
+
+        if (root.temperatureActive) {
+            if (root.automatic && root.manualActive === undefined) {
+                const cmd = `pkill -x wlsunset 2>/dev/null; exec wlsunset -t ${root.colorTemperature} -T 6500 -s ${root.from} -S ${root.to} -g ${gammaFloat}`;
+                Quickshell.execDetached(["bash", "-c", cmd]);
+            } else {
+                const cmd = `pkill -x wlsunset 2>/dev/null; exec wlsunset -t ${root.colorTemperature} -T 6500 -s 00:00 -S 00:01 -g ${gammaFloat}`;
+                Quickshell.execDetached(["bash", "-c", cmd]);
+            }
+        } else {
+            if (root.gamma < 100) {
+                const cmd = `pkill -x wlsunset 2>/dev/null; exec wlsunset -t 6500 -T 6501 -g ${gammaFloat}`;
+                Quickshell.execDetached(["bash", "-c", cmd]);
+            } else {
+                Quickshell.execDetached(["pkill", "-x", "wlsunset"]);
+            }
+        }
+    }
+
     function startHyprsunset() {
+        if (root.useWlsunset) return;
         Quickshell.execDetached(["bash", "-c", `pidof hyprsunset || hyprsunset`]);
     }
 
     function load() {
-        root.startHyprsunset();
+        if (!root.useWlsunset) {
+            root.startHyprsunset();
+        }
         root.ensureState();
     }
 
@@ -103,25 +125,33 @@ Singleton {
 
     function enableTemperature() {
         root.temperatureActive = true;
-
-        // console.log("[Hyprsunset] Enabling");
-        root.startHyprsunset();
-        Quickshell.execDetached(["bash", "-c", `hyprctl hyprsunset temperature ${root.colorTemperature}`]);
+        if (root.useWlsunset) {
+            root.applyWlsunset();
+        } else {
+            root.startHyprsunset();
+            Quickshell.execDetached(["bash", "-c", `hyprctl hyprsunset temperature ${root.colorTemperature}`]);
+        }
     }
 
     function disableTemperature() {
         root.temperatureActive = false;
-        // console.log("[Hyprsunset] Disabling");
-        Quickshell.execDetached(["hyprctl", "hyprsunset", "identity"]);
+        if (root.useWlsunset) {
+            root.applyWlsunset();
+        } else {
+            Quickshell.execDetached(["hyprctl", "hyprsunset", "identity"]);
+        }
     }
 
     function setGamma(gamma) {
         root.gamma = Math.max(root.gammaLowerLimit, Math.min(100, gamma));
-
         root.gammaChangeAttempt();
 
-        root.startHyprsunset();
-        Quickshell.execDetached(["bash", "-c", `hyprctl hyprsunset gamma ${root.gamma}`]);
+        if (root.useWlsunset) {
+            root.applyWlsunset();
+        } else {
+            root.startHyprsunset();
+            Quickshell.execDetached(["bash", "-c", `hyprctl hyprsunset gamma ${root.gamma}`]);
+        }
     }
 
     function fetchState() {
@@ -131,16 +161,19 @@ Singleton {
     Process {
         id: fetchProc
         running: true
-        command: ["bash", "-c", "hyprctl hyprsunset temperature"]
+        command: root.useWlsunset ? ["pidof", "wlsunset"] : ["bash", "-c", "hyprctl hyprsunset temperature"]
         stdout: StdioCollector {
             id: stateCollector
             onStreamFinished: {
                 const output = stateCollector.text.trim();
-                if (output.length == 0 || output.startsWith("Couldn't"))
-                    root.temperatureActive = false;
-                else
-                    root.temperatureActive = (output != "6500"); // 6500 is the default when off
-                // console.log("[Hyprsunset] Fetched state:", output, "->", root.temperatureActive);
+                if (root.useWlsunset) {
+                    root.temperatureActive = (output.length > 0);
+                } else {
+                    if (output.length == 0 || output.startsWith("Couldn't"))
+                        root.temperatureActive = false;
+                    else
+                        root.temperatureActive = (output != "6500"); // 6500 is the default when off
+                }
             }
         }
     }
@@ -165,7 +198,11 @@ Singleton {
         target: Config.options.light.night
         function onColorTemperatureChanged() {
             if (!root.temperatureActive) return;
-            Quickshell.execDetached(["hyprctl", "hyprsunset", "temperature", `${Config.options.light.night.colorTemperature}`]);
+            if (root.useWlsunset) {
+                root.applyWlsunset();
+            } else {
+                Quickshell.execDetached(["hyprctl", "hyprsunset", "temperature", `${Config.options.light.night.colorTemperature}`]);
+            }
         }
     }
 }
