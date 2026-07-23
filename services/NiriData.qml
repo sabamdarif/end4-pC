@@ -25,6 +25,10 @@ Singleton {
         const active = workspaces.find(ws => ws.is_active || ws.is_focused);
         return active ? active.id : 1;
     }
+    property string currentOutput: {
+        const active = workspaces.find(ws => ws.is_active || ws.is_focused);
+        return active?.output ?? Quickshell.screens[0]?.name ?? "";
+    }
     property int workspaceCount: Math.max(1, workspaces.length)
 
     function updateWorkspaces() {

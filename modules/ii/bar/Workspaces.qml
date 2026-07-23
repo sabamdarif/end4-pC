@@ -117,9 +117,9 @@ ButtonMouseArea {
                     id: wsBg
                     required property int index
                     readonly property int wsId: wsModel.getWorkspaceIdAt(index)
-                    property bool currentOccupied: wsModel.occupied[index] && wsId != wsModel.fakeWorkspace
-                    property bool previousOccupied: index > 0 && wsModel.occupied[index - 1] && (wsId - 1) != wsModel.fakeWorkspace
-                    property bool nextOccupied: index < wsModel.shownCount - 1 && wsModel.occupied[index + 1] && (wsId + 1) != wsModel.fakeWorkspace
+                    property bool currentOccupied: (wsModel.occupied[index] ?? false) && wsId != wsModel.fakeWorkspace
+                    property bool previousOccupied: index > 0 && (wsModel.occupied[index - 1] ?? false) && (wsId - 1) != wsModel.fakeWorkspace
+                    property bool nextOccupied: index < wsModel.shownCount - 1 && (wsModel.occupied[index + 1] ?? false) && (wsId + 1) != wsModel.fakeWorkspace
                     implicitWidth: root.workspaceButtonWidth
                     implicitHeight: root.workspaceButtonWidth
 

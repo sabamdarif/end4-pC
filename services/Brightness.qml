@@ -27,31 +27,42 @@ Singleton {
         return monitors.find(m => m.screen === screen);
     }
 
+    function getFocusedScreenName(): string {
+        if (NiriData.isNiri) {
+            return Quickshell.screens[0]?.name ?? "";
+        }
+        return Hyprland.focusedMonitor?.name ?? Quickshell.screens[0]?.name ?? "";
+    }
+
     function increaseBrightness(): void {
-        // if gamma is not yet 100, first increase gamma
-        if (Hyprsunset.gamma !== 100) {
+        // if gamma is not yet 100, first increase gamma (Hyprland only, hyprctl not available on Niri)
+        if (!NiriData.isNiri && Hyprsunset.gamma !== 100) {
             Hyprsunset.setGamma(Hyprsunset.gamma + 5);
             return;
         }
 
-        const focusedName = Hyprland.focusedMonitor.name;
+        const focusedName = root.getFocusedScreenName();
         const monitor = monitors.find(m => focusedName === m.screen.name);
         if (monitor)
             monitor.setBrightness(monitor.brightness + 0.05);
     }
 
     function decreaseBrightness(): void {
-        const focusedName = Hyprland.focusedMonitor.name;
+        const focusedName = root.getFocusedScreenName();
         const monitor = monitors.find(m => focusedName === m.screen.name);
         if (monitor && monitor.brightness > 0) 
             monitor.setBrightness(monitor.brightness - 0.05);
-        // if brightness is 0, then decrease gamma
-        else {
+        // if brightness is 0, then decrease gamma (Hyprland only, hyprctl not available on Niri)
+        else if (!NiriData.isNiri) {
             Hyprsunset.setGamma(Hyprsunset.gamma - 5);
         }
     }
 
     reloadableId: "brightness"
+
+    Component.onCompleted: {
+        initializeMonitor(0);
+    }
 
     onMonitorsChanged: {
         ddcMonitors = [];
@@ -101,7 +112,7 @@ Singleton {
         property real brightness
         property real brightnessMultiplier: 1.0
         property real multipliedBrightness: Math.max(0, Math.min(1, brightness * (Config.options.light.antiFlashbang.enable ? brightnessMultiplier : 1)))
-        property bool ready: false
+        property bool ready: true
         property bool animateChanges: !monitor.isDdc
 
         onBrightnessChanged: {
@@ -118,12 +129,11 @@ Singleton {
             }
         }
         onMultipliedBrightnessChanged: {
-            if (monitor.animationEnabled) syncBrightness();
+            if (monitor.animateChanges) syncBrightness();
             else setTimer.restart();
         }
 
         function initialize() {
-            monitor.ready = false;
             const match = root.ddcMonitors.find(m => m.name === screen.name && !root.monitors.slice(0, root.monitors.indexOf(this)).some(mon => mon.busNum === m.busNum));
             isDdc = !!match;
             busNum = match?.busNum ?? "";
@@ -134,13 +144,22 @@ Singleton {
         readonly property Process initProc: Process {
             stdout: SplitParser {
                 onRead: data => {
-                    const [, , , current, max] = data.split(" ");
-                    monitor.rawMaxBrightness = parseInt(max);
-                    monitor.brightness = parseInt(current) / monitor.rawMaxBrightness;
+                    const parts = data.trim().split(/\s+/);
+                    if (parts.length >= 5) {
+                        const current = parseInt(parts[3]);
+                        const max = parseInt(parts[4]);
+                        if (!isNaN(max) && max > 0) {
+                            monitor.rawMaxBrightness = max;
+                            if (!isNaN(current)) {
+                                monitor.brightness = current / max;
+                            }
+                        }
+                    }
                     monitor.ready = true;
                 }
             }
             onExited: (exitCode, exitStatus) => {
+                monitor.ready = true;
                 initializeMonitor(root.monitors.indexOf(monitor) + 1);
             }
         }
@@ -249,11 +268,11 @@ Singleton {
         target: "brightness"
 
         function increment() {
-            onPressed: root.increaseBrightness()
+            root.increaseBrightness();
         }
 
         function decrement() {
-            onPressed: root.decreaseBrightness()
+            root.decreaseBrightness();
         }
     }
 

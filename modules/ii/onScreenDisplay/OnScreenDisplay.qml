@@ -13,7 +13,7 @@ import Quickshell.Hyprland
 Scope {
     id: root
     property string protectionMessage: ""
-    property var focusedScreen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name)
+    property var focusedScreen: Quickshell.screens.find(s => s.name === (NiriData.isNiri ? NiriData.currentOutput : Hyprland.focusedMonitor?.name)) ?? Quickshell.screens[0]
 
     property string currentIndicator: "volume"
     property var indicators: [
@@ -29,6 +29,14 @@ Scope {
             id: "gamma",
             sourceUrl: "indicators/GammaIndicator.qml"
         },
+        {
+            id: "capslock",
+            sourceUrl: "indicators/CapsLockIndicator.qml"
+        },
+        {
+            id: "numlock",
+            sourceUrl: "indicators/NumLockIndicator.qml"
+        }
     ]
 
     function triggerOsd() {
@@ -88,6 +96,30 @@ Scope {
         function onSinkProtectionTriggered(reason) {
             root.protectionMessage = reason;
             root.currentIndicator = "volume";
+            root.triggerOsd();
+        }
+    }
+
+    Connections {
+        target: KeyLocks
+        function onShowCapsLockOsd() {
+            root.protectionMessage = "";
+            root.currentIndicator = "capslock";
+            root.triggerOsd();
+        }
+        function onShowNumLockOsd() {
+            root.protectionMessage = "";
+            root.currentIndicator = "numlock";
+            root.triggerOsd();
+        }
+        function onCapsLockChanged() {
+            root.protectionMessage = "";
+            root.currentIndicator = "capslock";
+            root.triggerOsd();
+        }
+        function onNumLockChanged() {
+            root.protectionMessage = "";
+            root.currentIndicator = "numlock";
             root.triggerOsd();
         }
     }

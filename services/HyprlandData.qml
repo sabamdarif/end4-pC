@@ -64,6 +64,7 @@ Singleton {
     }
 
     function updateAll() {
+        if (NiriData.isNiri || Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE") === "") return;
         updateWindowList();
         updateMonitors();
         updateLayers();
