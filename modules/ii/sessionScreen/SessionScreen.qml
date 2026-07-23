@@ -13,7 +13,7 @@ import Quickshell.Hyprland
 
 Scope {
     id: root
-    property var focusedScreen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name)
+    property var focusedScreen: Quickshell.screens.find(s => s.name === (NiriData.isNiri ? NiriData.currentOutput : Hyprland.focusedMonitor?.name)) ?? Quickshell.screens[0]
 
     Loader {
         id: sessionLoader
@@ -34,6 +34,7 @@ Scope {
 
         sourceComponent: PanelWindow { // Session menu
             id: sessionRoot
+            screen: root.focusedScreen
             visible: sessionLoader.active
             property string subtitle
 
@@ -49,12 +50,10 @@ Scope {
 
             anchors {
                 top: true
+                bottom: true
                 left: true
                 right: true
             }
-
-            implicitWidth: root.focusedScreen?.width ?? 0
-            implicitHeight: root.focusedScreen?.height ?? 0
 
             MouseArea {
                 id: sessionMouseArea
