@@ -12,6 +12,56 @@ Scope {
     property int sidebarWidth: Appearance.sizes.sidebarWidth
     readonly property bool centerOnly: Config.options.bar.layouts.leftLayout.length === 0 && Config.options.bar.layouts.rightLayout.length === 0 && !Config.options.bar.vertical
 
+    // Niri: full-screen transparent click-catcher to dismiss sidebar when clicking outside
+    PanelWindow {
+        id: dismissCatcher
+        visible: GlobalStates.sidebarRightOpen && NiriData.isNiri
+        color: "transparent"
+
+        WlrLayershell.namespace: "quickshell:sidebarRight:dismiss"
+        WlrLayershell.layer: WlrLayer.Top
+        WlrLayershell.exclusiveZone: -1
+        WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+
+        anchors {
+            top: true
+            left: true
+            right: true
+            bottom: true
+        }
+
+        mask: Region {
+            item: catchArea
+            Region {
+                item: sidebarHole
+                intersection: Intersection.Subtract
+            }
+        }
+
+        Rectangle {
+            id: catchArea
+            visible: false
+            anchors.fill: parent
+        }
+
+        Rectangle {
+            id: sidebarHole
+            visible: false
+            x: parent.width - root.sidebarWidth
+            y: 0
+            width: root.sidebarWidth
+            height: parent.height
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            hoverEnabled: false
+            onClicked: {
+                GlobalFocusGrab.dismiss();
+            }
+        }
+    }
+
     PanelWindow {
         id: panelWindow
         visible: GlobalStates.sidebarRightOpen
@@ -23,7 +73,9 @@ Scope {
         exclusiveZone: 0
         implicitWidth: sidebarWidth
         WlrLayershell.namespace: "quickshell:sidebarRight"
-        WlrLayershell.keyboardFocus: GlobalStates.sidebarRightOpen ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+        WlrLayershell.keyboardFocus: GlobalStates.sidebarRightOpen
+            ? (NiriData.isNiri ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.OnDemand)
+            : WlrKeyboardFocus.None
         color: "transparent"
 
         anchors {
