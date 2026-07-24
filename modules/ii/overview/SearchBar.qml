@@ -8,12 +8,23 @@ import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
 
-RowLayout {
+Rectangle {
     id: root
-    spacing: 6
+    implicitHeight: 52
+    implicitWidth: 520
+    radius: 26
+    color: Appearance.colors.colSurfaceContainerHigh
+    border.color: searchInput.activeFocus ? Appearance.colors.colPrimary : ColorUtils.transparentize(Appearance.colors.colOutline, 0.4)
+    border.width: searchInput.activeFocus ? 2 : 1
+
+    Behavior on border.color {
+        animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+    }
+
     property bool animateWidth: false
     property alias searchInput: searchInput
     property string searchingText
+    signal submitted
 
     function forceFocus() {
         searchInput.forceActiveFocus();
@@ -33,24 +44,10 @@ RowLayout {
         if (root.searchingText.startsWith(Config.options.search.prefix.keybinds ?? "<")) return SearchBar.SearchPrefixType.Keybinds;
         return SearchBar.SearchPrefixType.DefaultSearch;
     }
-    
-    MaterialShapeWrappedMaterialSymbol {
-        id: searchIcon
-        Layout.alignment: Qt.AlignVCenter
-        iconSize: Appearance.font.pixelSize.huge
-        shape: switch(root.searchPrefixType) {
-            case SearchBar.SearchPrefixType.Action: return MaterialShape.Shape.Pill;
-            case SearchBar.SearchPrefixType.App: return MaterialShape.Shape.Clover4Leaf;
-            case SearchBar.SearchPrefixType.Clipboard: return MaterialShape.Shape.Gem;
-            case SearchBar.SearchPrefixType.Emojis: return MaterialShape.Shape.Sunny;
-            case SearchBar.SearchPrefixType.Symbols: return MaterialShape.Shape.Clover4Leaf;
-            case SearchBar.SearchPrefixType.Math: return MaterialShape.Shape.PuffyDiamond;
-            case SearchBar.SearchPrefixType.ShellCommand: return MaterialShape.Shape.PixelCircle;
-            case SearchBar.SearchPrefixType.WebSearch: return MaterialShape.Shape.SoftBurst;
-            case SearchBar.SearchPrefixType.Keybinds: return MaterialShape.Shape.Cookie4Sided;
-            default: return MaterialShape.Shape.Cookie7Sided;
-        }
-        text: switch (root.searchPrefixType) {
+
+    function getPrefixIcon(text, prefixType) {
+        if (text === "") return "center_focus_weak";
+        switch (prefixType) {
             case SearchBar.SearchPrefixType.Action: return "settings_suggest";
             case SearchBar.SearchPrefixType.App: return "apps";
             case SearchBar.SearchPrefixType.Clipboard: return "content_paste_search";
@@ -59,107 +56,123 @@ RowLayout {
             case SearchBar.SearchPrefixType.Math: return "calculate";
             case SearchBar.SearchPrefixType.ShellCommand: return "terminal";
             case SearchBar.SearchPrefixType.WebSearch: return "travel_explore";
-            case SearchBar.SearchPrefixType.DefaultSearch: return "search";
-            case SearchBar.SearchPrefixType.Keybinds: return "keyboard_command_key";
-            default: return "search";
+            default: return "center_focus_weak";
         }
     }
-    ToolbarTextField { // Search box
-        id: searchInput
-        Layout.topMargin: 4
-        Layout.bottomMargin: 4
-        implicitHeight: 40
-        focus: GlobalStates.overviewOpen
-        font.pixelSize: Appearance.font.pixelSize.small
-        placeholderText: Translation.tr("Search, calculate or run")
-        implicitWidth: root.searchingText == "" ? Appearance.sizes.searchWidthCollapsed : Appearance.sizes.searchWidth
 
-        Behavior on implicitWidth {
-            id: searchWidthBehavior
-            enabled: root.animateWidth
-            NumberAnimation {
-                duration: 300
-                easing.type: Appearance.animation.elementMove.type
-                easing.bezierCurve: Appearance.animation.elementMove.bezierCurve
+    RowLayout {
+        anchors.fill: parent
+        anchors.leftMargin: 8
+        anchors.rightMargin: 8
+        spacing: 6
+
+        // Left Lens / Search Action Button
+        RippleButton {
+            id: lensBtn
+            Layout.preferredWidth: 40
+            Layout.preferredHeight: 40
+            Layout.alignment: Qt.AlignVCenter
+            buttonRadius: 20
+            colBackground: Appearance.colors.colSecondaryContainer
+            colBackgroundHover: Appearance.colors.colPrimaryContainer
+            colRipple: Appearance.colors.colPrimaryContainer
+
+            scale: lensBtn.down ? 0.85 : (lensBtn.hovered ? 1.08 : 1.0)
+            Behavior on scale {
+                NumberAnimation {
+                    duration: lensBtn.down ? 90 : 250
+                    easing.type: lensBtn.down ? Easing.OutCubic : Easing.OutBack
+                    easing.overshoot: 1.4
+                }
+            }
+
+            onClicked: {
+                GlobalStates.overviewOpen = false;
+                Quickshell.execDetached(["qs", "-p", Quickshell.shellPath(""), "ipc", "call", "region", "search"]);
+            }
+
+            contentItem: MaterialShapeWrappedMaterialSymbol {
+                anchors.centerIn: parent
+                iconSize: 22
+                shape: MaterialShape.Shape.Cookie4Sided
+                color: Appearance.colors.colSecondaryContainer
+                colSymbol: Appearance.colors.colOnSecondaryContainer
+                text: root.getPrefixIcon(root.searchingText, root.searchPrefixType)
+            }
+
+            StyledToolTip {
+                text: Translation.tr("Google Lens / Region Search")
             }
         }
 
-        onTextChanged: LauncherSearch.query = text
+        // Central Search Text Input
+        ToolbarTextField {
+            id: searchInput
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            focus: GlobalStates.overviewOpen
+            font.pixelSize: Appearance.font.pixelSize.normal
+            placeholderText: Translation.tr("Search apps...")
 
-        onAccepted: {
-            if (appResults.count > 0) {
-                // Get the first visible delegate and trigger its click
-                let firstItem = appResults.itemAtIndex(0);
-                if (firstItem && firstItem.clicked) {
-                    firstItem.clicked();
+            onTextChanged: LauncherSearch.query = text
+            onAccepted: root.submitted()
+
+            Keys.onPressed: event => {
+                if (event.key === Qt.Key_Tab) {
+                    if (LauncherSearch.results.length === 0) return;
+                    const tabbedText = LauncherSearch.results[0].name;
+                    LauncherSearch.query = tabbedText;
+                    searchInput.text = tabbedText;
+                    event.accepted = true;
                 }
             }
         }
 
-        Keys.onPressed: event => {
-            if (event.key === Qt.Key_Tab) {
-                if (LauncherSearch.results.length === 0) return;
-                const tabbedText = LauncherSearch.results[0].name;
-                LauncherSearch.query = tabbedText;
-                searchInput.text = tabbedText;
-                event.accepted = true;
-            }
-        }
-    }
+        // Right Song Recognition / Voice Button
+        RippleButton {
+            id: songRecButton
+            Layout.preferredWidth: 40
+            Layout.preferredHeight: 40
+            Layout.alignment: Qt.AlignVCenter
+            buttonRadius: 20
+            readonly property bool toggled: SongRec.running
+            colBackground: toggled ? Appearance.colors.colPrimary : Appearance.colors.colTertiaryContainer
+            colBackgroundHover: toggled ? Appearance.colors.colPrimaryHover : Appearance.colors.colPrimaryContainer
+            colRipple: Appearance.colors.colPrimaryContainer
 
-    IconToolbarButton {
-        Layout.topMargin: 4
-        Layout.bottomMargin: 4
-        onClicked: {
-            GlobalStates.overviewOpen = false;
-            Quickshell.execDetached(["qs", "-p", Quickshell.shellPath(""), "ipc", "call", "region", "search"]);
-        }
-        text: "image_search"
-        StyledToolTip {
-            text: Translation.tr("Google Lens")
-        }
-    }
-
-    IconToolbarButton {
-        id: songRecButton
-        Layout.topMargin: 4
-        Layout.bottomMargin: 4
-        Layout.rightMargin: 4
-        toggled: SongRec.running
-        onClicked: SongRec.toggleRunning()
-        text: "music_cast"
-
-        StyledToolTip {
-            text: Translation.tr("Recognize music")
-        }
-
-        colText: toggled ? Appearance.colors.colOnPrimary : Appearance.colors.colOnSurfaceVariant
-        background: MaterialShape {
-            RotationAnimation on rotation {
-                running: songRecButton.toggled
-                duration: 12000
-                easing.type: Easing.Linear
-                loops: Animation.Infinite
-                from: 0
-                to: 360
-            }
-            shape: {
-                if (songRecButton.down) {
-                    return songRecButton.toggled ? MaterialShape.Shape.Circle : MaterialShape.Shape.Square
-                } else {
-                    return songRecButton.toggled ? MaterialShape.Shape.SoftBurst : MaterialShape.Shape.Circle
+            scale: songRecButton.down ? 0.85 : (songRecButton.hovered ? 1.08 : 1.0)
+            Behavior on scale {
+                NumberAnimation {
+                    duration: songRecButton.down ? 90 : 250
+                    easing.type: songRecButton.down ? Easing.OutCubic : Easing.OutBack
+                    easing.overshoot: 1.4
                 }
             }
-            color: {
-                if (songRecButton.toggled) {
-                    return songRecButton.hovered ? Appearance.colors.colPrimaryHover : Appearance.colors.colPrimary
-                } else {
-                    return songRecButton.hovered ? Appearance.colors.colSurfaceContainerHigh : ColorUtils.transparentize(Appearance.colors.colSurfaceContainerHigh)
+
+            onClicked: SongRec.toggleRunning()
+
+            contentItem: MaterialShapeWrappedMaterialSymbol {
+                anchors.centerIn: parent
+                iconSize: 22
+                shape: songRecButton.toggled ? MaterialShape.Shape.SoftBurst : MaterialShape.Shape.Cookie4Sided
+                color: songRecButton.toggled ? Appearance.colors.colPrimary : Appearance.colors.colTertiaryContainer
+                colSymbol: songRecButton.toggled ? Appearance.colors.colOnPrimary : Appearance.colors.colOnTertiaryContainer
+                text: songRecButton.toggled ? "graphic_eq" : "mic"
+
+                RotationAnimation on rotation {
+                    running: songRecButton.toggled
+                    duration: 2000
+                    easing.type: Easing.Linear
+                    loops: Animation.Infinite
+                    from: 0
+                    to: 360
                 }
             }
-            Behavior on color {
-                animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+
+            StyledToolTip {
+                text: Translation.tr("Recognize Music / Voice")
             }
         }
     }
 }
+

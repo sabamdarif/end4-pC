@@ -24,7 +24,11 @@ Scope {
 
         WlrLayershell.namespace: "quickshell:overview"
         WlrLayershell.layer: WlrLayer.Top
-        WlrLayershell.keyboardFocus: GlobalStates.overviewOpen ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+        // Niri has no focus-grab protocol, so OnDemand never routes keys to the layer surface.
+        // Use Exclusive there; keep OnDemand on Hyprland (paired with HyprlandFocusGrab).
+        WlrLayershell.keyboardFocus: GlobalStates.overviewOpen
+            ? (NiriData.isNiri ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.OnDemand)
+            : WlrKeyboardFocus.None
         color: "transparent"
 
         mask: Region {
@@ -71,11 +75,8 @@ Scope {
         Column {
             id: columnLayout
             visible: GlobalStates.overviewOpen
-            anchors {
-                horizontalCenter: parent.horizontalCenter
-                top: parent.top
-            }
-            spacing: -8
+            anchors.centerIn: parent
+            spacing: 0
 
             Keys.onPressed: event => {
                 if (event.key === Qt.Key_Escape) {
@@ -107,7 +108,9 @@ Scope {
 
             Loader {
                 id: overviewLoader
-                active: GlobalStates.overviewOpen && (Config?.options.overview.enable ?? true)
+                // Disabled: this window is now a pure app launcher. Workspace overview
+                // is handled natively by niri (Mod key). Re-enable to bring it back here.
+                active: false
                 sourceComponent: (Config?.options.overview.style ?? "default") === "niri" ? niriComponent : defaultComponent
 
                 Component {

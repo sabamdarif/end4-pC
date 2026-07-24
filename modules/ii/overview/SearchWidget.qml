@@ -3,43 +3,126 @@ pragma ComponentBehavior: Bound
 import Qt.labs.synchronizer
 import Qt5Compat.GraphicalEffects
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Widgets
 
 import qs
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
+import qs.modules.common.models
 import qs.modules.common.functions
 
 Item { // Wrapper
     id: root
 
-    readonly property string xdgConfigHome: Directories.config
-    readonly property int typingDebounceInterval: 200
-    readonly property int typingResultLimit: 15 // Should be enough to cover the whole view
+    readonly property int gridColumns: 6
+    readonly property int tileSize: 136
+    readonly property int tileHeight: 146
+    readonly property int iconSize: 44
 
     property string searchingText: LauncherSearch.query
     property bool showResults: searchingText != ""
-    implicitWidth: searchWidgetContent.implicitWidth + Appearance.sizes.elevationMargin * 2
-    implicitHeight: searchWidgetContent.implicitHeight + searchBar.verticalPadding * 2 + Appearance.sizes.elevationMargin * 2
+    property string activeCategory: "All"
+
+    readonly property var categories: ["All", "Work", "Social", "Tools", "Media", "System"]
+
+    readonly property var organicShapes: [
+        MaterialShape.Shape.Gem,
+        MaterialShape.Shape.Cookie4Sided,
+        MaterialShape.Shape.Sunny,
+        MaterialShape.Shape.Cookie7Sided,
+        MaterialShape.Shape.Clover4Leaf,
+        MaterialShape.Shape.Triangle,
+        MaterialShape.Shape.Square,
+        MaterialShape.Shape.Slanted,
+        MaterialShape.Shape.Arch,
+        MaterialShape.Shape.Puffy,
+        MaterialShape.Shape.PuffyDiamond,
+        MaterialShape.Shape.Bun,
+        MaterialShape.Shape.SoftBurst
+    ]
+
+    readonly property var shapeColors: [
+        Appearance.colors.colPrimaryContainer,
+        Appearance.colors.colSecondaryContainer,
+        Appearance.colors.colTertiaryContainer,
+        Appearance.colors.colSurfaceContainerHigh,
+        Appearance.colors.colSurfaceContainerHighest
+    ]
+
+    function matchesCategory(entry, cat) {
+        if (cat === "All") return true;
+        const text = (entry.name + " " + (entry.id ?? "") + " " + (entry.comment ?? "")).toLowerCase();
+        if (cat === "Work") {
+            return text.match(/office|word|writer|calc|sheet|presentation|slide|code|dev|editor|project|kate|nvim|emacs|idea|studio|work|pdf/) !== null;
+        } else if (cat === "Social") {
+            return text.match(/network|chat|message|messenger|social|discord|telegram|slack|signal|element|matrix|email|mail|thunderbird|social|browser|firefox|chrome|zen|vesktop|web/) !== null;
+        } else if (cat === "Tools") {
+            return text.match(/utility|tool|calc|clock|counter|convert|archiv|terminal|foot|kitty|alacritty|wezterm|ghostty|hread|gnome-calculator|st/) !== null;
+        } else if (cat === "Media") {
+            return text.match(/audio|video|music|player|mpv|vlc|spotify|cider|rhythmbox|gimp|inkscape|blender|draw|photo|gallery|media|obs|camera|feh|imv/) !== null;
+        } else if (cat === "System") {
+            return text.match(/system|setting|config|control|manager|file|nemo|nautilus|thunar|dolphin|htop|btop|gparted|btrfs|store|discover/) !== null;
+        }
+        return true;
+    }
+
+    function getShapeForApp(index, name) {
+        let codeSum = 0;
+        for (let i = 0; i < name.length; i++) {
+            codeSum += name.charCodeAt(i);
+        }
+        return organicShapes[(index + codeSum) % organicShapes.length];
+    }
+
+    function getColorForApp(index, name) {
+        let codeSum = 0;
+        for (let i = 0; i < name.length; i++) {
+            codeSum += name.charCodeAt(i);
+        }
+        return shapeColors[(index + codeSum) % shapeColors.length];
+    }
+
+    property var items: {
+        if (root.showResults)
+            return LauncherSearch.results ?? [];
+        return AppSearch.list
+            .slice()
+            .filter(entry => root.matchesCategory(entry, root.activeCategory))
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .map(entry => ({
+                name: entry.name,
+                iconName: entry.icon,
+                iconType: LauncherSearchResult.IconType.System,
+                execute: () => {
+                    if (!entry.runInTerminal)
+                        entry.execute();
+                    else
+                        Quickshell.execDetached(["bash", "-c", `${Config.options.apps.terminal} -e '${StringUtils.shellSingleQuoteEscape(entry.command.join(' '))}'`]);
+                }
+            }));
+    }
+
+    implicitWidth: root.tileSize * root.gridColumns + Appearance.sizes.elevationMargin * 2 + 48
+    implicitHeight: 700 + Appearance.sizes.elevationMargin * 2
 
     function focusFirstItem() {
-        appResults.currentIndex = 0;
+        grid.currentIndex = 0;
     }
 
     function focusSearchInput() {
         searchBar.forceFocus();
     }
 
-    function disableExpandAnimation() {
-        searchBar.animateWidth = false;
-    }
+    function disableExpandAnimation() {}
 
     function cancelSearch() {
-        searchBar.searchInput.text = ""; 
+        searchBar.searchInput.text = "";
         LauncherSearch.query = "";
-        searchBar.animateWidth = true;
+        root.activeCategory = "All";
     }
 
     function setSearchingText(text) {
@@ -47,52 +130,36 @@ Item { // Wrapper
         LauncherSearch.query = text;
     }
 
+    function launch(item) {
+        if (!item?.execute)
+            return;
+        GlobalStates.overviewOpen = false;
+        item.execute();
+    }
+
     Keys.onPressed: event => {
-        // Prevent Esc and Backspace from registering
         if (event.key === Qt.Key_Escape)
             return;
 
-        // Handle Backspace: focus and delete character if not focused
         if (event.key === Qt.Key_Backspace) {
             if (!searchBar.searchInput.activeFocus) {
                 root.focusSearchInput();
-                if (event.modifiers & Qt.ControlModifier) {
-                    // Delete word before cursor
-                    let text = searchBar.searchInput.text;
-                    let pos = searchBar.searchInput.cursorPosition;
-                    if (pos > 0) {
-                        // Find the start of the previous word
-                        let left = text.slice(0, pos);
-                        let match = left.match(/(\s*\S+)\s*$/);
-                        let deleteLen = match ? match[0].length : 1;
-                        searchBar.searchInput.text = text.slice(0, pos - deleteLen) + text.slice(pos);
-                        searchBar.searchInput.cursorPosition = pos - deleteLen;
-                    }
-                } else {
-                    // Delete character before cursor if any
-                    if (searchBar.searchInput.cursorPosition > 0) {
-                        searchBar.searchInput.text = searchBar.searchInput.text.slice(0, searchBar.searchInput.cursorPosition - 1) + searchBar.searchInput.text.slice(searchBar.searchInput.cursorPosition);
-                        searchBar.searchInput.cursorPosition -= 1;
-                    }
+                let ti = searchBar.searchInput;
+                if (ti.cursorPosition > 0) {
+                    ti.text = ti.text.slice(0, ti.cursorPosition - 1) + ti.text.slice(ti.cursorPosition);
                 }
-                // Always move cursor to end after programmatic edit
-                searchBar.searchInput.cursorPosition = searchBar.searchInput.text.length;
+                ti.cursorPosition = ti.text.length;
                 event.accepted = true;
             }
-            // If already focused, let TextField handle it
             return;
         }
 
-        // Only handle visible printable characters (ignore control chars, arrows, etc.)
-        if (event.text && event.text.length === 1 && event.key !== Qt.Key_Enter && event.key !== Qt.Key_Return && event.key !== Qt.Key_Delete && event.text.charCodeAt(0) >= 0x20) // ignore control chars like Backspace, Tab, etc.
-        {
+        if (event.text && event.text.length === 1 && event.key !== Qt.Key_Enter && event.key !== Qt.Key_Return && event.key !== Qt.Key_Delete && event.text.charCodeAt(0) >= 0x20) {
             if (!searchBar.searchInput.activeFocus) {
                 root.focusSearchInput();
-                // Insert the character at the cursor position
-                searchBar.searchInput.text = searchBar.searchInput.text.slice(0, searchBar.searchInput.cursorPosition) + event.text + searchBar.searchInput.text.slice(searchBar.searchInput.cursorPosition);
-                searchBar.searchInput.cursorPosition += 1;
+                searchBar.searchInput.text += event.text;
+                searchBar.searchInput.cursorPosition = searchBar.searchInput.text.length;
                 event.accepted = true;
-                root.focusFirstItem();
             }
         }
     }
@@ -100,7 +167,8 @@ Item { // Wrapper
     StyledRectangularShadow {
         target: searchWidgetContent
     }
-    Rectangle { // Background
+
+    Rectangle { // Main Glassmorphic Container
         id: searchWidgetContent
         anchors {
             top: parent.top
@@ -108,121 +176,211 @@ Item { // Wrapper
             topMargin: Appearance.sizes.elevationMargin
         }
         clip: true
-        implicitWidth: columnLayout.implicitWidth
-        implicitHeight: columnLayout.implicitHeight
-        radius: searchBar.height / 2 + searchBar.verticalPadding
+        implicitWidth: root.implicitWidth - Appearance.sizes.elevationMargin * 2
+        implicitHeight: root.implicitHeight - Appearance.sizes.elevationMargin * 2
+        radius: 28
         color: Appearance.colors.colBackgroundSurfaceContainer
-
-        Behavior on implicitHeight {
-            id: searchHeightBehavior
-            enabled: GlobalStates.overviewOpen && root.showResults
-            animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
-        }
+        border.color: ColorUtils.transparentize(Appearance.colors.colOutline, 0.6)
+        border.width: 1
 
         ColumnLayout {
-            id: columnLayout
-            anchors {
-                top: parent.top
-                horizontalCenter: parent.horizontalCenter
-            }
-            spacing: 0
-
-            // clip: true
-            layer.enabled: true
-            layer.effect: OpacityMask {
-                maskSource: Rectangle {
-                    width: searchWidgetContent.width
-                    height: searchWidgetContent.width
-                    radius: searchWidgetContent.radius
-                }
-            }
+            anchors.fill: parent
+            anchors.margins: 18
+            spacing: 14
 
             SearchBar {
                 id: searchBar
-                property real verticalPadding: 4
                 Layout.fillWidth: true
-                Layout.leftMargin: 10
-                Layout.rightMargin: 4
-                Layout.topMargin: verticalPadding
-                Layout.bottomMargin: verticalPadding
+                Layout.alignment: Qt.AlignHCenter
+
                 Synchronizer on searchingText {
                     property alias source: root.searchingText
                 }
+
+                onSubmitted: root.launch(root.items[Math.max(0, grid.currentIndex)])
+
+                Component.onCompleted: {
+                    searchInput.Keys.downPressed.connect(() => {
+                        grid.forceActiveFocus();
+                        grid.currentIndex = 0;
+                    });
+                }
             }
 
-            Rectangle {
-                // Separator
-                visible: root.showResults
-                Layout.fillWidth: true
-                height: 1
-                color: Appearance.colors.colOutlineVariant
+            // Category Filter Pills Bar
+            RowLayout {
+                id: categoriesRow
+                Layout.alignment: Qt.AlignHCenter
+                visible: !root.showResults
+                spacing: 10
+
+                Repeater {
+                    model: root.categories
+
+                    delegate: RippleButton {
+                        id: catBtn
+                        required property string modelData
+                        readonly property bool isActive: root.activeCategory === modelData
+
+                        buttonRadius: 18
+                        padding: 0
+                        leftPadding: 16
+                        rightPadding: 16
+                        topPadding: 0
+                        bottomPadding: 0
+                        implicitHeight: 36
+
+                        scale: catBtn.down ? 0.88 : (catBtn.hovered ? 1.05 : 1.0)
+                        Behavior on scale {
+                            NumberAnimation {
+                                duration: catBtn.down ? 90 : 250
+                                easing.type: catBtn.down ? Easing.OutCubic : Easing.OutBack
+                                easing.overshoot: 1.4
+                            }
+                        }
+
+                        colBackground: isActive ? Appearance.colors.colPrimary : Appearance.colors.colLayer1
+                        colBackgroundHover: isActive ? Appearance.colors.colPrimaryHover : Appearance.colors.colLayer2
+                        colRipple: Appearance.colors.colPrimaryContainer
+
+                        onClicked: root.activeCategory = modelData
+
+                        contentItem: StyledText {
+                            text: catBtn.modelData
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                            font.pixelSize: Appearance.font.pixelSize.normal
+                            font.weight: catBtn.isActive ? Font.Bold : Font.Normal
+                            color: catBtn.isActive ? Appearance.colors.colOnPrimary : Appearance.colors.colOnSurface
+                        }
+                    }
+                }
             }
 
-            ListView { // App results
-                id: appResults
-                visible: root.showResults
+            // App Grid with Organic Shapes
+            GridView {
+                id: grid
                 Layout.fillWidth: true
-                implicitHeight: Math.min(600, appResults.contentHeight + topMargin + bottomMargin)
+                Layout.fillHeight: true
                 clip: true
-                topMargin: 10
-                bottomMargin: 10
-                spacing: 2
-                KeyNavigation.up: searchBar
-                highlightMoveDuration: 100
+                cellWidth: Math.floor(width / root.gridColumns)
+                cellHeight: root.tileHeight
+                model: root.items
+                currentIndex: 0
+                highlightMoveDuration: 120
+                boundsBehavior: Flickable.StopAtBounds
 
-                onFocusChanged: {
-                    if (focus)
-                        appResults.currentIndex = 1;
-                }
+                ScrollBar.vertical: StyledScrollBar {}
 
-                Connections {
-                    target: root
-                    function onSearchingTextChanged() {
-                        if (appResults.count > 0)
-                            appResults.currentIndex = 0;
+                Keys.onPressed: event => {
+                    if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                        root.launch(root.items[grid.currentIndex]);
+                        event.accepted = true;
+                    } else if (event.key === Qt.Key_Up && grid.currentIndex < root.gridColumns) {
+                        root.focusSearchInput();
+                        event.accepted = true;
                     }
                 }
 
-                Timer {
-                    id: debounceTimer
-                    interval: root.typingDebounceInterval
-                    onTriggered: {
-                        resultModel.values = LauncherSearch.results ?? [];
-                    }
-                }
-
-                Connections {
-                    target: LauncherSearch
-                    function onResultsChanged() {
-                        resultModel.values = LauncherSearch.results.slice(0, root.typingResultLimit);
-                        root.focusFirstItem();
-                        debounceTimer.restart();
-                    }
-                }
-
-                model: ScriptModel {
-                    id: resultModel
-                    objectProp: "key"
-                }
-
-                delegate: SearchItem {
-                    id: searchItem
-                    // The selectable item for each search result
+                delegate: Item {
+                    id: tileWrap
+                    required property int index
                     required property var modelData
-                    anchors.left: parent?.left
-                    anchors.right: parent?.right
-                    entry: modelData
-                    query: StringUtils.cleanOnePrefix(root.searchingText, [Config.options.search.prefix.action, Config.options.search.prefix.app, Config.options.search.prefix.clipboard, Config.options.search.prefix.emojis, Config.options.search.prefix.symbols, Config.options.search.prefix.math, Config.options.search.prefix.shellCommand, Config.options.search.prefix.webSearch])
+                    width: grid.cellWidth
+                    height: grid.cellHeight
+                    readonly property bool selected: tileMouse.containsMouse || (GridView.isCurrentItem && grid.activeFocus)
+                    readonly property var shapeType: root.getShapeForApp(index, modelData.name)
+                    readonly property color shapeColor: root.getColorForApp(index, modelData.name)
 
-                    Keys.onPressed: event => {
-                        if (event.key === Qt.Key_Tab) {
-                            if (LauncherSearch.results.length === 0)
-                                return;
-                            const tabbedText = searchItem.modelData.name;
-                            LauncherSearch.query = tabbedText;
-                            searchBar.searchInput.text = tabbedText;
-                            event.accepted = true;
-                            root.focusSearchInput();
+                    MouseArea {
+                        id: tileMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.launch(tileWrap.modelData)
+                    }
+
+                    ColumnLayout {
+                        anchors.fill: parent
+                        anchors.margins: 4
+                        spacing: 8
+
+                        // Organic Material Shape Frame
+                        Item {
+                            Layout.alignment: Qt.AlignHCenter
+                            implicitWidth: 74
+                            implicitHeight: 74
+                            scale: tileMouse.pressed ? 0.85 : (tileWrap.selected ? 1.08 : 1.0)
+
+                            Behavior on scale {
+                                NumberAnimation {
+                                    duration: tileMouse.pressed ? 90 : 280
+                                    easing.type: tileMouse.pressed ? Easing.OutCubic : Easing.OutBack
+                                    easing.overshoot: 1.5
+                                }
+                            }
+
+                            MaterialShape {
+                                id: shapeCanvas
+                                anchors.fill: parent
+                                shape: tileWrap.shapeType
+                                color: tileWrap.selected ? Appearance.colors.colPrimaryContainerHover : tileWrap.shapeColor
+                                borderWidth: 0
+
+                                Behavior on color {
+                                    animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                                }
+                            }
+
+                            // App Icon
+                            Loader {
+                                anchors.centerIn: parent
+                                sourceComponent: tileWrap.modelData.iconType === LauncherSearchResult.IconType.Material
+                                    ? materialIcon
+                                    : (tileWrap.modelData.iconType === LauncherSearchResult.IconType.Text ? textIcon : systemIcon)
+
+                                Component {
+                                    id: systemIcon
+                                    IconImage {
+                                        implicitSize: root.iconSize
+                                        source: Quickshell.iconPath(tileWrap.modelData.iconName, "image-missing")
+                                    }
+                                }
+                                Component {
+                                    id: materialIcon
+                                    MaterialSymbol {
+                                        iconSize: root.iconSize
+                                        text: tileWrap.modelData.iconName
+                                        color: tileWrap.selected ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnSurface
+                                    }
+                                }
+                                Component {
+                                    id: textIcon
+                                    StyledText {
+                                        font.pixelSize: root.iconSize
+                                        text: tileWrap.modelData.iconName
+                                        color: tileWrap.selected ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnSurface
+                                    }
+                                }
+                            }
+                        }
+
+                        // App Label Text
+                        StyledText {
+                            Layout.fillWidth: true
+                            Layout.leftMargin: 2
+                            Layout.rightMargin: 2
+                            horizontalAlignment: Text.AlignHCenter
+                            maximumLineCount: 1
+                            elide: Text.ElideRight
+                            font.pixelSize: Appearance.font.pixelSize.small
+                            font.weight: tileWrap.selected ? Font.Bold : Font.Normal
+                            color: tileWrap.selected ? Appearance.colors.colPrimary : Appearance.colors.colOnSurface
+                            text: tileWrap.modelData.name
+
+                            Behavior on color {
+                                animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                            }
                         }
                     }
                 }
@@ -230,3 +388,6 @@ Item { // Wrapper
         }
     }
 }
+
+
+
