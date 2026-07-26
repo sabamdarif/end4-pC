@@ -141,6 +141,7 @@ Singleton {
 
             property JsonObject audio: JsonObject {
                 // Values in %
+                property bool overamplify: false
                 property JsonObject protection: JsonObject {
                     // Prevent sudden bangs
                     property bool enable: false
@@ -733,6 +734,8 @@ Singleton {
             property JsonObject sounds: JsonObject {
                 property bool battery: false
                 property bool pomodoro: false
+                property bool notification: false
+                property bool volumeChanged: false
                 property string theme: "freedesktop"
             }
 

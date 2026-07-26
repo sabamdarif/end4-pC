@@ -16,6 +16,7 @@ Singleton {
     property PwNode sink: Pipewire.defaultAudioSink
     property PwNode source: Pipewire.defaultAudioSource
     readonly property real hardMaxValue: 2.00 // People keep joking about setting volume to 5172% so...
+    readonly property real maxVolume: Config.options.audio.overamplify ? 1.5 : 1.0
     property string audioTheme: Config.options.sounds.theme
     property real value: sink?.audio.volume ?? 0
     
@@ -60,7 +61,7 @@ Singleton {
     function incrementVolume() {
         const currentVolume = Audio.value;
         const step = currentVolume < 0.1 ? 0.01 : 0.02 || 0.2;
-        Audio.sink.audio.volume = Math.min(1, Audio.sink.audio.volume + step);
+        Audio.sink.audio.volume = Math.min(root.maxVolume, Audio.sink.audio.volume + step);
     }
     
     function decrementVolume() {
@@ -114,26 +115,52 @@ Singleton {
         }
     }
 
+    Timer { // Debounce so scrolling doesn't spam the sound
+        id: volumeChangedSoundTimer
+        interval: 90
+        onTriggered: root.playSystemSound("audio-volume-change")
+    }
+
+    Connections { // Volume changed feedback sound
+        target: sink?.audio ?? null
+        property bool lastReady: false
+        function onVolumeChanged() {
+            const newVolume = sink.audio.volume;
+            if (isNaN(newVolume) || newVolume === undefined || newVolume === null) {
+                lastReady = false;
+                return;
+            }
+            if (!lastReady) { // Skip startup/initial value
+                lastReady = true;
+                return;
+            }
+            if (!Config.options.sounds.volumeChanged) return;
+            volumeChangedSoundTimer.restart();
+        }
+    }
+
     function playSystemSound(soundName) {
-        const ogaPath = `/usr/share/sounds/${root.audioTheme}/stereo/${soundName}.oga`;
-        const oggPath = `/usr/share/sounds/${root.audioTheme}/stereo/${soundName}.ogg`;
-
-        // Try playing .oga first
-        let command = [
-            "ffplay",
-            "-nodisp",
-            "-autoexit",
-            ogaPath
-        ];
-        Quickshell.execDetached(command);
-
-        // Also try playing .ogg (ffplay will just fail silently if file doesn't exist)
-        command = [
-            "ffplay",
-            "-nodisp",
-            "-autoexit",
-            oggPath
-        ];
-        Quickshell.execDetached(command);
+        // Prefer canberra-gtk-play: it resolves sound themes and fallbacks per the
+        // XDG sound theme spec by itself. Otherwise resolve the theme dir manually
+        // (configured theme -> system/GNOME theme -> freedesktop) and play the file.
+        const script = `
+snd="$1"; theme="$2"
+if command -v canberra-gtk-play >/dev/null 2>&1; then
+    if [ -n "$theme" ]; then
+        exec canberra-gtk-play -i "$snd" --property=canberra.xdg-theme.name="$theme"
+    fi
+    exec canberra-gtk-play -i "$snd"
+fi
+[ -d "/usr/share/sounds/$theme/stereo" ] || theme="$(gsettings get org.gnome.desktop.sound theme-name 2>/dev/null | tr -d \\')"
+[ -d "/usr/share/sounds/$theme/stereo" ] || theme="freedesktop"
+for f in "/usr/share/sounds/$theme/stereo/$snd.oga" "/usr/share/sounds/$theme/stereo/$snd.ogg" "/usr/share/sounds/freedesktop/stereo/$snd.oga"; do
+    if [ -f "$f" ]; then
+        if command -v ffplay >/dev/null 2>&1; then exec ffplay -nodisp -autoexit -loglevel quiet "$f"; fi
+        if command -v pw-play >/dev/null 2>&1; then exec pw-play "$f"; fi
+        if command -v paplay >/dev/null 2>&1; then exec paplay "$f"; fi
+    fi
+done
+`;
+        Quickshell.execDetached(["bash", "-c", script, "playSystemSound", soundName, root.audioTheme]);
     }
 }

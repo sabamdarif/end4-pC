@@ -89,6 +89,7 @@ Singleton {
         { page: "Bar",       path: "BarConfig.qml" },
         { page: "Desktop",   path: "BackgroundConfig.qml" },
         { page: "Interface", path: "InterfaceConfig.qml" },
+        { page: "Sound",     path: "SoundConfig.qml" },
         { page: "Services",  path: "ServicesConfig.qml" },
         NiriData.isNiri
             ? { page: "Niri",     path: "NiriConfig.qml" }

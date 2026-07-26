@@ -2,6 +2,7 @@ pragma Singleton
 pragma ComponentBehavior: Bound
 
 import qs.modules.common
+import qs.services
 import qs
 import QtQuick
 import Quickshell
@@ -178,6 +179,7 @@ Singleton {
                     });
                 }
                 root.unread++;
+                if (Config.options.sounds.notification) Audio.playSystemSound("message-new-instant");
             }
             root.notify(newNotifObject);
             // console.log(notifToString(newNotifObject));

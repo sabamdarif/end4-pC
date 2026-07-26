@@ -50,7 +50,7 @@ Item {
     }
 
     onCurrentPageChanged: {
-        if (currentPage === 7) {
+        if (currentPage === 8) {
             if (SystemInfo.cpu === "") SystemInfo.refresh()
             Updates.refresh()
         }
@@ -62,6 +62,7 @@ Item {
         { name: Translation.tr("Bar"),        icon: "toast",          iconRotation: 180, component: Qt.resolvedUrl("pages/BarConfig.qml") },
         { name: Translation.tr("Desktop"),    icon: "texture",        component: Qt.resolvedUrl("pages/BackgroundConfig.qml") },
         { name: Translation.tr("Interface"),  icon: "bottom_app_bar", component: Qt.resolvedUrl("pages/InterfaceConfig.qml") },
+        { name: Translation.tr("Sound"),      icon: "volume_up",      component: Qt.resolvedUrl("pages/SoundConfig.qml") },
         { name: Translation.tr("Services"),   icon: "settings",       component: Qt.resolvedUrl("pages/ServicesConfig.qml") },
         NiriData.isNiri
             ? { name: Translation.tr("Niri"),     icon: "select_window_2",   component: Qt.resolvedUrl("pages/NiriConfig.qml") }
