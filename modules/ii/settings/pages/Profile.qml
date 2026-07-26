@@ -50,6 +50,8 @@ ContentPage {
         }
     }
 
+    Component.onCompleted: Users.refresh()
+
     ColumnLayout {
         id: mainLayout
         Layout.fillWidth: true
@@ -235,6 +237,331 @@ ContentPage {
                         ]
                     }
                 }
+            }
+        }
+
+        // ── Users ────────────────────────────────────────────────────────
+        ContentSection {
+            icon: "group"
+            shape: MaterialShape.Shape.Clover4Leaf
+            title: Translation.tr("Users")
+
+            // Dynamic list: NOT inside GroupedList (it reparents static
+            // children only) — card + ColumnLayout + Repeater instead
+            Rectangle {
+                Layout.fillWidth: true
+                implicitHeight: usersCol.implicitHeight + 20
+                radius: Appearance.rounding.normal
+                color: Appearance.colors.colLayer1
+
+                ColumnLayout {
+                    id: usersCol
+                    anchors { fill: parent; margins: 10 }
+                    spacing: 2
+
+                    StyledText {
+                        visible: Users.users.length === 0
+                        Layout.leftMargin: 8
+                        text: Translation.tr("No users found")
+                        color: Appearance.colors.colSubtext
+                    }
+
+                    Repeater {
+                        model: Users.users
+                        delegate: ColumnLayout {
+                            id: userRow
+                            required property var modelData
+                            property bool confirmingAdmin: false
+                            property bool confirmingDelete: false
+                            Layout.fillWidth: true
+                            spacing: 2
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: 10
+
+                                MaterialSymbol {
+                                    Layout.leftMargin: 8
+                                    text: userRow.modelData.isAdmin ? "shield_person" : "person"
+                                    iconSize: Appearance.font.pixelSize.huge
+                                    color: userRow.modelData.isCurrent ? Appearance.colors.colPrimary : Appearance.colors.colOnSecondaryContainer
+                                }
+
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 0
+
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 6
+
+                                        StyledText {
+                                            text: userRow.modelData.username
+                                            font.weight: Font.Medium
+                                            color: Appearance.colors.colOnSecondaryContainer
+                                        }
+                                        Rectangle {
+                                            visible: userRow.modelData.isCurrent
+                                            color: Appearance.colors.colPrimaryContainer
+                                            radius: Appearance.rounding.full
+                                            implicitWidth: youBadgeText.implicitWidth + 12
+                                            implicitHeight: youBadgeText.implicitHeight + 4
+                                            StyledText {
+                                                id: youBadgeText
+                                                anchors.centerIn: parent
+                                                text: Translation.tr("you")
+                                                font.pixelSize: Appearance.font.pixelSize.smaller
+                                                color: Appearance.colors.colOnPrimaryContainer
+                                            }
+                                        }
+                                        Rectangle {
+                                            visible: userRow.modelData.isAdmin
+                                            color: Appearance.colors.colSecondaryContainer
+                                            radius: Appearance.rounding.full
+                                            implicitWidth: adminBadgeText.implicitWidth + 12
+                                            implicitHeight: adminBadgeText.implicitHeight + 4
+                                            StyledText {
+                                                id: adminBadgeText
+                                                anchors.centerIn: parent
+                                                text: Translation.tr("admin")
+                                                font.pixelSize: Appearance.font.pixelSize.smaller
+                                                color: Appearance.colors.colOnSecondaryContainer
+                                            }
+                                        }
+                                        Item { Layout.fillWidth: true }
+                                    }
+
+                                    StyledText {
+                                        Layout.fillWidth: true
+                                        font.pixelSize: Appearance.font.pixelSize.smaller
+                                        color: Appearance.colors.colSubtext
+                                        elide: Text.ElideRight
+                                        text: {
+                                            let parts = [Translation.tr("UID %1").arg(userRow.modelData.uid)]
+                                            if (userRow.modelData.fullName !== "") parts.push(userRow.modelData.fullName)
+                                            parts.push(userRow.modelData.home)
+                                            return parts.join(" • ")
+                                        }
+                                    }
+                                }
+
+                                // Admin toggle, two-step confirm. De-admining
+                                // yourself is refused (service guard) — hide it.
+                                RippleButtonWithIcon {
+                                    visible: !userRow.confirmingAdmin && !userRow.confirmingDelete
+                                        && !(userRow.modelData.isCurrent && userRow.modelData.isAdmin)
+                                    materialIcon: userRow.modelData.isAdmin ? "remove_moderator" : "add_moderator"
+                                    mainText: ""
+                                    enabled: !Users.actionRunning
+                                    onClicked: userRow.confirmingAdmin = true
+                                    StyledToolTip {
+                                        text: userRow.modelData.isAdmin
+                                            ? Translation.tr("Remove admin rights (wheel group)")
+                                            : Translation.tr("Make administrator (wheel group)")
+                                    }
+                                }
+                                DialogButton {
+                                    visible: userRow.confirmingAdmin
+                                    buttonText: userRow.modelData.isAdmin
+                                        ? Translation.tr("Remove admin from %1?").arg(userRow.modelData.username)
+                                        : Translation.tr("Make %1 admin?").arg(userRow.modelData.username)
+                                    colText: userRow.modelData.isAdmin ? Appearance.m3colors.m3error : Appearance.colors.colPrimary
+                                    onClicked: {
+                                        userRow.confirmingAdmin = false
+                                        Users.setAdmin(userRow.modelData.username, !userRow.modelData.isAdmin)
+                                    }
+                                }
+                                DialogButton {
+                                    visible: userRow.confirmingAdmin
+                                    buttonText: Translation.tr("Cancel")
+                                    onClicked: userRow.confirmingAdmin = false
+                                }
+
+                                // Delete (never for the current user)
+                                RippleButtonWithIcon {
+                                    visible: !userRow.modelData.isCurrent && !userRow.confirmingAdmin && !userRow.confirmingDelete
+                                    materialIcon: "delete"
+                                    mainText: ""
+                                    enabled: !Users.actionRunning
+                                    onClicked: userRow.confirmingDelete = true
+                                    StyledToolTip {
+                                        text: Translation.tr("Delete this user")
+                                    }
+                                }
+                            }
+
+                            // Delete confirm area — destructive, so it spells
+                            // out the username and what will happen
+                            ColumnLayout {
+                                visible: userRow.confirmingDelete
+                                Layout.fillWidth: true
+                                Layout.leftMargin: 40
+                                Layout.rightMargin: 8
+                                Layout.bottomMargin: 6
+                                spacing: 4
+
+                                StyledText {
+                                    Layout.fillWidth: true
+                                    wrapMode: Text.Wrap
+                                    color: Appearance.m3colors.m3error
+                                    text: Translation.tr("This permanently deletes the user account \"%1\". This cannot be undone.").arg(userRow.modelData.username)
+                                }
+                                ConfigSwitch {
+                                    id: removeHomeSwitch
+                                    buttonIcon: "folder_delete"
+                                    text: Translation.tr("Also delete the home directory (%1)").arg(userRow.modelData.home)
+                                    checked: false
+                                }
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    Item { Layout.fillWidth: true }
+                                    DialogButton {
+                                        buttonText: Translation.tr("Cancel")
+                                        onClicked: userRow.confirmingDelete = false
+                                    }
+                                    DialogButton {
+                                        buttonText: Translation.tr("Delete %1").arg(userRow.modelData.username)
+                                        colText: Appearance.m3colors.m3error
+                                        onClicked: {
+                                            userRow.confirmingDelete = false
+                                            Users.deleteUser(userRow.modelData.username, removeHomeSwitch.checked)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            GroupedList {
+                // Change password (current user) — reuses the existing
+                // Config.options.apps.changePassword terminal flow
+                RowLayout {
+                    spacing: 10
+                    Layout.leftMargin: 8
+                    Layout.rightMargin: 8
+
+                    MaterialSymbol {
+                        text: "password"
+                        iconSize: Appearance.font.pixelSize.larger
+                        color: Appearance.colors.colOnSecondaryContainer
+                    }
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 0
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: Translation.tr("Change password")
+                            color: Appearance.colors.colOnSecondaryContainer
+                        }
+                        StyledText {
+                            Layout.fillWidth: true
+                            font.pixelSize: Appearance.font.pixelSize.smaller
+                            color: Appearance.colors.colSubtext
+                            text: Translation.tr("Opens a terminal running passwd for %1").arg(Users.currentUsername !== "" ? Users.currentUsername : SystemInfo.username)
+                        }
+                    }
+                    RippleButtonWithIcon {
+                        materialIcon: "terminal"
+                        mainText: Translation.tr("Change")
+                        onClicked: Session.changePassword()
+                    }
+                }
+            }
+
+            ContentSubsection {
+                title: Translation.tr("Create user")
+
+                GroupedList {
+                    ConfigTextArea {
+                        id: newUserField
+                        Layout.fillWidth: true
+                        buttonIcon: "person_add"
+                        text: Translation.tr("Username")
+                        placeholderText: Translation.tr("lowercase letters, digits, - and _")
+                        onValueChanged: createUserRow.confirming = false
+                    }
+                    ConfigSwitch {
+                        id: newUserAdminSwitch
+                        buttonIcon: "shield_person"
+                        text: Translation.tr("Administrator (wheel group)")
+                        checked: false
+                    }
+                    StyledText {
+                        visible: newUserField.value.trim() !== "" && !Users.isValidUsername(newUserField.value.trim())
+                        Layout.leftMargin: 8
+                        Layout.fillWidth: true
+                        wrapMode: Text.Wrap
+                        color: Appearance.m3colors.m3error
+                        font.pixelSize: Appearance.font.pixelSize.smaller
+                        text: Translation.tr("Invalid username: must start with a lowercase letter or _, followed by lowercase letters, digits, - or _")
+                    }
+                    StyledText {
+                        visible: Users.userExists(newUserField.value.trim())
+                        Layout.leftMargin: 8
+                        Layout.fillWidth: true
+                        color: Appearance.m3colors.m3error
+                        font.pixelSize: Appearance.font.pixelSize.smaller
+                        text: Translation.tr("A user with this name already exists")
+                    }
+                    RowLayout {
+                        id: createUserRow
+                        property bool confirming: false
+                        readonly property string newUsername: newUserField.value.trim()
+                        spacing: 10
+                        Layout.leftMargin: 8
+                        Layout.rightMargin: 8
+
+                        RippleButtonWithIcon {
+                            visible: !createUserRow.confirming
+                            materialIcon: "person_add"
+                            mainText: Translation.tr("Create user")
+                            enabled: !Users.actionRunning
+                                && Users.isValidUsername(createUserRow.newUsername)
+                                && !Users.userExists(createUserRow.newUsername)
+                            onClicked: createUserRow.confirming = true
+                        }
+                        DialogButton {
+                            visible: createUserRow.confirming
+                            buttonText: newUserAdminSwitch.checked
+                                ? Translation.tr("Create admin user \"%1\"?").arg(createUserRow.newUsername)
+                                : Translation.tr("Create user \"%1\"?").arg(createUserRow.newUsername)
+                            onClicked: {
+                                createUserRow.confirming = false
+                                if (Users.createUser(createUserRow.newUsername, newUserAdminSwitch.checked)) {
+                                    newUserField.value = ""
+                                    newUserAdminSwitch.checked = false
+                                }
+                            }
+                        }
+                        DialogButton {
+                            visible: createUserRow.confirming
+                            buttonText: Translation.tr("Cancel")
+                            onClicked: createUserRow.confirming = false
+                        }
+                        Item { Layout.fillWidth: true }
+                    }
+                }
+            }
+
+            StyledText {
+                visible: Users.lastActionOutput !== ""
+                Layout.leftMargin: 8
+                Layout.fillWidth: true
+                text: Users.lastActionOutput
+                font.pixelSize: Appearance.font.pixelSize.smaller
+                color: Appearance.colors.colSubtext
+                wrapMode: Text.Wrap
+            }
+
+            StyledText {
+                Layout.leftMargin: 8
+                Layout.fillWidth: true
+                text: Translation.tr("User changes use pkexec — a system authentication prompt will appear")
+                font.pixelSize: Appearance.font.pixelSize.smaller
+                color: Appearance.colors.colSubtext
+                wrapMode: Text.Wrap
             }
         }
 

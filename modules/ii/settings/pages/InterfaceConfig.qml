@@ -849,6 +849,55 @@ ContentPage {
         }
 
         ContentSection {
+            icon: "palette"
+            title: Translation.tr("System theming")
+            shape: MaterialShape.Shape.Slanted
+
+            GroupedList {
+                ConfigComboBox {
+                    buttonIcon: "interests"
+                    text: Translation.tr("Icon theme")
+                    model: SystemTheming.iconThemes.map(t => ({ displayName: t, value: t }))
+                    currentValue: SystemTheming.currentIconTheme
+                    onSelected: newValue => SystemTheming.applyIconTheme(newValue)
+                }
+                ConfigComboBox {
+                    buttonIcon: "brush"
+                    text: Translation.tr("GTK theme")
+                    description: Translation.tr("Base widget theme; colors come from wallpaper theming")
+                    model: SystemTheming.gtkThemes.map(t => ({ displayName: t, value: t }))
+                    currentValue: SystemTheming.currentGtkTheme
+                    onSelected: newValue => SystemTheming.applyGtkTheme(newValue)
+                }
+                ConfigComboBox {
+                    buttonIcon: "mouse"
+                    text: Translation.tr("Cursor theme")
+                    model: [{ displayName: Translation.tr("Default"), value: "" }]
+                        .concat(SystemTheming.cursorThemes.map(t => ({ displayName: t, value: t })))
+                    currentValue: SystemTheming.currentCursorTheme
+                    onSelected: newValue => SystemTheming.applyCursorTheme(newValue, SystemTheming.currentCursorSize)
+                }
+                ConfigSpinBox {
+                    id: cursorSizeSpin
+                    icon: "zoom_in"
+                    text: Translation.tr("Cursor size")
+                    value: SystemTheming.currentCursorSize
+                    from: 16; to: 64; stepSize: 2
+                    onValueChanged: {
+                        if (value === SystemTheming.currentCursorSize) return
+                        cursorSizeDebounceTimer.restart()
+                    }
+                    Timer {
+                        id: cursorSizeDebounceTimer
+                        interval: 500
+                        repeat: false
+                        onTriggered: SystemTheming.applyCursorTheme(SystemTheming.currentCursorTheme, cursorSizeSpin.value)
+                    }
+                }
+            }
+        }
+
+        ContentSection {
             icon: "colors"
             title: Translation.tr("Color generation")
             shape: MaterialShape.Shape.VerySunny
@@ -901,6 +950,62 @@ ContentPage {
                     value: Config.options.appearance.wallpaperTheming.terminalGenerationProps.termFgBoost * 100
                     from: 0; to: 100; stepSize: 10
                     onValueChanged: { Config.options.appearance.wallpaperTheming.terminalGenerationProps.termFgBoost = value / 100 }
+                }
+            }
+
+            ContentSubsection {
+                title: Translation.tr("App color templates (matugen)")
+
+                // Templates parsed live from ~/.config/matugen/config.toml.orig — nothing hardcoded
+                Rectangle {
+                    Layout.fillWidth: true
+                    implicitHeight: matugenTogglesCol.implicitHeight + 28
+                    radius: Appearance.rounding.normal
+                    color: Appearance.colors.colLayer1
+
+                    ColumnLayout {
+                        id: matugenTogglesCol
+                        anchors { fill: parent; margins: 14 }
+                        spacing: 4
+
+                        StyledText {
+                            visible: SystemTheming.matugenTemplates.length === 0
+                            Layout.leftMargin: 8
+                            text: Translation.tr("No matugen config found (~/.config/matugen/config.toml)")
+                            color: Appearance.colors.colSubtext
+                        }
+
+                        Repeater {
+                            model: SystemTheming.matugenTemplates
+                            delegate: ConfigSwitch {
+                                required property var modelData
+                                buttonIcon: "colors"
+                                text: modelData.name
+                                checked: SystemTheming.templateEnabled(modelData.name)
+                                onCheckedChanged: SystemTheming.setTemplateEnabled(modelData.name, checked)
+                            }
+                        }
+                    }
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    StyledText {
+                        Layout.leftMargin: 8
+                        Layout.fillWidth: true
+                        text: Translation.tr("Toggles apply on the next wallpaper change, or regenerate now")
+                        font.pixelSize: Appearance.font.pixelSize.smaller
+                        color: Appearance.colors.colSubtext
+                        wrapMode: Text.Wrap
+                    }
+                    RippleButtonWithIcon {
+                        Layout.rightMargin: 6
+                        Layout.preferredHeight: 40
+                        buttonRadius: Appearance.rounding.normal
+                        materialIcon: "refresh"
+                        mainText: Translation.tr("Regenerate now")
+                        onClicked: SystemTheming.regenerateColors()
+                    }
                 }
             }
         }

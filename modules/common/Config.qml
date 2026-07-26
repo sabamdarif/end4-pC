@@ -133,6 +133,8 @@ Singleton {
                         property bool forceDarkMode: false
                     }
                 }
+                // matugen template names (from config.toml.orig) excluded when regenerating config.toml
+                property list<string> matugenDisabled: []
                 property JsonObject palette: JsonObject {
                     property string type: "auto" // Allowed: auto, scheme-content, scheme-expressive, scheme-fidelity, scheme-fruit-salad, scheme-monochrome, scheme-neutral, scheme-rainbow, scheme-tonal-spot
                     property string accentColor: ""
@@ -212,6 +214,13 @@ Singleton {
                 property string terminal: "kitty -1" // This is only for shell actions
                 property string update: "kitty -1 --hold=yes fish -i -c 'pkexec pacman -Syu'"
                 property string volumeMixer: `~/.config/hypr/hyprland/scripts/launch_first_available.sh "pavucontrol-qt" "pavucontrol"`
+                // [{from, to}] — window app IDs remapped before bar/dock icon lookup
+                property list<var> idSubstitutions: []
+            }
+
+            property JsonObject cliphist: JsonObject {
+                // Applied via `cliphist store -max-items N` in the autostart entry
+                property int maxEntries: 750
             }
 
             property JsonObject background: JsonObject {

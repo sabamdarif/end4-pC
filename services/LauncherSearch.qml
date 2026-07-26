@@ -90,10 +90,13 @@ Singleton {
         { page: "Desktop",   path: "BackgroundConfig.qml" },
         { page: "Interface", path: "InterfaceConfig.qml" },
         { page: "Sound",     path: "SoundConfig.qml" },
+        { page: "Network",   path: "NetworkConfig.qml" },
+        { page: "Apps",      path: "AppsConfig.qml" },
         { page: "Services",  path: "ServicesConfig.qml" },
         NiriData.isNiri
             ? { page: "Niri",     path: "NiriConfig.qml" }
             : { page: "Hyprland", path: "HyprlandConfig.qml" },
+        { page: "Shortcuts", path: "ShortcutsConfig.qml" },
         { page: "About",     path: "About.qml" },
         { page: "Quick",     path: "QuickConfig.qml" },
     ]

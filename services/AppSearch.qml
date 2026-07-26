@@ -98,6 +98,19 @@ Singleton {
     function guessIcon(str) {
         if (!str || str.length == 0) return "image-missing";
 
+        // User-defined app ID substitutions (Settings > Apps) take precedence;
+        // the result continues down the pipeline so it can be another app id
+        // or a raw icon name
+        const userSubs = Config.options?.apps?.idSubstitutions ?? [];
+        for (const sub of userSubs) {
+            if (!sub?.from) continue;
+            if (sub.from === str || sub.from.toLowerCase() === str.toLowerCase()) {
+                str = sub.to ?? "";
+                break;
+            }
+        }
+        if (!str || str.length == 0) return "image-missing";
+
         // Quickshell's desktop entry lookup
         const entry = DesktopEntries.byId(str);
         if (entry) return entry.icon;

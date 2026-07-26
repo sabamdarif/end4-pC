@@ -43,9 +43,13 @@ ContentPage {
 
     Process {
         id: includeCheckProc
-        // ok = both include lines present and nothing but blanks/comments/includes after them
+        // ok = all include lines present and nothing but blanks/comments/includes after them
         command: ["sh", "-c", `cfg="$HOME/.config/niri/config.kdl"
-if ! grep -qs 'qssettings/shell.kdl' "$cfg" || ! grep -qs 'qssettings/outputs.kdl' "$cfg"; then echo missing
+missing=0
+for f in shell outputs autostart binds; do
+    grep -qs "qssettings/$f.kdl" "$cfg" || missing=1
+done
+if [ "$missing" = 1 ]; then echo missing
 elif awk '/qssettings\\/shell.kdl/ {found=1; next} found && NF && $0 !~ /qssettings/ && $0 !~ /^[ \\t]*\\/\\// {bad=1} END {exit bad}' "$cfg"; then echo ok
 else echo misplaced
 fi`]
@@ -61,8 +65,8 @@ fi`]
         command: ["sh", "-c", `cfg="$HOME/.config/niri/config.kdl"
 cp -L "$cfg" "$cfg.backup.$(date +%s)" || exit 1
 tmp=$(mktemp)
-grep -v 'qssettings/shell.kdl' "$cfg" | grep -v 'qssettings/outputs.kdl' > "$tmp"
-printf '\\ninclude optional=true "qssettings/shell.kdl"\\ninclude optional=true "qssettings/outputs.kdl"\\n' >> "$tmp"
+grep -vE 'qssettings/(shell|outputs|autostart|binds)\\.kdl' "$cfg" > "$tmp"
+printf '\\ninclude optional=true "qssettings/shell.kdl"\\ninclude optional=true "qssettings/outputs.kdl"\\ninclude optional=true "qssettings/autostart.kdl"\\ninclude optional=true "qssettings/binds.kdl"\\n' >> "$tmp"
 cat "$tmp" > "$cfg"
 rm -f "$tmp"`]
         onExited: includeCheckProc.running = true
@@ -608,26 +612,17 @@ rm -f "$tmp"`]
             shape: MaterialShape.Shape.Arrow
             title: Translation.tr("Cursor")
             GroupedList {
-                ConfigTextArea {
-                    id: cursorThemeField
-                    Layout.fillWidth: true
+                ConfigComboBox {
                     buttonIcon: "mouse"
                     text: Translation.tr("Cursor theme")
-                    placeholderText: Translation.tr("e.g., Adwaita (empty = default)")
-                    Component.onCompleted: value = NiriConfig.options.cursor.theme
-                    onValueChanged: cursorThemeDebounceTimer.restart()
-
-                    Timer {
-                        id: cursorThemeDebounceTimer
-                        interval: 1000
-                        repeat: false
-                        onTriggered: {
-                            NiriConfig.options.cursor.theme = cursorThemeField.value
-                        }
-                    }
+                    model: [{ displayName: Translation.tr("Default"), value: "" }]
+                        .concat(SystemTheming.cursorThemes.map(t => ({ displayName: t, value: t })))
+                    currentValue: NiriConfig.options.cursor.theme
+                    onSelected: newValue => SystemTheming.applyCursorTheme(newValue, NiriConfig.options.cursor.size)
                 }
 
                 ConfigSpinBox {
+                    id: cursorSizeSpin
                     icon: "zoom_in"
                     text: Translation.tr("Cursor size")
                     value: NiriConfig.options.cursor.size
@@ -635,6 +630,13 @@ rm -f "$tmp"`]
                     onValueChanged: {
                         if (value === NiriConfig.options.cursor.size) return
                         NiriConfig.options.cursor.size = value
+                        cursorSizeApplyTimer.restart()
+                    }
+                    Timer {
+                        id: cursorSizeApplyTimer
+                        interval: 500
+                        repeat: false
+                        onTriggered: SystemTheming.applyCursorTheme(NiriConfig.options.cursor.theme, cursorSizeSpin.value)
                     }
                 }
 
