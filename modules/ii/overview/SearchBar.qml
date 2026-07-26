@@ -30,12 +30,11 @@ Rectangle {
         searchInput.forceActiveFocus();
     }
 
-    enum SearchPrefixType { Action, App, Clipboard, Emojis, Symbols, Math, ShellCommand, WebSearch, Keybinds, DefaultSearch }
+    enum SearchPrefixType { Action, App, Emojis, Symbols, Math, ShellCommand, WebSearch, Keybinds, DefaultSearch }
 
     property var searchPrefixType: {
         if (root.searchingText.startsWith(Config.options.search.prefix.action)) return SearchBar.SearchPrefixType.Action;
         if (root.searchingText.startsWith(Config.options.search.prefix.app)) return SearchBar.SearchPrefixType.App;
-        if (root.searchingText.startsWith(Config.options.search.prefix.clipboard)) return SearchBar.SearchPrefixType.Clipboard;
         if (root.searchingText.startsWith(Config.options.search.prefix.emojis)) return SearchBar.SearchPrefixType.Emojis;
         if (root.searchingText.startsWith(Config.options.search.prefix.symbols)) return SearchBar.SearchPrefixType.Symbols;
         if (root.searchingText.startsWith(Config.options.search.prefix.math)) return SearchBar.SearchPrefixType.Math;
@@ -50,7 +49,6 @@ Rectangle {
         switch (prefixType) {
             case SearchBar.SearchPrefixType.Action: return "settings_suggest";
             case SearchBar.SearchPrefixType.App: return "apps";
-            case SearchBar.SearchPrefixType.Clipboard: return "content_paste_search";
             case SearchBar.SearchPrefixType.Emojis: return "add_reaction";
             case SearchBar.SearchPrefixType.Symbols: return "interests";
             case SearchBar.SearchPrefixType.Math: return "calculate";

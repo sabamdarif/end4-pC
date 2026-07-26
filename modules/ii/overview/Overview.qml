@@ -133,16 +133,6 @@ Scope {
         }
     }
 
-    function toggleClipboard() {
-        if (GlobalStates.overviewOpen && overviewScope.dontAutoCancelSearch) {
-            GlobalStates.overviewOpen = false;
-            return;
-        }
-        overviewScope.dontAutoCancelSearch = true;
-        panelWindow.setSearchingText(Config.options.search.prefix.clipboard);
-        GlobalStates.overviewOpen = true;
-    }
-
     function toggleEmojis() {
         if (GlobalStates.overviewOpen && overviewScope.dontAutoCancelSearch) {
             GlobalStates.overviewOpen = false;
@@ -181,8 +171,11 @@ Scope {
         function toggleReleaseInterrupt() {
             GlobalStates.superReleaseMightTrigger = false;
         }
-        function clipboardToggle() {
-            overviewScope.toggleClipboard();
+        function emojiToggle() {
+            overviewScope.toggleEmojis();
+        }
+        function symbolsToggle() {
+            overviewScope.toggleSymbols();
         }
     }
 
@@ -234,15 +227,6 @@ Scope {
             GlobalStates.superReleaseMightTrigger = false;
         }
     }
-    NiriSafeShortcut {
-        name: "overviewClipboardToggle"
-        description: "Toggle clipboard query on overview widget"
-
-        onPressed: {
-            overviewScope.toggleClipboard();
-        }
-    }
-
     NiriSafeShortcut {
         name: "overviewEmojiToggle"
         description: "Toggle emoji query on overview widget"

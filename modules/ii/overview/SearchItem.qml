@@ -33,8 +33,6 @@ RippleButton {
     property string itemClickActionName: entry?.verb ?? "Open"
     property string bigText: entry?.iconType === LauncherSearchResult.IconType.Text ? entry?.iconName ?? "" : ""
     property string materialSymbol: entry.iconType === LauncherSearchResult.IconType.Material ? entry?.iconName ?? "" : ""
-    property string cliphistRawString: entry?.rawValue ?? ""
-    property bool blurImage: entry?.blurImage ?? false
     
     visible: root.entryShown
     property int horizontalMargin: 10
@@ -193,23 +191,6 @@ RippleButton {
                 text: root.itemType
             }
             RowLayout {
-                Loader { // Checkmark for copied clipboard entry
-                    visible: itemName == Quickshell.clipboardText && root.cliphistRawString
-                    active: itemName == Quickshell.clipboardText && root.cliphistRawString
-                    sourceComponent: Rectangle {
-                        implicitWidth: activeText.implicitHeight
-                        implicitHeight: activeText.implicitHeight
-                        radius: Appearance.rounding.full
-                        color: Appearance.colors.colPrimary
-                        MaterialSymbol {
-                            id: activeText
-                            anchors.centerIn: parent
-                            text: "check"
-                            font.pixelSize: Appearance.font.pixelSize.normal
-                            color: Appearance.m3colors.m3onPrimary
-                        }
-                    }
-                }
                 Repeater { // Favicons for links
                     model: root.query == root.itemName ? [] : root.urls
                     Favicon {
@@ -237,16 +218,6 @@ RippleButton {
                 color: root.selected ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colSubtext
                 elide: Text.ElideRight
                 text: root.itemTags
-            }
-            Loader { // Clipboard image preview
-                active: root.cliphistRawString && Cliphist.entryIsImage(root.cliphistRawString)
-                sourceComponent: CliphistImage {
-                    Layout.fillWidth: true
-                    entry: root.cliphistRawString
-                    maxWidth: contentColumn.width
-                    maxHeight: 140
-                    blur: root.blurImage
-                }
             }
         }
 

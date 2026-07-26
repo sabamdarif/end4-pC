@@ -223,6 +223,12 @@ Singleton {
                 property int maxEntries: 750
             }
 
+            property JsonObject clipboard: JsonObject {
+                property bool showIndexNumbers: true
+                property int imagePreviewHeight: 68
+                property bool closeOnCopy: true
+            }
+
             property JsonObject background: JsonObject {
                 property string lockWall: ""
                 property bool widgetsLocked: false
@@ -653,7 +659,6 @@ Singleton {
                     property bool showDefaultActionsWithoutPrefix: true
                     property string action: "/"
                     property string app: ">"
-                    property string clipboard: ";"
                     property string emojis: ":"
                     property string keybinds: "<"
                     property string symbols: "."

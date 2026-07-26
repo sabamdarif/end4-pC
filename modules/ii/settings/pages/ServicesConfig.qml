@@ -189,20 +189,6 @@ ContentPage {
                         }
                         ConfigTextArea {
                             Layout.fillWidth: true
-                            buttonIcon: "content_paste"
-                            fieldWidth: 100
-                            text: Translation.tr("Clipboard")
-                            value: Config.options.search.prefix.clipboard
-                            onValueChanged: {
-                                Config.options.search.prefix.clipboard = value;
-                            }
-                        }
-                    }
-
-                    ConfigRow {
-                        uniform: true
-                        ConfigTextArea {
-                            Layout.fillWidth: true
                             buttonIcon: "mood"
                             fieldWidth: 100
                             text: Translation.tr("Emojis")

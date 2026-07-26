@@ -14,6 +14,12 @@ Rectangle {
     property real maxHeight
     property bool blur: false
     property string blurText: "Image hidden"
+    // Fill the whole maxWidth x maxHeight box and crop the overflow, instead of
+    // shrinking to the image's own aspect ratio. Used for list thumbnails.
+    property bool cropToFit: false
+    // Keep the decoded file around after this item goes away. List delegates get
+    // recycled constantly, and the decode cache is wiped on shell start anyway.
+    property bool keepDecoded: false
 
     property string imageDecodePath: Directories.cliphistDecode
     property string imageDecodeFileName: `${entryNumber}`
@@ -44,8 +50,8 @@ Rectangle {
 
     color: Appearance.colors.colLayer1
     radius: Appearance.rounding.small
-    implicitHeight: imageHeight * scale
-    implicitWidth: imageWidth * scale
+    implicitHeight: root.cropToFit ? root.maxHeight : imageHeight * scale
+    implicitWidth: root.cropToFit ? root.maxWidth : imageWidth * scale
 
     Component.onCompleted: {
         decodeImageProcess.running = true;
@@ -65,6 +71,8 @@ Rectangle {
     }
 
     Component.onDestruction: {
+        if (root.keepDecoded)
+            return;
         Quickshell.execDetached(["bash", "-c", `[ -f '${imageDecodeFilePath}' ] && rm -f '${imageDecodeFilePath}'`]);
     }
 
@@ -82,14 +90,14 @@ Rectangle {
         anchors.fill: parent
 
         source: Qt.resolvedUrl(root.source)
-        fillMode: Image.PreserveAspectFit
+        fillMode: root.cropToFit ? Image.PreserveAspectCrop : Image.PreserveAspectFit
         antialiasing: true
         asynchronous: true
 
-        width: root.imageWidth * root.scale
-        height: root.imageHeight * root.scale
-        sourceSize.width: width
-        sourceSize.height: height
+        // In crop mode only the height is constrained, so the decode keeps the source
+        // aspect ratio and the extra width is what gets cropped away.
+        sourceSize.width: root.cropToFit ? 0 : root.imageWidth * root.scale
+        sourceSize.height: root.cropToFit ? root.maxHeight * 2 : root.imageHeight * root.scale
     }
 
     Loader {
