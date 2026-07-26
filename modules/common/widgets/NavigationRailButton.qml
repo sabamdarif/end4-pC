@@ -48,7 +48,8 @@ TabButton {
             anchors.top: itemIconBackground.top
             anchors.left: itemIconBackground.left
             anchors.bottom: itemIconBackground.bottom
-            implicitWidth: root.visualWidth
+            // Full rail width, not the text width, so every pill matches
+            implicitWidth: root.width
             radius: Appearance.rounding.full
             color: toggled ? 
                 root.showToggledHighlight ?
@@ -67,7 +68,7 @@ TabButton {
                 }
                 PropertyChanges {
                     target: itemBackground
-                    implicitWidth: root.visualWidth
+                    implicitWidth: root.width
                 }
             }
             transitions: Transition {

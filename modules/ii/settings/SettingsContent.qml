@@ -17,6 +17,11 @@ Item {
     property int currentPage: 0
     property bool showingProfile: false
 
+    // Not a plain `width > 900` binding: width is 0 for the first frames, so the
+    // rail would start collapsed and animate open every time the window opens.
+    property bool railExpanded: true
+    onWidthChanged: if (width > 0) railExpanded = (width > 900)
+
     Connections {
         target: GlobalStates
         function onSettingsPageChanged() {
@@ -75,13 +80,24 @@ Item {
 
     Component.onCompleted: {
         Config.readWriteDelay = 0
-        Qt.callLater(() => {
-            for (let i = 0; i < root.pages.length; i++) {
-                let loader = pagesRepeater.itemAt(i)
-                if (loader) loader.active = true
+        preloadTimer.start()
+    }
+
+    // Preload every page so switching is instant, but one per frame — building all
+    // 12 in a single callLater froze the window for the whole startup.
+    Timer {
+        id: preloadTimer
+        interval: 16
+        repeat: true
+        property int nextPage: 0
+        onTriggered: {
+            const loader = pagesRepeater.itemAt(nextPage)
+            if (loader) loader.active = true
+            if (++nextPage >= root.pages.length) {
+                if (profileLoader) profileLoader.active = true
+                running = false
             }
-            if (profileLoader) profileLoader.active = true
-        })
+        }
     }
 
     ColumnLayout {
@@ -111,7 +127,7 @@ Item {
                     id: navRail
                     anchors { left: parent.left; top: parent.top; bottom: parent.bottom; leftMargin: 20 }
                     spacing: 10
-                    expanded: root.width > 900
+                    expanded: root.railExpanded
 
                     RowLayout {
                         visible: navRail.expanded
@@ -255,6 +271,10 @@ Item {
                             }
                         }
                     }
+
+                    // Soaks up leftover vertical space. Without it the ColumnLayout
+                    // spreads the slack across every cell and inflates the gaps.
+                    Item { Layout.fillHeight: true }
                 }
             }
 

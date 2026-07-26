@@ -24,7 +24,7 @@ Item {
         radius: Appearance.rounding.full
         color: root.colToggled
         implicitHeight: root.expanded ? itemHeight : baseHighlightHeight
-        implicitWidth: tabBarColumn?.children[root.currentIndex]?.visualWidth ?? 100
+        implicitWidth: tabBarColumn.width
 
         Behavior on anchors.topMargin {
             NumberAnimation {
