@@ -6,123 +6,151 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Wayland
-import Quickshell.Hyprland
 import qs
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
-import qs.modules.common.functions as CF
 
 Scope {
     id: root
 
+    // True when an uncommented prefer-no-csd is found in the niri config.
+    // In that case the window draws no titlebar, like every other no-csd client.
+    property bool preferNoCsd: false
+
     Component.onCompleted: {
         GlobalStates.settingsOpen = false;
+        if (NiriData.isNiri) csdCheckProc.running = true;
     }
 
-    PanelWindow {
-        id: panelWindow
-        visible: GlobalStates.settingsOpen
-
-        function hide() {
-            GlobalStates.settingsOpen = false;
+    Process {
+        id: csdCheckProc
+        command: ["sh", "-c", "grep -hsE '^\\s*prefer-no-csd\\s*$' ~/.config/niri/config.kdl ~/.config/niri/config.d/*.kdl"]
+        stdout: StdioCollector {
+            onStreamFinished: root.preferNoCsd = text.trim().length > 0
         }
+    }
 
-        exclusiveZone: 0
-        WlrLayershell.namespace: "quickshell:settings"
-        WlrLayershell.layer: WlrLayer.Overlay
-        WlrLayershell.keyboardFocus: GlobalStates.settingsOpen ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
-        color: "transparent"
+    Loader {
+        id: windowLoader
+        active: GlobalStates.settingsOpen
 
-        anchors {
-            top: true
-            bottom: true
-            left: true
-            right: true
-        }
-
-        onVisibleChanged: {
-            if (visible) {
-                GlobalFocusGrab.addDismissable(panelWindow);
-                settingsWindow.userMoved = false;
-            } else {
-                GlobalFocusGrab.removeDismissable(panelWindow);
-            }
-        }
-
-        Connections {
-            target: GlobalFocusGrab
-            function onDismissed() {
-                panelWindow.hide();
-            }
-        }
-
-        Rectangle {
-            anchors.fill: parent
-            color: "transparent"
-            opacity: GlobalStates.settingsOpen ? 1 : 0
-            z: 0
-            Behavior on opacity {
-                NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
-            }
-            MouseArea {
-                anchors.fill: parent
-                propagateComposedEvents: false
-                onClicked: panelWindow.hide()
-            }
-        }
-
-        Rectangle {
+        sourceComponent: FloatingWindow {
             id: settingsWindow
-            width: Math.min(parent.width - 80, 980)
-            height: Math.min(parent.height - 80, 665)
+            title: Translation.tr("Settings")
             color: Appearance.colors.colLayer0
-            border.width: 1
-            border.color: Appearance.colors.colLayer0Border
-            radius: Appearance.rounding.screenRounding - Appearance.sizes.hyprlandGapsOut + 5
-            z: 1
+            implicitWidth: 980
+            implicitHeight: 665 + (titleBar.visible ? titleBar.implicitHeight : 0)
+            minimumSize: Qt.size(600, 400)
+            visible: true
 
-            property bool userMoved: false
-            anchors.centerIn: userMoved ? undefined : parent
-
-            opacity: GlobalStates.settingsOpen ? 1 : 0
-            scale: GlobalStates.settingsOpen ? 1 : 0.95
-
-            Behavior on opacity {
-                NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
-            }
-            Behavior on scale {
-                NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+            function hide() {
+                GlobalStates.settingsOpen = false;
             }
 
-            Keys.onPressed: (event) => {
-                if (event.key === Qt.Key_Escape) {
-                    panelWindow.hide();
-                }
+            onVisibleChanged: {
+                if (!visible) GlobalStates.settingsOpen = false;
             }
 
-            Rectangle {
-                id: dragHandle
-                anchors.top: parent.top
-                anchors.left: parent.left
-                anchors.right: parent.right
-                height: 32
-                color: "transparent"
-                z: 2
-
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.SizeAllCursor
-                    drag.target: settingsWindow
-                    drag.axis: Drag.XAndYAxis
-                    onPressed: settingsWindow.userMoved = true
-                    onDoubleClicked: settingsWindow.userMoved = false
-                }
+            Component.onCompleted: {
+                if (NiriData.isNiri) csdCheckProc.running = true;
             }
 
-            SettingsContent {
+            ColumnLayout {
                 anchors.fill: parent
+                spacing: 0
+
+                Rectangle {
+                    id: titleBar
+                    visible: !(NiriData.isNiri && root.preferNoCsd)
+                    Layout.fillWidth: true
+                    implicitHeight: 44
+                    color: Appearance.m3colors.m3surfaceContainerLow
+                    readonly property var backingWindow: Window.window
+
+                    DragHandler {
+                        target: null
+                        onActiveChanged: if (active) titleBar.backingWindow?.startSystemMove()
+                    }
+
+                    TapHandler {
+                        gesturePolicy: TapHandler.DragThreshold
+                        onDoubleTapped: settingsWindow.maximized = !settingsWindow.maximized
+                    }
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 16
+                        anchors.rightMargin: 8
+                        spacing: 4
+
+                        MaterialSymbol {
+                            text: "settings"
+                            iconSize: 20
+                            color: Appearance.colors.colOnLayer1
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: settingsWindow.title
+                            font.pixelSize: Appearance.font.pixelSize.normal
+                            font.weight: Font.Medium
+                            color: Appearance.colors.colOnLayer1
+                            elide: Text.ElideRight
+                        }
+
+                        RippleButton {
+                            implicitWidth: 32
+                            implicitHeight: 32
+                            buttonRadius: width / 2
+                            onClicked: settingsWindow.maximized = !settingsWindow.maximized
+                            contentItem: MaterialSymbol {
+                                anchors.centerIn: parent
+                                horizontalAlignment: Text.AlignHCenter
+                                text: settingsWindow.maximized ? "collapse_content" : "expand_content"
+                                iconSize: 18
+                                color: Appearance.colors.colOnLayer1
+                            }
+                            StyledToolTip {
+                                text: settingsWindow.maximized ? Translation.tr("Restore") : Translation.tr("Maximize")
+                            }
+                        }
+
+                        RippleButton {
+                            implicitWidth: 32
+                            implicitHeight: 32
+                            buttonRadius: width / 2
+                            colBackgroundHover: Appearance.m3colors.m3error
+                            onClicked: settingsWindow.hide()
+                            contentItem: MaterialSymbol {
+                                anchors.centerIn: parent
+                                horizontalAlignment: Text.AlignHCenter
+                                text: "close"
+                                iconSize: 18
+                                color: Appearance.colors.colOnLayer1
+                            }
+                            StyledToolTip {
+                                text: Translation.tr("Close")
+                            }
+                        }
+                    }
+                }
+
+                Item {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+
+                    Keys.onPressed: (event) => {
+                        if (event.key === Qt.Key_Escape) {
+                            settingsWindow.hide();
+                        }
+                    }
+
+                    SettingsContent {
+                        anchors.fill: parent
+                        focus: true
+                    }
+                }
             }
         }
     }
