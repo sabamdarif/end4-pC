@@ -15,26 +15,9 @@ MouseArea {
     property int columns: Config.options.wallpaperSelector.columns || 4
     property real previewCellAspectRatio: 4 / 3
     property bool useDarkMode: Appearance.m3colors.darkmode
-    property bool showControls: false
     property string source: "local"
     property string selectedResolution: "1080p"
-    property bool toolbarVisible: showControls || Config.options.wallpaperSelector.showSearchbar
     property bool filterFieldFocused: false
-
-    property var quickDirs: [
-        { icon: "home",       name: "Home   ",       path: `${Directories.home}`,                alwaysVisible: Config.options.wallpaperSelector.showHomePath },
-        { icon: "wallpaper",  name: "Wallpapers   ", path: `${Directories.pictures}/Wallpapers`, alwaysVisible: true },
-        { icon: "imagesmode", name: "Homework   ",   path: `${Directories.pictures}/homework`,   alwaysVisible: Config.options.policies.weeb },
-        { icon: "casino",     name: "Random   ",     path: `${Directories.pictures}/Random`,     alwaysVisible: true },
-        { 
-            icon: "image",     
-            name: Config.options.wallpaperSelector.userPath?.trim().length > 0 
-                ? Config.options.wallpaperSelector.userPath.split("/").filter(s => s.length > 0).pop() + "   "
-                : "Custom   ",
-            path: Config.options.wallpaperSelector.userPath, 
-            alwaysVisible: Config.options.wallpaperSelector.userPath?.trim().length > 0 
-        }
-    ]
 
     function updateThumbnails() {
         const item = gridLoader.item;
@@ -42,7 +25,6 @@ MouseArea {
         const cellW = item?.cellWidth ?? (wallpaperGridBackground.width / root.columns);
         const cellH = item?.cellHeight ?? (cellW / root.previewCellAspectRatio);
         const thumbnailSizeName = Images.thumbnailSizeNameForDimensions(cellW - totalImageMargin, cellH - totalImageMargin);
-        Wallpapers.setDirectory(`${Directories.pictures}/Wallpapers`);
         Qt.callLater(() => Wallpapers.generateThumbnail(thumbnailSizeName));
     }
 
@@ -92,14 +74,6 @@ MouseArea {
             event.accepted = true;
         } else if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_V) {
             root.handleFilePasting(event);
-        } else if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_F) {
-            if (Config.options.wallpaperSelector.showSearchbar) {
-                Config.options.wallpaperSelector.showSearchbar = false
-                showControls = false
-            } else {
-                showControls = !showControls
-            }
-            event.accepted = true;
         } else if (event.modifiers & Qt.AltModifier && event.key === Qt.Key_Up) {
             Wallpapers.navigateUp();
             event.accepted = true;
@@ -247,7 +221,9 @@ MouseArea {
                         }
 
                         StyledText {
-                            text: Translation.tr("Wallpaper Selector")
+                            text: GlobalStates.wallpaperSelectorTarget === "live"
+                                ? Translation.tr("Live Wallpaper Selector")
+                                : Translation.tr("Wallpaper Selector")
                             font.pixelSize: Appearance.font.pixelSize.large
                         }
                     }
@@ -260,35 +236,56 @@ MouseArea {
                             visible: active
                             sourceComponent: RowLayout {
                                 spacing: 4
-                                Repeater {
-                                    model: root.quickDirs
-                                    delegate: RippleButton {
-                                        id: dirBtn
-                                        required property var modelData
-                                        implicitHeight: 38
-                                        buttonRadius: height / 2
-                                        visible: modelData.alwaysVisible
-                                        toggled: Wallpapers.directory === Qt.resolvedUrl(modelData.path)
-                                        colBackgroundToggled: Appearance.colors.colSecondaryContainer
-                                        colBackgroundToggledHover: Appearance.colors.colSecondaryContainerHover
-                                        colRippleToggled: Appearance.colors.colSecondaryContainerActive
-                                        onClicked: Wallpapers.setDirectory(modelData.path)
-                                        contentItem: RowLayout {
-                                            anchors.fill: parent
-                                            anchors.leftMargin: 12
-                                            anchors.rightMargin: 12
-                                            spacing: 6
-                                            MaterialSymbol {
-                                                text: dirBtn.modelData.icon
-                                                iconSize: Appearance.font.pixelSize.larger
-                                                color: dirBtn.toggled ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnLayer1
-                                                fill: dirBtn.toggled ? 1 : 0
-                                            }
-                                            StyledText {
-                                                text: dirBtn.modelData.name
-                                                color: dirBtn.toggled ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnLayer1
-                                            }
+                                IconToolbarButton {
+                                    implicitWidth: height
+                                    onClicked: {
+                                        Wallpapers.openFallbackPicker(root.useDarkMode);
+                                        GlobalStates.wallpaperSelectorOpen = false;
+                                    }
+                                    altAction: () => {
+                                        Wallpapers.openFallbackPicker(root.useDarkMode);
+                                        GlobalStates.wallpaperSelectorOpen = false;
+                                        Config.options.wallpaperSelector.useSystemFileDialog = true;
+                                    }
+                                    text: "open_in_new"
+                                }
+                                IconToolbarButton {
+                                    implicitWidth: height
+                                    onClicked: Wallpapers.randomFromCurrentFolder()
+                                    text: "ifl"
+                                }
+                                IconToolbarButton {
+                                    implicitWidth: height
+                                    onClicked: root.useDarkMode = !root.useDarkMode
+                                    text: root.useDarkMode ? "dark_mode" : "light_mode"
+                                }
+                                IconToolbarButton {
+                                    implicitWidth: height
+                                    onClicked: root.updateThumbnails()
+                                    text: "reset_image"
+                                }
+                                ToolbarTextField {
+                                    id: filterField
+                                    placeholderText: Translation.tr("Search wallpapers")
+                                    clip: true
+                                    font.pixelSize: Appearance.font.pixelSize.small
+                                    onTextChanged: Wallpapers.searchQuery = text
+                                    onActiveFocusChanged: root.filterFieldFocused = activeFocus
+                                    Keys.onPressed: event => {
+                                        if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_V) {
+                                            root.handleFilePasting(event);
+                                            event.accepted = true;
+                                            return;
                                         }
+                                        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                                            event.accepted = true;
+                                            return;
+                                        }
+                                        if (text.length !== 0) {
+                                            if (event.key === Qt.Key_Down) { event.accepted = true; return; }
+                                            if (event.key === Qt.Key_Up)   { event.accepted = true; return; }
+                                        }
+                                        event.accepted = false;
                                     }
                                 }
                             }
@@ -318,6 +315,33 @@ MouseArea {
                                                 : Appearance.colors.colOnLayer2
                                         }
                                     }
+                                }
+                                ToolbarTextField {
+                                    id: onlineSearchField
+                                    placeholderText: Translation.tr("Search online wallpapers")
+                                    clip: true
+                                    font.pixelSize: Appearance.font.pixelSize.small
+                                    onTextChanged: OnlineWallpapers.query = text
+                                    onAccepted: OnlineWallpapers.fetch()
+                                    onActiveFocusChanged: root.filterFieldFocused = activeFocus
+                                    Connections {
+                                        target: GlobalStates
+                                        function onWallpaperSelectorOpenChanged() {
+                                            if (!GlobalStates.wallpaperSelectorOpen) onlineSearchField.text = ""
+                                        }
+                                    }
+                                    Keys.onPressed: event => {
+                                        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                                            event.accepted = true;
+                                            return;
+                                        }
+                                        event.accepted = false;
+                                    }
+                                }
+                                IconToolbarButton {
+                                    implicitWidth: height
+                                    text: "refresh"
+                                    onClicked: OnlineWallpapers.fetch()
                                 }
                             }
                         }
@@ -351,26 +375,16 @@ MouseArea {
                             implicitWidth: 36
                             implicitHeight: 36
                             buttonRadius: height / 2
-                            toggled: root.toolbarVisible
                             colBackground: Appearance.colors.colSecondaryContainer
                             onClicked: {
-                                if (Config.options.wallpaperSelector.showSearchbar) {
-                                    Config.options.wallpaperSelector.showSearchbar = false
-                                    showControls = false
-                                } else {
-                                    showControls = !showControls
-                                }
+                                Wallpapers.stopPreview();
+                                GlobalStates.wallpaperSelectorOpen = false;
                             }
                             contentItem: MaterialSymbol {
                                 anchors.centerIn: parent
-                                text: "search"
+                                text: "close"
                                 iconSize: Appearance.font.pixelSize.larger
-                                color: root.toolbarVisible
-                                    ? Appearance.colors.colOnPrimary
-                                    : Appearance.colors.colOnSecondaryContainer
-                            }
-                            StyledToolTip {
-                                text: Translation.tr("Toggle search toolbar (Ctrl+F)")
+                                color: Appearance.colors.colOnSecondaryContainer
                             }
                         }
                     }
@@ -406,129 +420,6 @@ MouseArea {
                         }
                     }
 
-                    Row {
-                        id: extraOptions
-                        anchors {
-                            bottom: parent.bottom
-                            horizontalCenter: parent.horizontalCenter
-                            bottomMargin: 8
-                        }
-                        spacing: 6
-                        z: root.toolbarVisible ? 2 : -1
-                        opacity: root.toolbarVisible ? 1 : 0
-                        transform: Translate {
-                            y: root.toolbarVisible ? 0 : 20
-                            Behavior on y {
-                                NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
-                            }
-                        }
-                        Behavior on opacity {
-                            NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
-                        }
-
-                        Loader {
-                            active: root.source === "local"
-                            visible: active
-                            sourceComponent: Toolbar {
-                                IconToolbarButton {
-                                    implicitWidth: height
-                                    onClicked: {
-                                        Wallpapers.openFallbackPicker(root.useDarkMode);
-                                        GlobalStates.wallpaperSelectorOpen = false;
-                                    }
-                                    altAction: () => {
-                                        Wallpapers.openFallbackPicker(root.useDarkMode);
-                                        GlobalStates.wallpaperSelectorOpen = false;
-                                        Config.options.wallpaperSelector.useSystemFileDialog = true;
-                                    }
-                                    text: "open_in_new"
-                                }
-                                IconToolbarButton {
-                                    implicitWidth: height
-                                    onClicked: Wallpapers.randomFromCurrentFolder()
-                                    text: "ifl"
-                                }
-                                IconToolbarButton {
-                                    implicitWidth: height
-                                    onClicked: root.useDarkMode = !root.useDarkMode
-                                    text: root.useDarkMode ? "dark_mode" : "light_mode"
-                                }
-                                IconToolbarButton {
-                                    implicitWidth: height
-                                    onClicked: root.updateThumbnails()
-                                    text: "reset_image"
-                                }
-                                ToolbarTextField {
-                                    id: filterField
-                                    placeholderText: focus
-                                        ? Translation.tr("Search wallpapers")
-                                        : Translation.tr("Search wallpapers")
-                                    clip: true
-                                    font.pixelSize: Appearance.font.pixelSize.small
-                                    onTextChanged: Wallpapers.searchQuery = text
-                                    onActiveFocusChanged: root.filterFieldFocused = activeFocus
-                                    Keys.onPressed: event => {
-                                        if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_V) {
-                                            root.handleFilePasting(event);
-                                            event.accepted = true;
-                                            return;
-                                        }
-                                        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                                            event.accepted = true;
-                                            return;
-                                        }
-                                        if (text.length !== 0) {
-                                            if (event.key === Qt.Key_Down) { event.accepted = true; return; }
-                                            if (event.key === Qt.Key_Up)   { event.accepted = true; return; }
-                                        }
-                                        event.accepted = false;
-                                    }
-                                }
-                            }
-                        }
-
-                        Loader {
-                            active: root.source !== "local"
-                            visible: active
-                            sourceComponent: Toolbar {
-                                ToolbarTextField {
-                                    id: onlineSearchField
-                                    placeholderText: Translation.tr("Search online wallpapers")
-                                    clip: true
-                                    font.pixelSize: Appearance.font.pixelSize.small
-                                    onTextChanged: OnlineWallpapers.query = text
-                                    onAccepted: OnlineWallpapers.fetch()
-                                    onActiveFocusChanged: root.filterFieldFocused = activeFocus
-                                    Connections {
-                                        target: GlobalStates
-                                        function onWallpaperSelectorOpenChanged() {
-                                            if (!GlobalStates.wallpaperSelectorOpen) onlineSearchField.text = ""
-                                        }
-                                    }
-                                    Keys.onPressed: event => {
-                                        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                                            event.accepted = true;
-                                            return;
-                                        }
-                                        event.accepted = false;
-                                    }
-                                }
-                                IconToolbarButton {
-                                    implicitWidth: height
-                                    text: "refresh"
-                                    onClicked: OnlineWallpapers.fetch()
-                                }
-                            }
-                        }
-
-                        ToolbarPairedFab {
-                            iconText: "close"
-                            onClicked: {
-                                Wallpapers.stopPreview();
-                                GlobalStates.wallpaperSelectorOpen = false;
-                            }
-                        }
-                    }
                 }
             }
         }
@@ -544,6 +435,7 @@ MouseArea {
                     root.forceActiveFocus()
             } else if (!GlobalStates.wallpaperSelectorOpen) {
                 Wallpapers.stopPreview();
+                GlobalStates.wallpaperSelectorTarget = "wallpaper";
             }
         }
     }

@@ -1,3 +1,4 @@
+import qs
 import qs.modules.common
 import qs.modules.common.models
 import qs.modules.common.functions
@@ -22,9 +23,15 @@ Singleton {
     property url defaultFolder: Qt.resolvedUrl(`${Directories.pictures}/Wallpapers`)
     property alias folderModel: folderModel // Expose for direct binding when needed
     property string searchQuery: ""
-    readonly property list<string> extensions: [ // TODO: add videos
+    readonly property list<string> extensions: [
         "jpg", "jpeg", "png", "webp", "avif", "bmp", "svg"
     ]
+    // Matches what switchwall.sh is_video() accepts
+    readonly property list<string> videoExtensions: [
+        "mp4", "webm", "mkv", "avi", "mov"
+    ]
+    readonly property list<string> activeExtensions: GlobalStates.wallpaperSelectorTarget === "live" ? videoExtensions : extensions
+    readonly property string onlineCacheDir: FileUtils.trimFileProtocol(`${Directories.cache}/online_wallpapers`)
     property list<string> wallpapers: [] // List of absolute file paths (without file://)
     readonly property bool thumbnailGenerationRunning: thumbgenProc.running
     property real thumbnailGenerationProgress: 0
@@ -158,7 +165,7 @@ Singleton {
         id: folderModel
         folder: Qt.resolvedUrl(root.defaultFolder)
         caseSensitive: false
-        nameFilters: root.extensions.map(ext => `*${searchQuery.split(" ").filter(s => s.length > 0).map(s => `*${s}*`)}*.${ext}`)
+        nameFilters: root.activeExtensions.map(ext => `*${searchQuery.split(" ").filter(s => s.length > 0).map(s => `*${s}*`)}*.${ext}`)
         showDirs: true
         showDotAndDotDot: false
         showOnlyReadable: true
@@ -208,6 +215,25 @@ Singleton {
         onExited: (exitCode, exitStatus) => {
             // print("[Wallpapers] Thumbnail generation completed with exit code", exitCode)
             root.thumbnailGenerated(thumbgenProc.directory)
+        }
+    }
+
+    // Keep the last-5 list: current wallpaper first, then the 4 previous ones.
+    // Updated when switchwall.sh writes background.wallpaperPath back to the config,
+    // so local, online and live wallpapers all pass through here.
+    Connections {
+        target: Config.options.background
+        function onWallpaperPathChanged() {
+            const path = FileUtils.trimFileProtocol(Config.options.background.wallpaperPath)
+            if (!path || path.length === 0) return
+            const old = Config.options.background.recentWallpapers
+            const updated = [path, ...old.filter(p => p !== path)].slice(0, 5)
+            // Downloaded online wallpapers are cached only while in the last-5 list
+            for (const p of old) {
+                if (!updated.includes(p) && p.startsWith(root.onlineCacheDir))
+                    Quickshell.execDetached(["rm", "-f", p])
+            }
+            Config.options.background.recentWallpapers = updated
         }
     }
 

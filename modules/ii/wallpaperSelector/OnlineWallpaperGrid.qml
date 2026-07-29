@@ -45,24 +45,30 @@ Item {
         grid.positionViewAtIndex(grid.currentIndex, GridView.Contain)
     }
 
+    // Applied wallpapers go to the cache (kept while in the last-5 recents);
+    // explicit downloads (right-click) go to the local wallpaper collection.
+    function download(item, applyAfter) {
+        const urlLower = item.full.toLowerCase().split("?")[0]
+        const ext = urlLower.includes(".png") ? "png"
+            : urlLower.includes(".webp") ? "webp"
+            : "jpg"
+        const fileName = `${item.provider}-${item.id}.${ext}`
+        const dir = applyAfter
+            ? Wallpapers.onlineCacheDir
+            : `${Directories.pictures.toString().replace("file://", "")}/Wallpapers`
+        const fullPath = `${dir}/${fileName}`
+        downloadProc.filePath = fullPath
+        downloadProc.applyAfter = applyAfter
+        downloadProc.command = ["bash", "-c",
+            `mkdir -p '${dir}' && curl -L --silent '${item.full}' -o '${fullPath}'`
+        ]
+        downloadProc.running = true
+    }
+
     function activateCurrent() {
         const item = wallpaperModel.get(grid.currentIndex)
         if (!item) return
-        const url = item.full
-        const urlLower = url.toLowerCase().split("?")[0]
-        const ext = urlLower.includes(".png") ? "png"
-            : urlLower.includes(".webp") ? "webp"
-            : urlLower.includes(".jpeg") ? "jpg"
-            : "jpg"
-        const fileName = `${item.provider}-${item.id}.${ext}`
-        const picturesPath = Directories.pictures.toString().replace("file://", "")
-        const fullPath = `${picturesPath}/Wallpapers/${fileName}`
-        downloadProc.filePath = fullPath
-        downloadProc.applyAfter = true
-        downloadProc.command = ["bash", "-c",
-            `mkdir -p '${picturesPath}/Wallpapers' && curl -L --silent '${item.full}' -o '${fullPath}'`
-        ]
-        downloadProc.running = true
+        root.download(item, true)
     }
 
     Component.onCompleted: _syncAndFetch()
@@ -97,9 +103,12 @@ Item {
 
         onExited: (exitCode) => {
             if (exitCode === 0) {
-                if (applyAfter) root.wallpaperSelected(filePath)
-                Wallpapers.setDirectory(Wallpapers.effectiveDirectory)
-                Qt.callLater(() => root.updateThumbnailsRequested())
+                if (applyAfter) {
+                    root.wallpaperSelected(filePath)
+                } else {
+                    Wallpapers.setDirectory(Wallpapers.effectiveDirectory)
+                    Qt.callLater(() => root.updateThumbnailsRequested())
+                }
                 Quickshell.execDetached(["notify-send",
                     applyAfter ? Translation.tr("Wallpaper applied") : Translation.tr("Download complete"),
                     filePath, "-a", "Shell"
@@ -138,15 +147,38 @@ Item {
                 color: Appearance.colors.colOnLayer1
             }
 
-            StyledText {
+            RowLayout {
                 Layout.alignment: Qt.AlignHCenter
-                horizontalAlignment: Text.AlignHCenter
-                text: root.unsplashMissingKey
-                    ? Translation.tr("Open the launcher and run:\n/unsplash YOUR_API_KEY")
-                    : Translation.tr("Open the launcher and run:\n/pexels YOUR_API_KEY")
-                color: Appearance.colors.colSubtext
-                font.pixelSize: Appearance.font.pixelSize.normal
-                font.family: Appearance.font.family.main
+                spacing: 8
+
+                MaterialTextField {
+                    id: apiKeyField
+                    Layout.preferredWidth: 320
+                    placeholderText: Translation.tr("Paste your API key here")
+                    onAccepted: saveKeyButton.clicked()
+                }
+
+                RippleButton {
+                    id: saveKeyButton
+                    implicitHeight: 40
+                    buttonRadius: height / 2
+                    enabled: apiKeyField.text.trim().length > 0
+                    colBackground: Appearance.colors.colPrimary
+                    onClicked: {
+                        const key = apiKeyField.text.trim()
+                        if (key.length === 0) return
+                        KeyringStorage.setNestedField(["apiKeys", root.provider], key)
+                        apiKeyField.text = ""
+                        Qt.callLater(() => root._syncAndFetch())
+                    }
+                    contentItem: StyledText {
+                        anchors.centerIn: parent
+                        leftPadding: 16
+                        rightPadding: 16
+                        text: Translation.tr("Save & use")
+                        color: Appearance.colors.colOnPrimary
+                    }
+                }
             }
 
             StyledText {
@@ -262,21 +294,7 @@ Item {
                         root.forceActiveFocus()
                     }
                     onClicked: event => {
-                        const url = delegateItem.model.full
-                        const urlLower = url.toLowerCase().split("?")[0]
-                        const ext = urlLower.includes(".png") ? "png"
-                            : urlLower.includes(".webp") ? "webp"
-                            : urlLower.includes(".jpeg") ? "jpg"
-                            : "jpg"
-                        const fileName = `${delegateItem.model.provider}-${delegateItem.model.id}.${ext}`
-                        const picturesPath = Directories.pictures.toString().replace("file://", "")
-                        const fullPath = `${picturesPath}/Wallpapers/${fileName}`
-                        downloadProc.filePath = fullPath
-                        downloadProc.applyAfter = event.button === Qt.LeftButton
-                        downloadProc.command = ["bash", "-c",
-                            `mkdir -p '${picturesPath}/Wallpapers' && curl -L --silent '${delegateItem.model.full}' -o '${fullPath}'`
-                        ]
-                        downloadProc.running = true
+                        root.download(delegateItem.model, event.button === Qt.LeftButton)
                     }
                 }
             }

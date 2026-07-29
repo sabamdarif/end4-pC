@@ -2,7 +2,6 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Layouts
-import Qt.labs.folderlistmodel
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Hyprland
@@ -31,44 +30,40 @@ Scope {
 
     function displayPathFor(path) {
         if (!path) return path
+        // Videos are displayed via the thumbnail switchwall.sh keeps per file
         return /\.(mp4|webm|mkv|avi|mov)$/i.test(path)
-            ? Config.options.background.thumbnailPath
+            ? `${FileUtils.trimFileProtocol(Directories.config)}/hypr/custom/scripts/mpvpaper_thumbnails/${path.split("/").pop()}.jpg`
             : path
     }
 
-    // Wallpaper folder images
-    FolderListModel {
-        id: wallpaperFolder
-        folder: {
-            const wallPath = Config.options.background.wallpaperPath
-            if (!wallPath || wallPath.length === 0) return ""
-            const lastSlash = wallPath.lastIndexOf("/")
-            return "file://" + wallPath.substring(0, lastSlash)
-        }
-        showDirs: false
-        nameFilters: ["*.jpg", "*.jpeg", "*.png", "*.webp"]
-    }
-
-    property int carouselExtraCount: 5
     property bool useDarkMode: Appearance.m3colors.darkmode
-    property var randomWallpapers: {
+    // Last 5 used wallpapers, current one first
+    property var recentWallpapers: {
+        const recents = Config.options.background.recentWallpapers
+        if (recents.length > 0) return recents.map(p => FileUtils.trimFileProtocol(p))
         const current = FileUtils.trimFileProtocol(Config.options.background.wallpaperPath)
-        let all = []
-        for (let i = 0; i < wallpaperFolder.count; i++) {
-            const fp = FileUtils.trimFileProtocol(wallpaperFolder.get(i, "filePath").toString())
-            if (fp !== current) all.push(fp)
-        }
-        for (let i = all.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [all[i], all[j]] = [all[j], all[i]]
-        }
-        return all.slice(0, carouselExtraCount)
+        return current && current.length > 0 ? [current] : []
     }
+    property var carouselModel: recentWallpapers.map(p => root.displayPathFor(p))
 
-    property var carouselModel: {
-        const current = FileUtils.trimFileProtocol(Config.options.background.wallpaperPath)
-        if (!current || current.length === 0) return randomWallpapers.map(p => root.displayPathFor(p))
-        return [root.displayPathFor(current), ...randomWallpapers.map(p => root.displayPathFor(p))]
+    // Folder picker for the wallpaper/live wallpaper path selection
+    Process {
+        id: folderPickProc
+        property string targetKey: "userPath"
+        function pick(key) {
+            folderPickProc.targetKey = key
+            folderPickProc.exec(["yad", "--file", "--directory", "--title", "Choose wallpaper folder", `--filename=${FileUtils.trimFileProtocol(Directories.home)}/`])
+        }
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const dir = text.trim()
+                if (dir.length === 0) return
+                if (folderPickProc.targetKey === "liveWallpapersPath")
+                    Config.options.wallpaperSelector.liveWallpapersPath = dir
+                else
+                    Config.options.wallpaperSelector.userPath = dir
+            }
+        }
     }
 
     // Menu window
@@ -155,8 +150,11 @@ Scope {
                             anchors.fill: parent
                             anchors.margins: 10
                             model: root.carouselModel
-                            onWallpaperSelected: (path) => {
-                                Wallpapers.select(path, Appearance.m3colors.darkmode)
+                            // Apply the real path (videos display as thumbnails), by index
+                            clickAction: (index, modelData) => {
+                                const real = root.recentWallpapers[index]
+                                if (!real) return
+                                Wallpapers.select(real, Appearance.m3colors.darkmode)
                                 GlobalStates.desktopMenuOpen = false
                             }
                         }
@@ -196,6 +194,31 @@ Scope {
                                 }
                             }
                             onClicked: GlobalStates.desktopMenuOpen = false
+                        }
+
+                        // Change wallpaper (or select the wallpaper folder first)
+                        RippleButton {
+                            id: changeWallpaperRow
+                            property bool hasPath: (Config.options.wallpaperSelector.userPath ?? "").trim().length > 0
+                            implicitHeight: 40
+                            colBackground: "transparent"
+                            colBackgroundHover: Appearance.colors.colLayer2
+                            contentItem: RowLayout {
+                                anchors { fill: parent; leftMargin: 12; rightMargin: 12 }
+                                spacing: 12
+                                MaterialSymbol { text: "wallpaper"; iconSize: Appearance.font.pixelSize.larger; color: Appearance.colors.colOnLayer1 }
+                                StyledText { Layout.fillWidth: true; text: changeWallpaperRow.hasPath ? "Change wallpaper" : "Select wallpaper path"; font.pixelSize: Appearance.font.pixelSize.normal; color: Appearance.colors.colOnLayer1 }
+                            }
+                            onClicked: {
+                                GlobalStates.desktopMenuOpen = false
+                                if (!hasPath) {
+                                    folderPickProc.pick("userPath")
+                                    return
+                                }
+                                Wallpapers.setDirectory(Config.options.wallpaperSelector.userPath)
+                                GlobalStates.wallpaperSelectorTarget = "wallpaper"
+                                GlobalStates.wallpaperSelectorOpen = true
+                            }
                         }
 
                         // Widgets
@@ -263,6 +286,8 @@ Scope {
                         }
 
                         RippleButton {
+                            id: liveWallpaperRow
+                            property bool hasPath: (Config.options.wallpaperSelector.liveWallpapersPath ?? "").trim().length > 0
                             implicitHeight: 40
                             colBackground: "transparent"
                             colBackgroundHover: Appearance.colors.colLayer2
@@ -270,21 +295,17 @@ Scope {
                                 anchors { fill: parent; leftMargin: 12; rightMargin: 12 }
                                 spacing: 12
                                 MaterialSymbol { text: "video_template"; iconSize: Appearance.font.pixelSize.larger; color: Appearance.colors.colOnLayer1 }
-                                StyledText { Layout.fillWidth: true; text: "Live Wallpaper"; font.pixelSize: Appearance.font.pixelSize.normal; color: Appearance.colors.colOnLayer1 }
-                                MaterialSymbol {
-                                    visible: DropShelf.items.length === 0
-                                    text: "chevron_right"
-                                    iconSize: Appearance.font.pixelSize.normal
-                                    color: Appearance.colors.colOnLayer1
-                                    opacity: 0.4
-                                }
+                                StyledText { Layout.fillWidth: true; text: liveWallpaperRow.hasPath ? "Live Wallpaper" : "Select live wallpaper path"; font.pixelSize: Appearance.font.pixelSize.normal; color: Appearance.colors.colOnLayer1 }
                             }
                             onClicked: {
                                 GlobalStates.desktopMenuOpen = false
-                                Wallpapers.openFallbackPicker(
-                                    Appearance.m3colors.darkmode,
-                                    Config.options.wallpaperSelector.liveWallpapersPath ?? ""
-                                )
+                                if (!hasPath) {
+                                    folderPickProc.pick("liveWallpapersPath")
+                                    return
+                                }
+                                GlobalStates.wallpaperSelectorTarget = "live"
+                                Wallpapers.setDirectory(Config.options.wallpaperSelector.liveWallpapersPath)
+                                GlobalStates.wallpaperSelectorOpen = true
                             }
                         }
 
@@ -297,11 +318,11 @@ Scope {
                                 spacing: 12
                                 MaterialSymbol { text: "settings"; iconSize: Appearance.font.pixelSize.larger; color: Appearance.colors.colOnLayer1 }
                                 StyledText { Layout.fillWidth: true; text: "Settings"; font.pixelSize: Appearance.font.pixelSize.normal; color: Appearance.colors.colOnLayer1 }
-                                MaterialSymbol { text: "chevron_right"; iconSize: Appearance.font.pixelSize.normal; color: Appearance.colors.colOnLayer1; opacity: 0.4 }
                             }
                             onClicked: {
                                 GlobalStates.desktopMenuOpen = false
                                 GlobalStates.settingsOpen = true
+                                Qt.callLater(() => GlobalStates.settingsPage = "Desktop")
                             }
                         }
                     }

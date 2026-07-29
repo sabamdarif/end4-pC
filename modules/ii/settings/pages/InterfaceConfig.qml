@@ -595,15 +595,6 @@ ContentPage {
                 }
 
                 ConfigSwitch {
-                    buttonIcon: "home"
-                    text: Translation.tr('Show home directory in quick access')
-                    checked: Config.options.wallpaperSelector.showHomePath
-                    onCheckedChanged: {
-                        Config.options.wallpaperSelector.showHomePath = checked;
-                    }
-                }
-
-                ConfigSwitch {
                     buttonIcon: "done"
                     text: Translation.tr('Close after selection')
                     checked: Config.options.wallpaperSelector.closeAfterSelection
@@ -644,59 +635,6 @@ ContentPage {
                         Config.options.wallpaperSelector.changeInterval = value * 60000;
                     }
                 }
-
-                ConfigSwitch {
-                    buttonIcon: "search"
-                    text: Translation.tr('Always show search bar')
-                    checked: Config.options.wallpaperSelector.showSearchbar
-                    onCheckedChanged: {
-                        Config.options.wallpaperSelector.showSearchbar = checked;
-                    }
-                }
-                ConfigTextArea {
-                    id: userPathField
-                    Layout.fillWidth: true
-                    buttonIcon: "folder"
-                    text: Translation.tr("Custom Wallpaper Folder")
-                    placeholderText: Translation.tr("e.g., /home/user/Pictures")
-                    fieldWidth: 300
-                    value: Config.options.wallpaperSelector.userPath ?? ""
-
-                    onValueChanged: {
-                        userPathDebounceTimer.restart()
-                    }
-
-                    Timer {
-                        id: userPathDebounceTimer
-                        interval: 1000
-                        running: false
-                        onTriggered: {
-                            Config.options.wallpaperSelector.userPath = userPathField.value
-                        }
-                    }
-                }
-                ConfigTextArea {
-                    id: liveWallpapersPathField
-                    Layout.fillWidth: true
-                    buttonIcon: "video_template"
-                    text: Translation.tr("Live Wallpaper Folder")
-                    placeholderText: Translation.tr("e.g., /home/user/Videos/Wallpapers")
-                    fieldWidth: 300
-                    value: Config.options.wallpaperSelector.liveWallpapersPath ?? ""
-
-                    onValueChanged: {
-                        liveWallpapersPathDebounceTimer.restart()
-                    }
-
-                    Timer {
-                        id: liveWallpapersPathDebounceTimer
-                        interval: 1000
-                        running: false
-                        onTriggered: {
-                            Config.options.wallpaperSelector.liveWallpapersPath = liveWallpapersPathField.value
-                        }
-                    }
-                } 
             }
         }
 

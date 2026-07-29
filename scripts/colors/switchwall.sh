@@ -143,6 +143,45 @@ EOF
     mv "$RESTORE_SCRIPT.tmp" "$RESTORE_SCRIPT"
 }
 
+update_background_files() {
+    # Mirrors the rofi set-wallpaper flow: keep a stable copy at
+    # ~/.config/background.<ext> and a blurred copy applied with swaybg.
+    local img="$1"
+    [[ -f "$img" ]] || return 0
+    local ext="${img##*.}"
+    ext="${ext,,}"
+    local blurred="$XDG_CONFIG_HOME/blurred-background"
+    rm -f "$XDG_CONFIG_HOME"/background.* "$blurred"
+    cp "$img" "$XDG_CONFIG_HOME/background.$ext"
+    command -v magick &>/dev/null || return 0
+    local blur_src="$img"
+    [[ "$ext" == "gif" ]] && blur_src="$img[0]" # first frame for animated gifs
+    if magick "$blur_src" -blur 0x8 "png:$blurred" && command -v swaybg &>/dev/null; then
+        pkill swaybg
+        setsid -f swaybg -i "$blurred" -m fill >/dev/null 2>&1
+    fi
+}
+
+run_matugen() {
+    # Some matugen builds fail with "IO error: not a terminal" when spawned
+    # without a TTY (e.g. from Quickshell) — wrap with script(1) if available.
+    if command -v script >/dev/null 2>&1; then
+        script -qec "matugen $(printf '%q ' "${matugen_args[@]}")" /dev/null
+    else
+        matugen "${matugen_args[@]}"
+    fi
+}
+
+activate_venv_if_present() {
+    local venv_path
+    venv_path="$(eval echo "$ILLOGICAL_IMPULSE_VIRTUAL_ENV")"
+    [[ -n "$venv_path" && -f "$venv_path/bin/activate" ]] && source "$venv_path/bin/activate"
+}
+
+deactivate_venv_if_active() {
+    type deactivate &>/dev/null && deactivate
+}
+
 set_wallpaper_path() {
     local path="$1"
     if [ -f "$SHELL_CONFIG_FILE" ]; then
@@ -251,6 +290,7 @@ switch() {
                 generate_colors_material_args=(--path "$thumbnail")
                 if [[ -z "$colors_only_flag" ]]; then
                     create_restore_script "$video_path"
+                    update_background_files "$thumbnail" &
                 fi
             else
                 echo "Cannot create image to colorgen"
@@ -265,6 +305,7 @@ switch() {
             if [[ -z "$colors_only_flag" ]]; then
                 set_wallpaper_path "$imgpath"
                 remove_restore
+                update_background_files "$imgpath" &
             fi
         fi
     fi
@@ -277,6 +318,9 @@ switch() {
             mode_flag="light"
         fi
     fi
+
+    # Keep external scripts (rofi theme toggles etc.) in sync with the current mode
+    mkdir -p "$MATUGEN_DIR" && echo "$mode_flag" > "$MATUGEN_DIR/current_mode"
 
     if [[ -n "$mode_flag" ]]; then
         matugen_args+=(--mode "$mode_flag")
@@ -328,7 +372,7 @@ switch() {
         done
     fi
 
-    matugen "${matugen_args[@]}"
+    run_matugen
 
     if [[ -n "$colors_lock_flag" ]]; then
         if [[ -f "$colors_json_path" ]]; then
@@ -343,7 +387,7 @@ switch() {
         done
     fi
 
-    source "$(eval echo $ILLOGICAL_IMPULSE_VIRTUAL_ENV)/bin/activate"
+    activate_venv_if_present
 
     if [[ -n "$colors_lock_flag" ]]; then
         output_scss="$STATE_DIR/user/generated/material_colors_lock.scss"
@@ -351,9 +395,14 @@ switch() {
         output_scss="$STATE_DIR/user/generated/material_colors.scss"
     fi
 
-    python3 "$SCRIPT_DIR/generate_colors_material.py" "${generate_colors_material_args[@]}" \
-        > "$output_scss"
-    deactivate
+    if python3 "$SCRIPT_DIR/generate_colors_material.py" "${generate_colors_material_args[@]}" \
+        > "$output_scss.new" 2>/dev/null; then
+        mv "$output_scss.new" "$output_scss"
+    else
+        rm -f "$output_scss.new"
+        echo "[switchwall] Warning: terminal color generation failed (python venv missing?), skipping" >&2
+    fi
+    deactivate_venv_if_active
 
     if [[ -z "$colors_lock_flag" ]]; then
         "$SCRIPT_DIR"/applycolor.sh
@@ -389,9 +438,9 @@ main() {
 
     detect_scheme_type_from_image() {
         local img="$1"
-        source "$(eval echo $ILLOGICAL_IMPULSE_VIRTUAL_ENV)/bin/activate"
+        activate_venv_if_present
         "$SCRIPT_DIR"/scheme_for_image.py "$img" 2>/dev/null | tr -d '\n'
-        deactivate
+        deactivate_venv_if_active
     }
 
     while [[ $# -gt 0 ]]; do
@@ -484,7 +533,11 @@ main() {
         else
             cd "$(xdg-user-dir PICTURES)/Wallpapers/showcase" 2>/dev/null || cd "$(xdg-user-dir PICTURES)/Wallpapers" 2>/dev/null || cd "$(xdg-user-dir PICTURES)" || return 1
         fi
-        imgpath="$(kdialog --getopenfilename . --title 'Choose wallpaper')"
+        if command -v kdialog &>/dev/null; then
+            imgpath="$(kdialog --getopenfilename . --title 'Choose wallpaper')"
+        else
+            imgpath="$(yad --file --title 'Choose wallpaper')"
+        fi
     fi
 
     if [[ -n "$imgpath" && -z "$noswitch_flag" ]]; then

@@ -363,6 +363,7 @@ Singleton {
                 }
                 property list<string> screenList: [] 
                 property string wallpaperPath: ""
+                property list<string> recentWallpapers: [] // Currently applied wallpaper first, then the 4 previous ones
                 property bool centeredWallpaper: false
                 property string centeredWallpaperShape: "Cookie7Sided"
                 property int centeredWallpaperSize: 400
@@ -778,10 +779,8 @@ Singleton {
             property JsonObject wallpaperSelector: JsonObject {
                 property bool useSystemFileDialog: false
                 property bool showBlurBackground: false
-                property bool showHomePath: true
-                property string userPath: "" // This can be set to any path and it will show up as a quick access in the wallpaper selector"
-                property string liveWallpapersPath: ""
-                property bool showSearchbar: true
+                property string userPath: "" // Wallpaper folder, set from the desktop right-click menu
+                property string liveWallpapersPath: "" // Live wallpaper folder, set from the desktop right-click menu
                 property int columns: 4
                 property bool closeAfterSelection: true
                 property int changeInterval: 0 
