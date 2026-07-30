@@ -249,6 +249,16 @@ Scope {
         function toggle() {
             GlobalStates.osdVolumeOpen = !GlobalStates.osdVolumeOpen;
         }
+
+        function increment() {
+            Audio.incrementVolume();
+            root.triggerOsd();
+        }
+
+        function decrement() {
+            Audio.decrementVolume();
+            root.triggerOsd();
+        }
     }
     NiriSafeShortcut {
         name: "osdVolumeTrigger"
