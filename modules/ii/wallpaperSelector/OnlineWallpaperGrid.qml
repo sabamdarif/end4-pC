@@ -147,12 +147,13 @@ Item {
                 color: Appearance.colors.colOnLayer1
             }
 
-            RowLayout {
+            ColumnLayout {
                 Layout.alignment: Qt.AlignHCenter
-                spacing: 8
+                spacing: 12
 
                 MaterialTextField {
                     id: apiKeyField
+                    Layout.alignment: Qt.AlignHCenter
                     Layout.preferredWidth: 320
                     placeholderText: Translation.tr("Paste your API key here")
                     onAccepted: saveKeyButton.clicked()
@@ -160,10 +161,12 @@ Item {
 
                 RippleButton {
                     id: saveKeyButton
+                    Layout.alignment: Qt.AlignHCenter
                     implicitHeight: 40
+                    implicitWidth: Math.max(implicitContentWidth, 96)
                     buttonRadius: height / 2
-                    enabled: apiKeyField.text.trim().length > 0
                     colBackground: Appearance.colors.colPrimary
+                    colBackgroundHover: Appearance.colors.colPrimaryHover
                     onClicked: {
                         const key = apiKeyField.text.trim()
                         if (key.length === 0) return

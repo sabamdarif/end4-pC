@@ -69,7 +69,8 @@ MouseArea {
                     sourceComponent: ThumbnailImage {
                         id: thumbnailImage
 
-                        generateThumbnail: false
+                        // Lazy: each visible grid cell generates its own thumbnail on demand
+                        generateThumbnail: true
                         sourcePath: fileModelData.filePath
                         cache: false
                         fillMode: Image.PreserveAspectCrop

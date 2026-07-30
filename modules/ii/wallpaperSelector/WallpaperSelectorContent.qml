@@ -238,19 +238,6 @@ MouseArea {
                                 spacing: 4
                                 IconToolbarButton {
                                     implicitWidth: height
-                                    onClicked: {
-                                        Wallpapers.openFallbackPicker(root.useDarkMode);
-                                        GlobalStates.wallpaperSelectorOpen = false;
-                                    }
-                                    altAction: () => {
-                                        Wallpapers.openFallbackPicker(root.useDarkMode);
-                                        GlobalStates.wallpaperSelectorOpen = false;
-                                        Config.options.wallpaperSelector.useSystemFileDialog = true;
-                                    }
-                                    text: "open_in_new"
-                                }
-                                IconToolbarButton {
-                                    implicitWidth: height
                                     onClicked: Wallpapers.randomFromCurrentFolder()
                                     text: "ifl"
                                 }

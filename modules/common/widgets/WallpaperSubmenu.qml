@@ -22,6 +22,39 @@ Item {
         width: root.width
         spacing: 8
 
+        // Change wallpaper (or select the wallpaper folder first)
+        Rectangle {
+            Layout.fillWidth: true
+            implicitHeight: changeWallpaperRow.implicitHeight + 16
+            radius: Appearance.rounding.verylarge
+            color: Appearance.colors.colLayer0
+
+            RippleButton {
+                id: changeWallpaperRow
+                property bool hasPath: (Config.options.wallpaperSelector.userPath ?? "").trim().length > 0
+                anchors { fill: parent; margins: 8 }
+                implicitHeight: 40
+                buttonRadius: Appearance.rounding.verylarge
+                colBackground: "transparent"
+                colBackgroundHover: Appearance.colors.colLayer2
+                contentItem: RowLayout {
+                    anchors { fill: parent; leftMargin: 12; rightMargin: 12 }
+                    spacing: 12
+                    MaterialSymbol { text: "wallpaper"; iconSize: Appearance.font.pixelSize.larger; color: Appearance.colors.colOnLayer1 }
+                    StyledText { Layout.fillWidth: true; text: changeWallpaperRow.hasPath ? Translation.tr("Change wallpaper") : Translation.tr("Select wallpaper path"); font.pixelSize: Appearance.font.pixelSize.normal; color: Appearance.colors.colOnLayer1 }
+                }
+                onClicked: {
+                    GlobalStates.desktopMenuOpen = false
+                    if (!hasPath) {
+                        Wallpapers.pickFolder("userPath")
+                        return
+                    }
+                    GlobalStates.wallpaperSelectorTarget = "wallpaper"
+                    GlobalStates.wallpaperSelectorOpen = true
+                }
+            }
+        }
+
         // Scheme
         Rectangle {
             Layout.fillWidth: true

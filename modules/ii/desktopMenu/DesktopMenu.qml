@@ -46,25 +46,9 @@ Scope {
     }
     property var carouselModel: recentWallpapers.map(p => root.displayPathFor(p))
 
-    // Folder picker for the wallpaper/live wallpaper path selection
-    Process {
-        id: folderPickProc
-        property string targetKey: "userPath"
-        function pick(key) {
-            folderPickProc.targetKey = key
-            folderPickProc.exec(["yad", "--file", "--directory", "--title", "Choose wallpaper folder", `--filename=${FileUtils.trimFileProtocol(Directories.home)}/`])
-        }
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const dir = text.trim()
-                if (dir.length === 0) return
-                if (folderPickProc.targetKey === "liveWallpapersPath")
-                    Config.options.wallpaperSelector.liveWallpapersPath = dir
-                else
-                    Config.options.wallpaperSelector.userPath = dir
-            }
-        }
-    }
+    // Auto-hide when the workspace changes
+    property int activeWorkspace: NiriData.isNiri ? NiriData.activeWorkspaceIdx : (Hyprland.focusedMonitor?.activeWorkspace?.id ?? 0)
+    onActiveWorkspaceChanged: GlobalStates.desktopMenuOpen = false
 
     // Menu window
     Loader {
@@ -196,31 +180,6 @@ Scope {
                             onClicked: GlobalStates.desktopMenuOpen = false
                         }
 
-                        // Change wallpaper (or select the wallpaper folder first)
-                        RippleButton {
-                            id: changeWallpaperRow
-                            property bool hasPath: (Config.options.wallpaperSelector.userPath ?? "").trim().length > 0
-                            implicitHeight: 40
-                            colBackground: "transparent"
-                            colBackgroundHover: Appearance.colors.colLayer2
-                            contentItem: RowLayout {
-                                anchors { fill: parent; leftMargin: 12; rightMargin: 12 }
-                                spacing: 12
-                                MaterialSymbol { text: "wallpaper"; iconSize: Appearance.font.pixelSize.larger; color: Appearance.colors.colOnLayer1 }
-                                StyledText { Layout.fillWidth: true; text: changeWallpaperRow.hasPath ? "Change wallpaper" : "Select wallpaper path"; font.pixelSize: Appearance.font.pixelSize.normal; color: Appearance.colors.colOnLayer1 }
-                            }
-                            onClicked: {
-                                GlobalStates.desktopMenuOpen = false
-                                if (!hasPath) {
-                                    folderPickProc.pick("userPath")
-                                    return
-                                }
-                                Wallpapers.setDirectory(Config.options.wallpaperSelector.userPath)
-                                GlobalStates.wallpaperSelectorTarget = "wallpaper"
-                                GlobalStates.wallpaperSelectorOpen = true
-                            }
-                        }
-
                         // Widgets
                         RippleButton {
                             id: widgetsRow
@@ -300,11 +259,10 @@ Scope {
                             onClicked: {
                                 GlobalStates.desktopMenuOpen = false
                                 if (!hasPath) {
-                                    folderPickProc.pick("liveWallpapersPath")
+                                    Wallpapers.pickFolder("liveWallpapersPath")
                                     return
                                 }
                                 GlobalStates.wallpaperSelectorTarget = "live"
-                                Wallpapers.setDirectory(Config.options.wallpaperSelector.liveWallpapersPath)
                                 GlobalStates.wallpaperSelectorOpen = true
                             }
                         }

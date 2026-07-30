@@ -221,19 +221,56 @@ Singleton {
     // Keep the last-5 list: current wallpaper first, then the 4 previous ones.
     // Updated when switchwall.sh writes background.wallpaperPath back to the config,
     // so local, online and live wallpapers all pass through here.
+    function updateRecents() {
+        const path = FileUtils.trimFileProtocol(Config.options.background.wallpaperPath)
+        if (!path || path.length === 0) return
+        const old = Config.options.background.recentWallpapers
+        if (old[0] === path) return
+        const updated = [path, ...old.filter(p => p !== path)].slice(0, 5)
+        // Downloaded online wallpapers are cached only while in the last-5 list
+        for (const p of old) {
+            if (!updated.includes(p) && p.startsWith(root.onlineCacheDir))
+                Quickshell.execDetached(["rm", "-f", p])
+        }
+        Config.options.background.recentWallpapers = updated
+    }
     Connections {
         target: Config.options.background
         function onWallpaperPathChanged() {
-            const path = FileUtils.trimFileProtocol(Config.options.background.wallpaperPath)
-            if (!path || path.length === 0) return
-            const old = Config.options.background.recentWallpapers
-            const updated = [path, ...old.filter(p => p !== path)].slice(0, 5)
-            // Downloaded online wallpapers are cached only while in the last-5 list
-            for (const p of old) {
-                if (!updated.includes(p) && p.startsWith(root.onlineCacheDir))
-                    Quickshell.execDetached(["rm", "-f", p])
+            // Deferred: during a config file reload the (stale) recentWallpapers from
+            // disk is assigned after wallpaperPath, clobbering a synchronous update here.
+            Qt.callLater(root.updateRecents)
+        }
+    }
+
+    // Folder picker for the wallpaper/live wallpaper path (desktop menu + settings)
+    Process {
+        id: folderPickProc
+        property string targetKey: "userPath"
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const dir = text.trim()
+                if (dir.length === 0) return
+                Config.options.wallpaperSelector[folderPickProc.targetKey] = dir
             }
-            Config.options.background.recentWallpapers = updated
+        }
+    }
+    function pickFolder(key) {
+        folderPickProc.targetKey = key
+        folderPickProc.exec(["yad", "--file", "--directory", "--title", "Choose wallpaper folder", `--filename=${FileUtils.trimFileProtocol(Directories.home)}/`])
+    }
+
+    // The selector always opens at the configured wallpaper (or live wallpaper) folder
+    Connections {
+        target: GlobalStates
+        function onWallpaperSelectorOpenChanged() {
+            if (!GlobalStates.wallpaperSelectorOpen) {
+                GlobalStates.wallpaperSelectorTarget = "wallpaper"
+                return
+            }
+            const opts = Config.options.wallpaperSelector
+            const dir = GlobalStates.wallpaperSelectorTarget === "live" ? opts.liveWallpapersPath : opts.userPath
+            root.setDirectory((dir ?? "").trim().length > 0 ? dir : root.defaultFolder)
         }
     }
 

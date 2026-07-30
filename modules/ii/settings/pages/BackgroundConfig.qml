@@ -210,7 +210,62 @@ ContentPage {
                     syncWallpaperSwitch.checked = Qt.binding(() => Config.options.background.lockWall === "")
                 }
             }
-        
+
+            ContentSubsection {
+                title: Translation.tr("Wallpaper folders")
+                Layout.fillWidth: true
+
+                GroupedList {
+                    ConfigTextArea {
+                        id: userPathField
+                        Layout.fillWidth: true
+                        buttonIcon: "wallpaper"
+                        text: Translation.tr("Wallpaper path")
+                        placeholderText: Translation.tr("e.g., /home/user/Pictures/wallpapers")
+                        fieldWidth: 300
+                        value: Config.options.wallpaperSelector.userPath ?? ""
+                        confirmButtonVisible: true
+                        confirmButtonIcon: "folder_open"
+                        onConfirmClicked: Wallpapers.pickFolder("userPath")
+                        onValueChanged: userPathDebounceTimer.restart()
+                        Timer {
+                            id: userPathDebounceTimer
+                            interval: 1000
+                            onTriggered: Config.options.wallpaperSelector.userPath = userPathField.value
+                        }
+                    }
+                    ConfigTextArea {
+                        id: liveWallpapersPathField
+                        Layout.fillWidth: true
+                        buttonIcon: "video_template"
+                        text: Translation.tr("Live wallpaper path")
+                        placeholderText: Translation.tr("e.g., /home/user/Videos/Wallpapers")
+                        fieldWidth: 300
+                        value: Config.options.wallpaperSelector.liveWallpapersPath ?? ""
+                        confirmButtonVisible: true
+                        confirmButtonIcon: "folder_open"
+                        onConfirmClicked: Wallpapers.pickFolder("liveWallpapersPath")
+                        onValueChanged: liveWallpapersPathDebounceTimer.restart()
+                        Timer {
+                            id: liveWallpapersPathDebounceTimer
+                            interval: 1000
+                            onTriggered: Config.options.wallpaperSelector.liveWallpapersPath = liveWallpapersPathField.value
+                        }
+                    }
+                }
+
+                // Refresh the fields when the folder picker writes the config
+                Connections {
+                    target: Config.options.wallpaperSelector
+                    function onUserPathChanged() {
+                        userPathField.value = Config.options.wallpaperSelector.userPath
+                    }
+                    function onLiveWallpapersPathChanged() {
+                        liveWallpapersPathField.value = Config.options.wallpaperSelector.liveWallpapersPath
+                    }
+                }
+            }
+
             ContentSubsection {
                 title: Translation.tr("Centered wallpaper")
                 Layout.fillWidth: true
