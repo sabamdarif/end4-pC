@@ -1,6 +1,8 @@
 pragma Singleton
 pragma ComponentBehavior: Bound
 
+import qs.services
+import qs.modules.common
 import Quickshell
 import Quickshell.Bluetooth
 import Quickshell.Io
@@ -34,4 +36,40 @@ Singleton {
         ...pairedButNotConnectedDevices,
         ...unpairedDevices
     ]
+
+    // Connect/disconnect feedback
+    property var _prevConnectedNames: null
+    onConnectedDevicesChanged: {
+        const names = connectedDevices.map(d => d.name);
+        if (_prevConnectedNames === null || !startupGrace.done) {
+            _prevConnectedNames = names;
+            return;
+        }
+        const added = names.filter(n => !_prevConnectedNames.includes(n));
+        const removed = _prevConnectedNames.filter(n => !names.includes(n));
+        _prevConnectedNames = names;
+        added.forEach(name => root.connectionFeedback(true, name));
+        removed.forEach(name => root.connectionFeedback(false, name));
+    }
+
+    function connectionFeedback(connected, name) {
+        Quickshell.execDetached([
+            "notify-send",
+            connected ? Translation.tr("Bluetooth device connected") : Translation.tr("Bluetooth device disconnected"),
+            name,
+            "-a", "Shell",
+            "--hint=int:transient:1",
+        ]);
+        if (Config.options.sounds.bluetooth)
+            Audio.playSystemSound(connected ? "device-added" : "device-removed");
+    }
+
+    Timer {
+        // Don't fire feedback for devices that are already connected when the shell starts
+        id: startupGrace
+        property bool done: false
+        interval: 3000
+        running: true
+        onTriggered: done = true
+    }
 }

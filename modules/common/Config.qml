@@ -748,6 +748,7 @@ Singleton {
 
             property JsonObject sounds: JsonObject {
                 property bool battery: false
+                property bool bluetooth: true
                 property bool pomodoro: false
                 property bool notification: false
                 property bool volumeChanged: false

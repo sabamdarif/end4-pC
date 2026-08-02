@@ -166,6 +166,14 @@ ContentPage {
                     }
                 }
                 ConfigSwitch {
+                    buttonIcon: "bluetooth"
+                    text: Translation.tr("Bluetooth")
+                    checked: Config.options.sounds.bluetooth
+                    onCheckedChanged: {
+                        Config.options.sounds.bluetooth = checked;
+                    }
+                }
+                ConfigSwitch {
                     buttonIcon: "notifications_active"
                     text: Translation.tr("New notification")
                     checked: Config.options.sounds.notification
