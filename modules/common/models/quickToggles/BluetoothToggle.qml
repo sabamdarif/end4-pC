@@ -17,6 +17,8 @@ QuickToggleModel {
     available: BluetoothStatus.available
     toggled: BluetoothStatus.enabled
     mainAction: () => {
+        // rfkill-blocked adapter won't power on — unblock first
+        Quickshell.execDetached(["bash", "-c", "rfkill unblock bluetooth"]);
         Bluetooth.defaultAdapter.enabled = !Bluetooth.defaultAdapter?.enabled
     }
     hasMenu: true
