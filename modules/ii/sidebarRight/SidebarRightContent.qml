@@ -34,6 +34,20 @@ Item {
     property bool editMode: false
     property bool showIconPickerDialog: false
 
+    function closeDialogs() {
+        showAudioOutputDialog = false;
+        showAudioInputDialog = false;
+        showBluetoothDialog = false;
+        showNightLightDialog = false;
+        showWifiDialog = false;
+        showIconPickerDialog = false;
+    }
+
+    function openDialog(shownPropertyString) {
+        closeDialogs();
+        root[shownPropertyString] = true;
+    }
+
     readonly property MprisPlayer activePlayer: MprisController.activePlayer
     readonly property var realPlayers: MprisController.players
     readonly property var meaningfulPlayers: {
@@ -80,10 +94,8 @@ Item {
         target: GlobalStates
         function onSidebarRightOpenChanged() {
             if (!GlobalStates.sidebarRightOpen) {
-                root.showWifiDialog = false;
-                root.showBluetoothDialog = false;
-                root.showAudioOutputDialog = false;
-                root.showAudioInputDialog = false;
+                root.closeDialogs();
+                root.editMode = false;
             }
         }
     }
@@ -457,11 +469,11 @@ Item {
         active: Config.options.sidebar.quickToggles.style === styleName
         Connections {
             target: quickPanelImplLoader.item
-            function onOpenAudioOutputDialog() { root.showAudioOutputDialog = true; }
-            function onOpenAudioInputDialog() { root.showAudioInputDialog = true; }
-            function onOpenBluetoothDialog() { root.showBluetoothDialog = true; }
-            function onOpenNightLightDialog() { root.showNightLightDialog = true; }
-            function onOpenWifiDialog() { root.showWifiDialog = true; }
+            function onOpenAudioOutputDialog() { root.openDialog("showAudioOutputDialog"); }
+            function onOpenAudioInputDialog() { root.openDialog("showAudioInputDialog"); }
+            function onOpenBluetoothDialog() { root.openDialog("showBluetoothDialog"); }
+            function onOpenNightLightDialog() { root.openDialog("showNightLightDialog"); }
+            function onOpenWifiDialog() { root.openDialog("showWifiDialog"); }
         }
     }
 
@@ -500,7 +512,7 @@ Item {
                     MouseArea {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: root.showIconPickerDialog = true
+                        onClicked: root.openDialog("showIconPickerDialog")
                     }
                 }
                 StyledText {

@@ -18,7 +18,7 @@ Details for each task: see [plan.md](plan.md).
 | T04 | Low battery sounds at 20% / 15% | ✅ | defaults now use existing low/critical handlers at 20% and 15% |
 | T05 | Battery popup Health shows N/A | ✅ | health now shows Good/Fair/Poor/Unknown, with cycles when available |
 | T06 | Android-like battery icon | ✅ | existing ClippedProgressBar is a One UI 7 battery with fill, tip, percentage, and charging state |
-| T07 | Auto-close popups in control center | 🟨 | tracing shared popup state and sidebar lifecycle |
+| T07 | Auto-close popups in control center | ✅ | opening one closes siblings; sidebar close resets all dialogs and edit mode |
 | T08 | Fix color picker | ⬜ | reproduce first |
 | T09 | Settings first-load text/icon layout jump | ⬜ | |
 | T10 | Update indicator: + flatpak | ⬜ | one-liner in Updates.qml |
