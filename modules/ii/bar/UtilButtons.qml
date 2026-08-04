@@ -60,13 +60,13 @@ Item {
             id: colorPickerM3
             UtilButton {
                 iconText: "colorize"
-                onClicked: Quickshell.execDetached(["hyprpicker", "-a"])
+                onClicked: Quickshell.execDetached([Quickshell.shellPath("scripts/images/color-picker.sh")])
             }
         }
         Component {
             id: legacyColorPicker
             CircleUtilButton {
-                onClicked: Quickshell.execDetached(["hyprpicker", "-a"])
+                onClicked: Quickshell.execDetached([Quickshell.shellPath("scripts/images/color-picker.sh")])
                 MaterialSymbol {
                     horizontalAlignment: Qt.AlignHCenter
                     fill: 1; text: "colorize"
