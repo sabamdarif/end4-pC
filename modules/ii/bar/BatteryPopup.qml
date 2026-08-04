@@ -14,6 +14,13 @@ StyledPopup {
         return `${m}m`
     }
 
+    function healthLabel(health) {
+        if (health <= 0) return Translation.tr("Unknown")
+        if (health >= 80) return Translation.tr("Good")
+        if (health >= 50) return Translation.tr("Fair")
+        return Translation.tr("Poor")
+    }
+
     readonly property bool showTime: !(Battery.chargeState == 4
         || (Battery.isCharging ? Battery.timeToFull : Battery.timeToEmpty) <= 0
         || Battery.energyRate <= 0.01)
@@ -82,9 +89,10 @@ StyledPopup {
                 iconText: "heart_check"
                 iconShape: MaterialShape.Shape.Clover4Leaf
                 value: Battery.health / 100
-                sublabel: Battery.chargeCycles > 0
-                    ? `${Battery.chargeCycles} ${Translation.tr("cycles")}`
-                    : Translation.tr("N/A")
+                sublabel: root.healthLabel(Battery.health)
+                    + (Battery.chargeCycles > 0
+                        ? ` · ${Battery.chargeCycles} ${Translation.tr("cycles")}`
+                        : "")
                 sublabelColor: Appearance.colors.colOnSurfaceVariant
                 cardWidth: 160
             }
