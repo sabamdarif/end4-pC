@@ -16,6 +16,63 @@ Item {
     property real contentPadding: 8
     property int currentPage: 0
     property bool showingProfile: false
+    property string settingsSearchQuery: ""
+    property var settingsSearchResults: []
+    property int settingsSearchIndex: 0
+
+    function collectSearchSections(item, results) {
+        if (!item) return
+        if (item.settingsSearchSection === true && item.title !== "") {
+            results.push(item.title)
+        }
+        if (!item.children) return
+        for (let i = 0; i < item.children.length; i++) {
+            collectSearchSections(item.children[i], results)
+        }
+    }
+
+    function updateSettingsSearch() {
+        const query = settingsSearchQuery.toLowerCase().trim()
+        if (query === "") {
+            settingsSearchResults = []
+            settingsSearchIndex = 0
+            return
+        }
+
+        let results = []
+        for (let pageIndex = 0; pageIndex < pages.length; pageIndex++) {
+            const pageData = pages[pageIndex]
+            if (pageData.name.toLowerCase().includes(query)) {
+                results.push({ pageIndex: pageIndex, pageName: pageData.name, sectionName: "", icon: pageData.icon })
+            }
+
+            const loader = pagesRepeater.itemAt(pageIndex)
+            if (!loader || !loader.item) continue
+            let sectionNames = []
+            collectSearchSections(loader.item, sectionNames)
+            for (let sectionIndex = 0; sectionIndex < sectionNames.length; sectionIndex++) {
+                const sectionName = sectionNames[sectionIndex]
+                if (sectionName.toLowerCase().includes(query)) {
+                    results.push({ pageIndex: pageIndex, pageName: pageData.name, sectionName: sectionName, icon: pageData.icon })
+                }
+            }
+        }
+        settingsSearchResults = results.slice(0, 12)
+        settingsSearchIndex = Math.min(settingsSearchIndex, Math.max(0, settingsSearchResults.length - 1))
+    }
+
+    function openSettingsSearchResult(result) {
+        if (!result) return
+        currentPage = result.pageIndex
+        showingProfile = false
+        settingsSearchQuery = ""
+        if (result.sectionName === "") return
+
+        const loader = pagesRepeater.itemAt(result.pageIndex)
+        if (loader && loader.item && typeof loader.item.goTo === "function") {
+            Qt.callLater(() => loader.item.goTo(result.sectionName))
+        }
+    }
 
     // Not a plain `width > 900` binding: width is 0 for the first frames, so the
     // rail would start collapsed and animate open every time the window opens.
@@ -224,6 +281,123 @@ Item {
                         opacity: 0.15
                     }
 
+                    Item {
+                        visible: navRail.expanded
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: settingsSearchField.implicitHeight
+                        z: 10
+
+                        MaterialTextField {
+                            id: settingsSearchField
+                            anchors { left: parent.left; right: parent.right }
+                            placeholderText: Translation.tr("Search settings")
+                            leftPadding: 36
+                            rightPadding: 12
+                            selectByMouse: true
+                            text: root.settingsSearchQuery
+                            onTextEdited: {
+                                root.settingsSearchQuery = text
+                                root.settingsSearchIndex = 0
+                                root.updateSettingsSearch()
+                            }
+                            onActiveFocusChanged: if (activeFocus) root.updateSettingsSearch()
+                            Keys.onPressed: event => {
+                                if (event.key === Qt.Key_Down && root.settingsSearchResults.length > 0) {
+                                    root.settingsSearchIndex = Math.min(root.settingsSearchIndex + 1, root.settingsSearchResults.length - 1)
+                                    event.accepted = true
+                                } else if (event.key === Qt.Key_Up && root.settingsSearchResults.length > 0) {
+                                    root.settingsSearchIndex = Math.max(root.settingsSearchIndex - 1, 0)
+                                    event.accepted = true
+                                } else if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter) && root.settingsSearchResults.length > 0) {
+                                    root.openSettingsSearchResult(root.settingsSearchResults[root.settingsSearchIndex])
+                                    event.accepted = true
+                                } else if (event.key === Qt.Key_Escape) {
+                                    root.settingsSearchQuery = ""
+                                    root.settingsSearchResults = []
+                                    focus = false
+                                    event.accepted = true
+                                }
+                            }
+
+                            MaterialSymbol {
+                                anchors { left: parent.left; leftMargin: 11; verticalCenter: parent.verticalCenter }
+                                text: "search"
+                                iconSize: 18
+                                color: Appearance.colors.colSubtext
+                            }
+                        }
+
+                        Rectangle {
+                            visible: settingsSearchField.activeFocus && root.settingsSearchQuery.trim() !== ""
+                            anchors { top: settingsSearchField.bottom; left: parent.left; right: parent.right; topMargin: 4 }
+                            implicitHeight: Math.min(searchResultsColumn.implicitHeight + 8, 300)
+                            color: Appearance.m3colors.m3surfaceContainerHigh
+                            radius: Appearance.rounding.small
+                            border.width: 1
+                            border.color: Appearance.m3colors.m3outlineVariant
+                            clip: true
+
+                            Column {
+                                id: searchResultsColumn
+                                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 4 }
+
+                                Repeater {
+                                    model: root.settingsSearchResults
+                                    RippleButton {
+                                        required property var index
+                                        required property var modelData
+                                        width: searchResultsColumn.width
+                                        height: 44
+                                        colBackground: index === root.settingsSearchIndex
+                                            ? Appearance.colors.colSecondaryContainer
+                                            : "transparent"
+                                        colBackgroundHover: Appearance.colors.colLayer1Hover
+                                        onClicked: root.openSettingsSearchResult(modelData)
+
+                                        contentItem: RowLayout {
+                                            spacing: 8
+                                            MaterialSymbol {
+                                                text: modelData.icon
+                                                iconSize: 18
+                                                color: Appearance.colors.colOnLayer1
+                                            }
+                                            ColumnLayout {
+                                                spacing: 0
+                                                Layout.fillWidth: true
+                                                StyledText {
+                                                    Layout.fillWidth: true
+                                                    text: modelData.sectionName === "" ? modelData.pageName : modelData.sectionName
+                                                    color: Appearance.colors.colOnLayer1
+                                                    font.pixelSize: Appearance.font.pixelSize.small
+                                                    elide: Text.ElideRight
+                                                }
+                                                StyledText {
+                                                    visible: modelData.sectionName !== ""
+                                                    Layout.fillWidth: true
+                                                    text: modelData.pageName
+                                                    color: Appearance.colors.colSubtext
+                                                    font.pixelSize: Appearance.font.pixelSize.smaller
+                                                    elide: Text.ElideRight
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                StyledText {
+                                    visible: root.settingsSearchResults.length === 0
+                                    width: searchResultsColumn.width
+                                    height: 40
+                                    horizontalAlignment: Text.AlignHCenter
+                                    verticalAlignment: Text.AlignVCenter
+                                    text: Translation.tr("No settings found")
+                                    color: Appearance.colors.colSubtext
+                                    font.pixelSize: Appearance.font.pixelSize.small
+                                }
+                            }
+                        }
+                    }
+
                     FloatingActionButton {
                         id: fab
                         Layout.bottomMargin: -25
@@ -309,6 +483,9 @@ Item {
                             onLoaded: {
                                 if (root.currentPage === index) {
                                     GlobalStates.currentPageInstance = item;
+                                }
+                                if (root.settingsSearchQuery !== "") {
+                                    root.updateSettingsSearch()
                                 }
                             }
 
