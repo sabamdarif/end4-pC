@@ -110,7 +110,7 @@ MouseArea {
     //     }
     // }
 
-    // Caelestia-inspired centered clock and date. Authentication stays in the existing toolbar below.
+    // Keep time separate from the login box, as in Noctalia's widget-based lock screen.
     Column {
         anchors {
             horizontalCenter: parent.horizontalCenter
@@ -147,14 +147,17 @@ MouseArea {
         }
     }
 
-    // Main toolbar: password box
+    // Noctalia-style login panel: a compact rounded card near the bottom edge.
     Toolbar {
         id: mainIsland
         anchors {
             horizontalCenter: parent.horizontalCenter
-            verticalCenter: parent.verticalCenter
-            verticalCenterOffset: Math.min(170, parent.height * 0.2)
+            bottom: parent.bottom
+            bottomMargin: 140
         }
+        padding: 12
+        radius: 12
+        colBackground: ColorUtils.transparentize(Appearance.m3colors.m3surfaceContainer, 0.12)
         scale: root.toolbarScale
         opacity: root.toolbarOpacity
 
@@ -282,8 +285,11 @@ MouseArea {
         anchors {
             horizontalCenter: mainIsland.horizontalCenter
             bottom: mainIsland.top
-            bottomMargin: 12
+            bottomMargin: 8
         }
+        padding: 8
+        radius: 12
+        colBackground: ColorUtils.transparentize(Appearance.m3colors.m3surfaceContainer, 0.12)
         scale: root.toolbarScale
         opacity: root.toolbarOpacity
 
@@ -468,8 +474,11 @@ MouseArea {
         anchors {
             horizontalCenter: mainIsland.horizontalCenter
             top: mainIsland.bottom
-            topMargin: 12
+            topMargin: 8
         }
+        padding: 8
+        radius: 12
+        colBackground: ColorUtils.transparentize(Appearance.m3colors.m3surfaceContainer, 0.12)
 
         scale: root.toolbarScale
         opacity: root.toolbarOpacity
