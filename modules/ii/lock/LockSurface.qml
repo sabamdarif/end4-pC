@@ -110,18 +110,51 @@ MouseArea {
     //     }
     // }
 
+    // Caelestia-inspired centered clock and date. Authentication stays in the existing toolbar below.
+    Column {
+        anchors {
+            horizontalCenter: parent.horizontalCenter
+            top: parent.top
+            topMargin: Math.max(48, parent.height * 0.1)
+        }
+        spacing: 2
+        opacity: root.toolbarOpacity
+        scale: root.toolbarScale
+
+        StyledText {
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: DateTime.time
+            color: Appearance.colors.colPrimary
+            font.pixelSize: Math.min(150, Math.max(78, root.height * 0.14))
+            font.weight: Font.Light
+        }
+
+        StyledText {
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: DateTime.longDate.toUpperCase()
+            color: Appearance.colors.colOnSurface
+            font.pixelSize: Appearance.font.pixelSize.normal
+            font.weight: Font.DemiBold
+            font.letterSpacing: 1.2
+        }
+
+        StyledText {
+            anchors.horizontalCenter: parent.horizontalCenter
+            topPadding: 12
+            text: SystemInfo.username
+            color: Appearance.colors.colOnSurfaceVariant
+            font.pixelSize: Appearance.font.pixelSize.small
+        }
+    }
+
     // Main toolbar: password box
     Toolbar {
         id: mainIsland
         anchors {
             horizontalCenter: parent.horizontalCenter
-            bottom: parent.bottom
-            bottomMargin: 20
+            verticalCenter: parent.verticalCenter
+            verticalCenterOffset: Math.min(170, parent.height * 0.2)
         }
-        Behavior on anchors.bottomMargin {
-            animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
-        }
-
         scale: root.toolbarScale
         opacity: root.toolbarOpacity
 
@@ -247,10 +280,9 @@ MouseArea {
         id: leftIsland
         visible: Config.options.lock.showToolbars
         anchors {
-            right: mainIsland.left
-            top: mainIsland.top
-            bottom: mainIsland.bottom
-            rightMargin: 10
+            horizontalCenter: mainIsland.horizontalCenter
+            bottom: mainIsland.top
+            bottomMargin: 12
         }
         scale: root.toolbarScale
         opacity: root.toolbarOpacity
@@ -434,10 +466,9 @@ MouseArea {
         id: rightIsland
         visible: Config.options.lock.showToolbars
         anchors {
-            left: mainIsland.right
-            top: mainIsland.top
-            bottom: mainIsland.bottom
-            leftMargin: 10
+            horizontalCenter: mainIsland.horizontalCenter
+            top: mainIsland.bottom
+            topMargin: 12
         }
 
         scale: root.toolbarScale
