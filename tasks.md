@@ -20,18 +20,18 @@ Details for each task: see [plan.md](plan.md).
 | T06 | Android-like battery icon | ✅ | existing ClippedProgressBar is a One UI 7 battery with fill, tip, percentage, and charging state |
 | T07 | Auto-close popups in control center | ✅ | opening one closes siblings; sidebar close resets all dialogs and edit mode |
 | T08 | Fix color picker | ✅ | shared picker script uses hyprpicker or grim/slurp/ImageMagick fallback |
-| T09 | Settings first-load text/icon layout jump | ⬜ | |
-| T10 | Update indicator: + flatpak | ⬜ | one-liner in Updates.qml |
-| T11 | Screenshot: fullscreen default, Alt = area | ⬜ | |
+| T09 | Settings first-load text/icon layout jump | ✅ | suppress initial collapsed-to-expanded label animation |
+| T10 | Update indicator: + flatpak | ✅ | total in pill; hover breakdown for pacman, AUR, and Flatpak |
+| T11 | Screenshot: fullscreen default, Alt = area | ✅ | default UI/IPC action is fullscreen; Alt and areaScreenshot retain region selection |
 
 ## Phase 2 — Settings app
 
 | ID | Task | Status | Notes |
 |----|------|--------|-------|
-| T12 | Rearrange settings pages (+ fix About index) | ⬜ | do before T13 |
-| T13 | Settings search | ⬜ | reuse goTo() deep-linking |
-| T14 | DNS dropdown + custom provider | ⬜ | |
-| T15 | Add matugen theme from settings | ⬜ | |
+| T12 | Rearrange settings pages (+ fix About index) | ✅ | reordered navigation; About refresh now uses a stable page key |
+| T13 | Settings search | ✅ | searches translated page and section titles with keyboard navigation and deep links |
+| T14 | DNS dropdown + custom provider | ✅ | provider dropdown includes presets, DHCP, and conditional custom fields |
+| T15 | Add matugen theme from settings | ✅ | saved named schemes with type/accent and apply/remove controls |
 | T16 | Option to disable left sidebar | ⬜ | |
 | T17 | Change system sounds (Android-style) | ⬜ | |
 | T18 | Wallpaper-based scheme combinations | ⬜ | |

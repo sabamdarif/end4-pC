@@ -86,6 +86,55 @@ Singleton {
         matugenConfigFile.setText(toml)
     }
 
+    readonly property list<var> matugenSchemeOptions: [
+        { displayName: Translation.tr("Automatic"), value: "auto" },
+        { displayName: Translation.tr("Tonal spot"), value: "scheme-tonal-spot" },
+        { displayName: Translation.tr("Expressive"), value: "scheme-expressive" },
+        { displayName: Translation.tr("Fidelity"), value: "scheme-fidelity" },
+        { displayName: Translation.tr("Fruit salad"), value: "scheme-fruit-salad" },
+        { displayName: Translation.tr("Monochrome"), value: "scheme-monochrome" },
+        { displayName: Translation.tr("Neutral"), value: "scheme-neutral" },
+        { displayName: Translation.tr("Rainbow"), value: "scheme-rainbow" },
+        { displayName: Translation.tr("Content"), value: "scheme-content" }
+    ]
+
+    function validSchemeType(type) {
+        return matugenSchemeOptions.some(option => option.value === type)
+    }
+
+    function normalizeSchemeName(name) {
+        return (name || "").trim().replace(/\s+/g, " ")
+    }
+
+    function normalizeAccentColor(color) {
+        const value = (color || "").trim()
+        return value === "" || /^#?[0-9a-fA-F]{6}$/.test(value)
+            ? (value === "" ? "" : (value.startsWith("#") ? value : `#${value}`))
+            : ""
+    }
+
+    function saveCustomScheme(name, type, accentColor) {
+        const normalizedName = normalizeSchemeName(name)
+        const normalizedType = validSchemeType(type) ? type : "auto"
+        if (normalizedName === "") return false
+
+        const scheme = { name: normalizedName, type: normalizedType, accentColor: normalizeAccentColor(accentColor) }
+        const schemes = Config.options.appearance.palette.customSchemes.filter(item => item && item.name !== normalizedName)
+        Config.options.appearance.palette.customSchemes = schemes.concat([scheme])
+        return true
+    }
+
+    function removeCustomScheme(name) {
+        Config.options.appearance.palette.customSchemes = Config.options.appearance.palette.customSchemes.filter(item => item && item.name !== name)
+    }
+
+    function applyCustomScheme(scheme) {
+        if (!scheme || !validSchemeType(scheme.type)) return
+        Config.options.appearance.palette.type = scheme.type
+        Config.options.appearance.palette.accentColor = normalizeAccentColor(scheme.accentColor)
+        root.regenerateColors()
+    }
+
     // Re-run matugen + color generation with the current wallpaper
     function regenerateColors() {
         Quickshell.execDetached(["bash", Directories.wallpaperSwitchScriptPath, "--noswitch"])

@@ -892,6 +892,89 @@ ContentPage {
             }
 
             ContentSubsection {
+                title: Translation.tr("Saved matugen schemes")
+
+                ConfigTextArea {
+                    id: customSchemeNameField
+                    Layout.fillWidth: true
+                    buttonIcon: "bookmark_add"
+                    text: Translation.tr("Scheme name")
+                    placeholderText: Translation.tr("e.g. Soft night")
+                    confirmButtonVisible: true
+                    confirmButtonIcon: "save"
+                    onConfirmClicked: {
+                        if (SystemTheming.saveCustomScheme(value, customSchemeType.pendingValue, customSchemeAccentField.value)) {
+                            value = ""
+                            customSchemeAccentField.value = ""
+                        }
+                    }
+                }
+
+                ConfigComboBox {
+                    id: customSchemeType
+                    Layout.fillWidth: true
+                    property string pendingValue: Config.options.appearance.palette.type
+                    buttonIcon: "palette"
+                    text: Translation.tr("Scheme type")
+                    model: SystemTheming.matugenSchemeOptions
+                    currentValue: pendingValue
+                    onSelected: newValue => pendingValue = newValue
+                }
+
+                ConfigTextArea {
+                    id: customSchemeAccentField
+                    Layout.fillWidth: true
+                    buttonIcon: "colorize"
+                    text: Translation.tr("Accent color")
+                    description: Translation.tr("Optional six-digit hex color, for example #89b4fa")
+                    placeholderText: Translation.tr("Leave empty to use the wallpaper")
+                    value: ""
+                }
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    visible: Config.options.appearance.palette.customSchemes.length > 0
+                    implicitHeight: savedSchemesColumn.implicitHeight + 28
+                    radius: Appearance.rounding.normal
+                    color: Appearance.colors.colLayer1
+
+                    ColumnLayout {
+                        id: savedSchemesColumn
+                        anchors { fill: parent; margins: 14 }
+                        spacing: 4
+
+                        Repeater {
+                            model: Config.options.appearance.palette.customSchemes
+                            delegate: ConfigRow {
+                                required property var modelData
+                                Layout.fillWidth: true
+                                uniform: true
+
+                                StyledText {
+                                    Layout.fillWidth: true
+                                    text: modelData.name
+                                    color: Appearance.colors.colOnLayer1
+                                    elide: Text.ElideRight
+                                }
+
+                                RippleButtonWithIcon {
+                                    materialIcon: "play_arrow"
+                                    mainText: Translation.tr("Apply")
+                                    onClicked: SystemTheming.applyCustomScheme(modelData)
+                                }
+
+                                RippleButtonWithIcon {
+                                    materialIcon: "delete"
+                                    mainText: Translation.tr("Remove")
+                                    onClicked: SystemTheming.removeCustomScheme(modelData.name)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            ContentSubsection {
                 title: Translation.tr("App color templates (matugen)")
 
                 // Templates parsed live from ~/.config/matugen/config.toml.orig — nothing hardcoded
