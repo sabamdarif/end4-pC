@@ -68,7 +68,7 @@ PanelWindow {
     readonly property real monitorOffsetX: hyprlandMonitor.x
     readonly property real monitorOffsetY: hyprlandMonitor.y
     property int activeWorkspaceId: hyprlandMonitor.activeWorkspace?.id ?? 0
-    property string screenshotPath: `${root.screenshotDir}/image-${screen.name}`
+    property string screenshotPath: `${root.screenshotDir}/image-${screen.name}.png`
     property real dragStartX: 0
     property real dragStartY: 0
     property real draggingX: 0
@@ -272,6 +272,7 @@ PanelWindow {
         if (root.regionWidth <= 0 || root.regionHeight <= 0) {
             console.warn("[Region Selector] Invalid region size, skipping snip.");
             root.dismiss();
+            return;
         }
 
         // Clamp region to screen bounds
@@ -297,6 +298,7 @@ PanelWindow {
             screenshotAction, //
             screenshotDir
         )
+        if (!command) return;
         Quickshell.execDetached(command);
         if (root.action == RegionSelection.SnipAction.Record || root.action == RegionSelection.SnipAction.RecordWithSound) {
             root.phase = RegionSelection.Phase.Post
