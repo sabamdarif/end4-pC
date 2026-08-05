@@ -31,9 +31,14 @@ ContentPage {
     forceWidth: true
 
     property string selectedDnsConn: ""
+    property string selectedDnsProvider: ""
     readonly property string dnsConn: selectedDnsConn !== "" ? selectedDnsConn : NetworkExtras.activeConnectionName
+    readonly property bool customDnsProviderVisible: selectedDnsProvider === "custom"
+        || (selectedDnsProvider === "" && NetworkExtras.currentPresetName === ""
+            && (NetworkExtras.currentDnsV4 !== "" || NetworkExtras.currentDnsV6 !== ""))
 
     onDnsConnChanged: {
+        selectedDnsProvider = ""
         if (dnsConn !== "" && dnsConn !== NetworkExtras.dnsConnection)
             NetworkExtras.readDns(dnsConn)
     }
@@ -380,8 +385,8 @@ ContentPage {
                             }
                             StyledText {
                                 Layout.leftMargin: 34
-                                visible: (ethRow.nativeDev?.linkSpeed ?? 0) > 0
-                                text: Translation.tr("Link speed: %1 Mb/s").arg(ethRow.nativeDev?.linkSpeed ?? 0)
+                                visible: ethRow.nativeDev !== null && ethRow.nativeDev.linkSpeed > 0
+                                text: Translation.tr("Link speed: %1 Mb/s").arg(ethRow.nativeDev !== null ? ethRow.nativeDev.linkSpeed : 0)
                                 font.pixelSize: Appearance.font.pixelSize.smaller
                                 color: Appearance.colors.colSubtext
                             }
@@ -604,41 +609,42 @@ ContentPage {
             }
 
             ContentSubsection {
-                title: Translation.tr("Providers")
+                title: Translation.tr("Provider")
 
-                Rectangle {
-                    Layout.fillWidth: true
-                    implicitHeight: presetFlow.implicitHeight + 28
-                    radius: Appearance.rounding.normal
-                    color: Appearance.colors.colLayer1
+                GroupedList {
+                    ConfigComboBox {
+                        buttonIcon: "dns"
+                        text: Translation.tr("DNS provider")
+                        description: Translation.tr("Choose a preset or enter custom DNS servers")
+                        enabled: page.dnsConn !== ""
+                        model: [
+                            { displayName: Translation.tr("Automatic (DHCP)"), value: "automatic" }
+                        ].concat(NetworkExtras.dnsPresets.map(preset => ({
+                            displayName: preset.name,
+                            value: preset.name
+                        }))).concat([
+                            { displayName: Translation.tr("Custom"), value: "custom" }
+                        ])
+                        currentValue: {
+                            if (page.selectedDnsProvider !== "") return page.selectedDnsProvider
+                            if (NetworkExtras.currentPresetName !== "") return NetworkExtras.currentPresetName
+                            if (NetworkExtras.currentDnsV4 !== "" || NetworkExtras.currentDnsV6 !== "") return "custom"
+                            return "automatic"
+                        }
+                        onSelected: newValue => {
+                            page.selectedDnsProvider = newValue
+                            if (newValue === "custom") return
+                            if (newValue === "automatic") {
+                                NetworkExtras.resetDns(page.dnsConn)
+                                return
+                            }
 
-                    Flow {
-                        id: presetFlow
-                        anchors { fill: parent; margins: 14 }
-                        spacing: 6
-
-                        Repeater {
-                            model: NetworkExtras.dnsPresets
-                            delegate: RippleButtonWithIcon {
-                                id: presetButton
-                                required property var modelData
-                                readonly property bool current: NetworkExtras.currentPresetName === presetButton.modelData.name
-                                materialIcon: presetButton.current ? "check" : "dns"
-                                mainText: presetButton.modelData.name
-                                colBackground: presetButton.current ? Appearance.colors.colPrimaryContainer : Appearance.colors.colLayer2
-                                enabled: page.dnsConn !== ""
-                                onClicked: {
-                                    // DoT is applied where the provider supports it
-                                    // and the DoT switch is on (script: apply_plain/apply_dot)
-                                    NetworkExtras.applyDns(page.dnsConn,
-                                        presetButton.modelData.ipv4,
-                                        presetButton.modelData.ipv6,
-                                        NetworkExtras.currentDotEnabled && presetButton.modelData.dot !== "")
-                                }
-                                StyledToolTip {
-                                    text: presetButton.modelData.ipv4.replace(",", ", ")
-                                        + (presetButton.modelData.dot !== "" ? "\nDoT: " + presetButton.modelData.dot : "")
-                                }
+                            const preset = NetworkExtras.dnsPresets.find(item => item.name === newValue)
+                            if (preset) {
+                                NetworkExtras.applyDns(page.dnsConn,
+                                    preset.ipv4,
+                                    preset.ipv6,
+                                    NetworkExtras.currentDotEnabled && preset.dot !== "")
                             }
                         }
                     }
@@ -646,7 +652,8 @@ ContentPage {
             }
 
             ContentSubsection {
-                title: Translation.tr("Custom")
+                visible: page.customDnsProviderVisible
+                title: Translation.tr("Custom provider")
 
                 GroupedList {
                     ConfigTextArea {
@@ -662,8 +669,6 @@ ContentPage {
                         placeholderText: Translation.tr("e.g. 2606:4700:4700::1111")
                     }
                     RowLayout {
-                        id: dnsButtonsRow
-                        property bool confirmingReset: false
                         spacing: 10
                         Layout.leftMargin: 8
                         Layout.rightMargin: 8
@@ -680,30 +685,6 @@ ContentPage {
                             }
                         }
                         Item { Layout.fillWidth: true }
-                        RippleButtonWithIcon {
-                            visible: !dnsButtonsRow.confirmingReset
-                            materialIcon: "restart_alt"
-                            mainText: Translation.tr("Automatic (DHCP)")
-                            enabled: page.dnsConn !== ""
-                            onClicked: dnsButtonsRow.confirmingReset = true
-                            StyledToolTip {
-                                text: Translation.tr("Reset DNS of the selected connection to DHCP defaults")
-                            }
-                        }
-                        DialogButton {
-                            visible: dnsButtonsRow.confirmingReset
-                            buttonText: Translation.tr("Reset?")
-                            colText: Appearance.m3colors.m3error
-                            onClicked: {
-                                dnsButtonsRow.confirmingReset = false
-                                NetworkExtras.resetDns(page.dnsConn)
-                            }
-                        }
-                        DialogButton {
-                            visible: dnsButtonsRow.confirmingReset
-                            buttonText: Translation.tr("Cancel")
-                            onClicked: dnsButtonsRow.confirmingReset = false
-                        }
                     }
                 }
             }
