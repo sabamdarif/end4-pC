@@ -11,6 +11,8 @@ Singleton {
     id: root
 
     property list<var> flatpaks: []
+    property var permissions: ({})
+    property bool flatsealInstalled: false
     readonly property list<var> apps: {
         const systemApps = AppSearch.list.filter(app => !app.noDisplay).map(app => ({
             id: app.id,
@@ -65,9 +67,55 @@ Singleton {
         }
     }
 
+    Process {
+        id: flatsealCheckProc
+        command: ["flatpak", "info", "com.github.tchx84.Flatseal"]
+        onExited: exitCode => root.flatsealInstalled = exitCode === 0
+    }
+
+    Process {
+        id: permissionProc
+        command: ["flatpak", "permissions", "--json"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const values = {}
+                try {
+                    for (const entry of JSON.parse(text || "[]")) {
+                        if (entry.table !== "notifications" || entry.object !== "notification") continue
+                        values[entry.app] = String(entry.permissions).split(",").includes("yes")
+                    }
+                } catch (error) {
+                    console.warn("Could not parse Flatpak permissions:", error)
+                }
+                root.permissions = values
+                root.changed()
+            }
+        }
+    }
+
     function refresh() {
         flatpakProc.running = false
         flatpakProc.running = true
+        permissionProc.running = false
+        permissionProc.running = true
+        flatsealCheckProc.running = false
+        flatsealCheckProc.running = true
+    }
+
+    function notificationPermission(appId) {
+        return root.permissions[appId] ?? true
+    }
+
+    function setNotificationPermission(appId, allowed) {
+        Quickshell.execDetached(["flatpak", "permission-set", "notifications", "notification", appId, allowed ? "yes" : "no"])
+        const values = Object.assign({}, root.permissions)
+        values[appId] = allowed
+        root.permissions = values
+        root.changed()
+    }
+
+    function openPermissions(appId) {
+        Quickshell.execDetached(["flatpak", "run", "com.github.tchx84.Flatseal", appId])
     }
 
     function open(app) {

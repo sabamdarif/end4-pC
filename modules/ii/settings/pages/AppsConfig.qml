@@ -900,18 +900,23 @@ ContentPage {
                             required property int index
                             property bool confirmingUninstall: false
                             property bool confirmingClear: false
+                            property bool permissionsExpanded: false
 
                             Layout.fillWidth: true
                             implicitHeight: appContent.implicitHeight + 16
                             radius: Appearance.rounding.small
                             color: index % 2 === 0 ? Appearance.colors.colLayer2 : "transparent"
 
-                            RowLayout {
+                            ColumnLayout {
                                 id: appContent
                                 anchors { fill: parent; margins: 8 }
-                                spacing: 10
+                                spacing: 8
 
-                                IconImage {
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 10
+
+                                    IconImage {
                                     source: Quickshell.iconPath(appRow.modelData.icon, "image-missing")
                                     implicitWidth: 36
                                     implicitHeight: 36
@@ -939,6 +944,13 @@ ContentPage {
                                     materialIcon: "open_in_new"
                                     mainText: Translation.tr("Open")
                                     onClicked: AppInventory.open(appRow.modelData)
+                                }
+
+                                RippleButtonWithIcon {
+                                    visible: appRow.modelData.source === "flatpak"
+                                    materialIcon: "admin_panel_settings"
+                                    mainText: Translation.tr("Permissions")
+                                    onClicked: appRow.permissionsExpanded = !appRow.permissionsExpanded
                                 }
 
                                 RippleButtonWithIcon {
@@ -978,6 +990,41 @@ ContentPage {
                                     onClicked: {
                                         appRow.confirmingUninstall = false
                                         appRow.confirmingClear = false
+                                    }
+                                }
+                                }
+
+                                RowLayout {
+                                    visible: appRow.modelData.source === "flatpak" && appRow.permissionsExpanded
+                                    Layout.fillWidth: true
+                                    Layout.leftMargin: 46
+                                    spacing: 10
+
+                                    MaterialSymbol {
+                                        text: "notifications"
+                                        iconSize: Appearance.font.pixelSize.larger
+                                        color: Appearance.colors.colOnLayer1
+                                    }
+                                    StyledText {
+                                        Layout.fillWidth: true
+                                        text: Translation.tr("Notifications")
+                                        color: Appearance.colors.colOnLayer1
+                                    }
+                                    StyledSwitch {
+                                        checked: AppInventory.notificationPermission(appRow.modelData.id)
+                                        onClicked: AppInventory.setNotificationPermission(appRow.modelData.id, checked)
+                                        StyledToolTip {
+                                            text: Translation.tr("Allow this app to send notifications")
+                                        }
+                                    }
+                                    RippleButtonWithIcon {
+                                        visible: AppInventory.flatsealInstalled
+                                        materialIcon: "tune"
+                                        mainText: Translation.tr("More")
+                                        onClicked: AppInventory.openPermissions(appRow.modelData.id)
+                                        StyledToolTip {
+                                            text: Translation.tr("Open microphone, camera, filesystem, and other permissions in Flatseal")
+                                        }
                                     }
                                 }
                             }
