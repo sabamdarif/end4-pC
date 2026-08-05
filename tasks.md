@@ -45,4 +45,4 @@ Details for each task: see [plan.md](plan.md).
 | T21 | Launcher: Google-style, overlay layer | ✅ | Overlay layer with a compact centered launcher inspired by Caelestia |
 | T22 | Noctalia-style lock screen | ✅ | Caelestia-inspired clock/date focus and vertically stacked auth/status islands |
 | T23 | Android 12 quick toggles | ✅ | Verified default Android style, configurable grid, edit mode, and 17 toggle delegates |
-| T24 | AI system prompt sync | ⬜ | Config.qml:89 + ii-Default.md |
+| T24 | AI system prompt sync | ✅ | Verified Config.qml and ii-Default.md match the requested prompt byte-for-byte |
