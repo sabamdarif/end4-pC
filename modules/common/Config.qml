@@ -755,6 +755,11 @@ Singleton {
                 property bool notification: false
                 property bool volumeChanged: false
                 property string theme: "freedesktop"
+                property string batteryOverride: ""
+                property string pomodoroOverride: ""
+                property string bluetoothOverride: ""
+                property string notificationOverride: ""
+                property string volumeChangedOverride: ""
             }
 
             property JsonObject time: JsonObject {

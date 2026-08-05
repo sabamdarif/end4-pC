@@ -139,12 +139,28 @@ Singleton {
         }
     }
 
+    function overrideFor(soundName) {
+        const overrides = {
+            "dialog-warning": Config.options.sounds.batteryOverride,
+            "suspend-error": Config.options.sounds.batteryOverride,
+            "alarm-clock-elapsed": Config.options.sounds.pomodoroOverride,
+            "device-added": Config.options.sounds.bluetoothOverride,
+            "device-removed": Config.options.sounds.bluetoothOverride,
+            "message-new-instant": Config.options.sounds.notificationOverride,
+            "audio-volume-change": Config.options.sounds.volumeChangedOverride
+        };
+        return overrides[soundName] || "";
+    }
+
     function playSystemSound(soundName) {
-        // Prefer canberra-gtk-play: it resolves sound themes and fallbacks per the
-        // XDG sound theme spec by itself. Otherwise resolve the theme dir manually
-        // (configured theme -> system/GNOME theme -> freedesktop) and play the file.
+        // Prefer a user override, then resolve the configured system theme.
         const script = `
-snd="$1"; theme="$2"
+snd="$1"; theme="$2"; override="$3"
+if [ -n "$override" ] && [ -f "$override" ]; then
+    if command -v pw-play >/dev/null 2>&1; then exec pw-play "$override"; fi
+    if command -v paplay >/dev/null 2>&1; then exec paplay "$override"; fi
+    if command -v ffplay >/dev/null 2>&1; then exec ffplay -nodisp -autoexit -loglevel quiet "$override"; fi
+fi
 if command -v canberra-gtk-play >/dev/null 2>&1; then
     if [ -n "$theme" ]; then
         exec canberra-gtk-play -i "$snd" --property=canberra.xdg-theme.name="$theme"
@@ -161,6 +177,6 @@ for f in "/usr/share/sounds/$theme/stereo/$snd.oga" "/usr/share/sounds/$theme/st
     fi
 done
 `;
-        Quickshell.execDetached(["bash", "-c", script, "playSystemSound", soundName, root.audioTheme]);
+        Quickshell.execDetached(["bash", "-c", script, "playSystemSound", soundName, root.audioTheme, root.overrideFor(soundName)]);
     }
 }
