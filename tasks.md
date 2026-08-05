@@ -34,7 +34,7 @@ Details for each task: see [plan.md](plan.md).
 | T15 | Add matugen theme from settings | ✅ | saved named schemes with type/accent and apply/remove controls |
 | T16 | Option to disable left sidebar | ✅ | Config switch gates panel, triggers, and corner interaction |
 | T17 | Change system sounds (Android-style) select to play and check as well then set it| ✅ | Per-event enable, play, pick-to-safe-folder, and reset controls |
-| T18 | Wallpaper-based scheme combinations, just like how it works on android 13+ devices where it generate lot of combination of a single wallaper| ⬜ | |
+| T18 | Wallpaper-based scheme combinations, just like how it works on android 13+ devices where it generate lot of combination of a single wallaper| ✅ | Existing wallpaper scheme picker exposes Auto plus eight matugen variants and regenerates colors |
 | T19 | All Apps page (list/uninstall/storage) | ⬜ | permissions = follow-up |
 
 ## Phase 3 — Bigger features
