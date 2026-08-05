@@ -55,27 +55,27 @@ Item {
     }
 
     onCurrentPageChanged: {
-        if (currentPage === 11) { // About (Shortcuts page added before it shifted it 10→11)
+        if (currentPage >= 0 && currentPage < pages.length && pages[currentPage].key === "about") {
             if (SystemInfo.cpu === "") SystemInfo.refresh()
             Updates.refresh()
         }
     }
     
     property var pages: [
-        { name: Translation.tr("Quick"),      icon: "instant_mix",    component: Qt.resolvedUrl("pages/QuickConfig.qml") },
-        { name: Translation.tr("General"),    icon: "browse",         component: Qt.resolvedUrl("pages/GeneralConfig.qml") },
-        { name: Translation.tr("Bar"),        icon: "toast",          iconRotation: 180, component: Qt.resolvedUrl("pages/BarConfig.qml") },
-        { name: Translation.tr("Desktop"),    icon: "texture",        component: Qt.resolvedUrl("pages/BackgroundConfig.qml") },
-        { name: Translation.tr("Interface"),  icon: "bottom_app_bar", component: Qt.resolvedUrl("pages/InterfaceConfig.qml") },
-        { name: Translation.tr("Sound"),      icon: "volume_up",      component: Qt.resolvedUrl("pages/SoundConfig.qml") },
-        { name: Translation.tr("Network"),    icon: "wifi",           component: Qt.resolvedUrl("pages/NetworkConfig.qml") },
-        { name: Translation.tr("Apps"),       icon: "apps",           component: Qt.resolvedUrl("pages/AppsConfig.qml") },
-        { name: Translation.tr("Services"),   icon: "settings",       component: Qt.resolvedUrl("pages/ServicesConfig.qml") },
+        { key: "quick",      name: Translation.tr("Quick"),      icon: "instant_mix",    component: Qt.resolvedUrl("pages/QuickConfig.qml") },
+        { key: "general",    name: Translation.tr("General"),    icon: "browse",         component: Qt.resolvedUrl("pages/GeneralConfig.qml") },
+        { key: "interface",  name: Translation.tr("Interface"),  icon: "bottom_app_bar", component: Qt.resolvedUrl("pages/InterfaceConfig.qml") },
+        { key: "desktop",    name: Translation.tr("Desktop"),    icon: "texture",        component: Qt.resolvedUrl("pages/BackgroundConfig.qml") },
+        { key: "bar",        name: Translation.tr("Bar"),        icon: "toast",          iconRotation: 180, component: Qt.resolvedUrl("pages/BarConfig.qml") },
+        { key: "sound",      name: Translation.tr("Sound"),      icon: "volume_up",      component: Qt.resolvedUrl("pages/SoundConfig.qml") },
+        { key: "network",    name: Translation.tr("Network"),    icon: "wifi",           component: Qt.resolvedUrl("pages/NetworkConfig.qml") },
+        { key: "apps",       name: Translation.tr("Apps"),       icon: "apps",           component: Qt.resolvedUrl("pages/AppsConfig.qml") },
+        { key: "services",   name: Translation.tr("Services"),   icon: "settings",       component: Qt.resolvedUrl("pages/ServicesConfig.qml") },
         NiriData.isNiri
-            ? { name: Translation.tr("Niri"),     icon: "select_window_2",   component: Qt.resolvedUrl("pages/NiriConfig.qml") }
-            : { name: Translation.tr("Hyprland"), icon: "select_window_2",   component: Qt.resolvedUrl("pages/HyprlandConfig.qml") },
-        { name: Translation.tr("Shortcuts"),  icon: "keyboard",       component: Qt.resolvedUrl("pages/ShortcutsConfig.qml") },
-        { name: Translation.tr("About"),      icon: "info",           component: Qt.resolvedUrl("pages/About.qml") }
+            ? { key: "niri",     name: Translation.tr("Niri"),     icon: "select_window_2", component: Qt.resolvedUrl("pages/NiriConfig.qml") }
+            : { key: "hyprland", name: Translation.tr("Hyprland"), icon: "select_window_2", component: Qt.resolvedUrl("pages/HyprlandConfig.qml") },
+        { key: "shortcuts",  name: Translation.tr("Shortcuts"),  icon: "keyboard",       component: Qt.resolvedUrl("pages/ShortcutsConfig.qml") },
+        { key: "about",      name: Translation.tr("About"),      icon: "info",           component: Qt.resolvedUrl("pages/About.qml") }
     ]
 
     Component.onCompleted: {
