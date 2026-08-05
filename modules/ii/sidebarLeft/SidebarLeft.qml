@@ -16,6 +16,13 @@ Scope { // Scope
     property Item sidebarContent
     readonly property bool centerOnly: Config.options.bar.layouts.leftLayout.length === 0 && Config.options.bar.layouts.rightLayout.length === 0 && !Config.options.bar.vertical
 
+    Connections {
+        target: Config.options.sidebar
+        function onLeftEnabledChanged() {
+            if (!Config.options.sidebar.leftEnabled) GlobalStates.sidebarLeftOpen = false;
+        }
+    }
+
     function toggleDetach() {
         root.detach = !root.detach;
     }
@@ -218,6 +225,7 @@ Scope { // Scope
         target: "sidebarLeft"
 
         function toggle(): void {
+            if (!Config.options.sidebar.leftEnabled) return;
             GlobalStates.sidebarLeftOpen = !GlobalStates.sidebarLeftOpen
         }
 
@@ -226,6 +234,7 @@ Scope { // Scope
         }
 
         function open(): void {
+            if (!Config.options.sidebar.leftEnabled) return;
             GlobalStates.sidebarLeftOpen = true
         }
     }
@@ -235,6 +244,7 @@ Scope { // Scope
         description: "Toggles left sidebar on press"
 
         onPressed: {
+            if (!Config.options.sidebar.leftEnabled) return;
             GlobalStates.sidebarLeftOpen = !GlobalStates.sidebarLeftOpen;
         }
     }
@@ -244,6 +254,7 @@ Scope { // Scope
         description: "Opens left sidebar on press"
 
         onPressed: {
+            if (!Config.options.sidebar.leftEnabled) return;
             GlobalStates.sidebarLeftOpen = true;
         }
     }

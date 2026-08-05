@@ -126,6 +126,12 @@ ContentPage {
 
             GroupedList {
                 Layout.topMargin: -2
+                ConfigSwitch {
+                    buttonIcon: "left_panel_open"
+                    text: Translation.tr("Enable left sidebar")
+                    checked: Config.options.sidebar.leftEnabled
+                    onCheckedChanged: Config.options.sidebar.leftEnabled = checked
+                }
                 ConfigSelectionArray {
                     text: Translation.tr("Format")
                     icon: "schedule"

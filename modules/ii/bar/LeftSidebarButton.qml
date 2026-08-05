@@ -15,7 +15,7 @@ RippleButton {
     property bool isMaterial: Config.options.bar.cornerStyle === 3
     property real buttonPadding: 5
 
-    visible: aiChatEnabled || translatorEnabled || animeEnabled
+    visible: Config.options.sidebar.leftEnabled && (aiChatEnabled || translatorEnabled || animeEnabled)
 
     implicitWidth: 32
     implicitHeight: 32
@@ -30,6 +30,7 @@ RippleButton {
     toggled: GlobalStates.sidebarLeftOpen
 
     onPressed: {
+        if (!Config.options.sidebar.leftEnabled) return;
         GlobalStates.sidebarLeftOpen = !GlobalStates.sidebarLeftOpen;
     }
 

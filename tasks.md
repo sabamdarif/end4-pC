@@ -32,9 +32,9 @@ Details for each task: see [plan.md](plan.md).
 | T13 | Settings search | ✅ | searches translated page and section titles with keyboard navigation and deep links |
 | T14 | DNS dropdown + custom provider | ✅ | provider dropdown includes presets, DHCP, and conditional custom fields |
 | T15 | Add matugen theme from settings | ✅ | saved named schemes with type/accent and apply/remove controls |
-| T16 | Option to disable left sidebar | ⬜ | |
-| T17 | Change system sounds (Android-style) | ⬜ | |
-| T18 | Wallpaper-based scheme combinations | ⬜ | |
+| T16 | Option to disable left sidebar | ✅ | Config switch gates panel, triggers, and corner interaction |
+| T17 | Change system sounds (Android-style) select to play and check as well then set it| ⬜ | |
+| T18 | Wallpaper-based scheme combinations, just like how it works on android 13+ devices where it generate lot of combination of a single wallaper| ⬜ | |
 | T19 | All Apps page (list/uninstall/storage) | ⬜ | permissions = follow-up |
 
 ## Phase 3 — Bigger features
