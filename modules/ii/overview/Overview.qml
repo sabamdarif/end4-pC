@@ -23,7 +23,8 @@ Scope {
         visible: GlobalStates.overviewOpen
 
         WlrLayershell.namespace: "quickshell:overview"
-        WlrLayershell.layer: WlrLayer.Top
+        // Keep the launcher above fullscreen and other application surfaces, like Caelestia's launcher.
+        WlrLayershell.layer: WlrLayer.Overlay
         // Niri has no focus-grab protocol, so OnDemand never routes keys to the layer surface.
         // Use Exclusive there; keep OnDemand on Hyprland (paired with HyprlandFocusGrab).
         WlrLayershell.keyboardFocus: GlobalStates.overviewOpen

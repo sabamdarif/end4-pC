@@ -42,7 +42,7 @@ Details for each task: see [plan.md](plan.md).
 | ID | Task | Status | Notes |
 |----|------|--------|-------|
 | T20 | Screenshot annotation editor | ✅ | Fullscreen and area captures open satty/swappy when available, then copy/save the edited result; normal fallback retained |
-| T21 | Launcher: Google-style, overlay layer | ⬜ | |
+| T21 | Launcher: Google-style, overlay layer | ✅ | Overlay layer with a compact centered launcher inspired by Caelestia |
 | T22 | Noctalia-style lock screen | ⬜ | |
 | T23 | Android 12 quick toggles | ⬜ | likely already done — verify |
 | T24 | AI system prompt sync | ⬜ | Config.qml:89 + ii-Default.md |

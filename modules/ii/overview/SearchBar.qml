@@ -10,11 +10,11 @@ import qs.modules.common.functions
 
 Rectangle {
     id: root
-    implicitHeight: 52
+    implicitHeight: 60
     implicitWidth: 520
-    radius: 26
+    radius: 30
     color: Appearance.colors.colSurfaceContainerHigh
-    border.color: searchInput.activeFocus ? Appearance.colors.colPrimary : ColorUtils.transparentize(Appearance.colors.colOutline, 0.4)
+    border.color: searchInput.activeFocus ? Appearance.colors.colPrimary : ColorUtils.transparentize(Appearance.colors.colOutline, 0.65)
     border.width: searchInput.activeFocus ? 2 : 1
 
     Behavior on border.color {
@@ -60,17 +60,17 @@ Rectangle {
 
     RowLayout {
         anchors.fill: parent
-        anchors.leftMargin: 8
-        anchors.rightMargin: 8
-        spacing: 6
+        anchors.leftMargin: 10
+        anchors.rightMargin: 10
+        spacing: 8
 
         // Left Lens / Search Action Button
         RippleButton {
             id: lensBtn
-            Layout.preferredWidth: 40
-            Layout.preferredHeight: 40
+            Layout.preferredWidth: 44
+            Layout.preferredHeight: 44
             Layout.alignment: Qt.AlignVCenter
-            buttonRadius: 20
+            buttonRadius: 22
             colBackground: Appearance.colors.colSecondaryContainer
             colBackgroundHover: Appearance.colors.colPrimaryContainer
             colRipple: Appearance.colors.colPrimaryContainer
@@ -129,10 +129,10 @@ Rectangle {
         // Right Song Recognition / Voice Button
         RippleButton {
             id: songRecButton
-            Layout.preferredWidth: 40
-            Layout.preferredHeight: 40
+            Layout.preferredWidth: 44
+            Layout.preferredHeight: 44
             Layout.alignment: Qt.AlignVCenter
-            buttonRadius: 20
+            buttonRadius: 22
             readonly property bool toggled: SongRec.running
             colBackground: toggled ? Appearance.colors.colPrimary : Appearance.colors.colTertiaryContainer
             colBackgroundHover: toggled ? Appearance.colors.colPrimaryHover : Appearance.colors.colPrimaryContainer

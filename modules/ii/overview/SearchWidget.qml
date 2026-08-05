@@ -18,10 +18,10 @@ import qs.modules.common.functions
 Item { // Wrapper
     id: root
 
-    readonly property int gridColumns: 6
-    readonly property int tileSize: 136
-    readonly property int tileHeight: 146
-    readonly property int iconSize: 44
+    readonly property int gridColumns: 5
+    readonly property int tileSize: 116
+    readonly property int tileHeight: 126
+    readonly property int iconSize: 40
 
     property string searchingText: LauncherSearch.query
     property bool showResults: searchingText != ""
@@ -106,8 +106,8 @@ Item { // Wrapper
             }));
     }
 
-    implicitWidth: root.tileSize * root.gridColumns + Appearance.sizes.elevationMargin * 2 + 48
-    implicitHeight: 700 + Appearance.sizes.elevationMargin * 2
+    implicitWidth: root.tileSize * root.gridColumns + Appearance.sizes.elevationMargin * 2 + 40
+    implicitHeight: Math.min(620, Math.max(380, Screen.height * 0.68)) + Appearance.sizes.elevationMargin * 2
 
     function focusFirstItem() {
         grid.currentIndex = 0;
@@ -178,15 +178,15 @@ Item { // Wrapper
         clip: true
         implicitWidth: root.implicitWidth - Appearance.sizes.elevationMargin * 2
         implicitHeight: root.implicitHeight - Appearance.sizes.elevationMargin * 2
-        radius: 28
+        radius: 30
         color: Appearance.colors.colBackgroundSurfaceContainer
-        border.color: ColorUtils.transparentize(Appearance.colors.colOutline, 0.6)
+        border.color: ColorUtils.transparentize(Appearance.colors.colOutline, 0.72)
         border.width: 1
 
         ColumnLayout {
             anchors.fill: parent
-            anchors.margins: 18
-            spacing: 14
+            anchors.margins: 16
+            spacing: 12
 
             SearchBar {
                 id: searchBar
@@ -308,8 +308,8 @@ Item { // Wrapper
                         // Organic Material Shape Frame
                         Item {
                             Layout.alignment: Qt.AlignHCenter
-                            implicitWidth: 74
-                            implicitHeight: 74
+                            implicitWidth: 66
+                            implicitHeight: 66
                             scale: tileMouse.pressed ? 0.85 : (tileWrap.selected ? 1.08 : 1.0)
 
                             Behavior on scale {
