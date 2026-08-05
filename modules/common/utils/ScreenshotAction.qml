@@ -40,7 +40,8 @@ Singleton {
         const uploadAndGetUrl = (filePath) => {
             return `curl -sF files[]=@'${StringUtils.shellSingleQuoteEscape(filePath)}' ${root.fileUploadApiEndpoint} | jq -r '.files[0].url'`
         }
-        const annotationCommand = `${Config.options.regionSelector.annotation.useSatty ? "satty" : "swappy"} -f -`;
+        const escapedScreenshotPath = StringUtils.shellSingleQuoteEscape(screenshotPath)
+        const annotationCommand = `if command -v satty >/dev/null 2>&1; then satty --filename '${escapedScreenshotPath}' --output-filename '${escapedScreenshotPath}'; elif command -v swappy >/dev/null 2>&1; then swappy -f '${escapedScreenshotPath}' -o '${escapedScreenshotPath}'; fi`;
         switch (action) {
             case ScreenshotAction.Action.Copy:
                 if (saveDir === "") {
@@ -59,7 +60,10 @@ Singleton {
 
                 break;
             case ScreenshotAction.Action.Edit:
-                return ["bash", "-c", `${cropToStdout} | ${annotationCommand} && ${cleanup}`]
+                if (saveDir === "") {
+                    return ["bash", "-c", `${cropInPlace} && ${annotationCommand} && wl-copy < '${escapedScreenshotPath}' && ${cleanup}`]
+                }
+                return ["bash", "-c", `mkdir -p '${StringUtils.shellSingleQuoteEscape(saveDir)}' && savePath='${StringUtils.shellSingleQuoteEscape(saveDir)}/screenshot-'$(date '+%Y-%m-%d_%H.%M.%S').png && ${cropInPlace} && ${annotationCommand} && cp '${escapedScreenshotPath}' "$savePath" && wl-copy < "$savePath" && ${cleanup}`]
                 break;
             case ScreenshotAction.Action.Search:
                 return ["bash", "-c", `${cropInPlace} && xdg-open "${root.imageSearchEngineBaseUrl}$(${uploadAndGetUrl(screenshotPath)})" && ${cleanup}`]

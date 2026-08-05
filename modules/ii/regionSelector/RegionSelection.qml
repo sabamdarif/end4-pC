@@ -281,8 +281,8 @@ PanelWindow {
         root.regionHeight = Math.max(0, Math.min(root.regionHeight, root.screen.height - root.regionY));
 
         // Adjust action
-        if (root.action === RegionSelection.SnipAction.Copy || root.action === RegionSelection.SnipAction.Edit) {
-            root.action = root.mouseButton === Qt.RightButton ? RegionSelection.SnipAction.Edit : RegionSelection.SnipAction.Copy;
+        if (root.action === RegionSelection.SnipAction.Copy && root.mouseButton === Qt.RightButton) {
+            root.action = RegionSelection.SnipAction.Edit;
         }
         
         const screenshotDir = Config.options.screenSnip.savePath !== "" ? //

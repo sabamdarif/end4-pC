@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 import qs
 import qs.services
 import qs.modules.common
+import qs.modules.common.functions
 import QtQuick
 import Quickshell
 import Quickshell.Io
@@ -33,30 +34,29 @@ Scope {
         }
     }
 
+    function captureCommand(area = false) {
+        const saveDir = StringUtils.shellSingleQuoteEscape(Config.options.screenSnip.savePath || Directories.screenshotTemp)
+        const keepFile = Config.options.screenSnip.savePath !== ""
+        const grimArgs = area ? `-g "$(slurp)"` : ""
+        return `mkdir -p '${saveDir}' && filePath='${saveDir}/screenshot-'$(date '+%Y-%m-%d_%H.%M.%S').png && \
+            grim ${grimArgs} "$filePath" && \
+            if command -v satty >/dev/null 2>&1; then satty --filename "$filePath" --output-filename "$filePath"; \
+            elif command -v swappy >/dev/null 2>&1; then swappy -f "$filePath" -o "$filePath"; fi && \
+            wl-copy < "$filePath" && \
+            notify-send "Screenshot ${keepFile ? "Saved" : "Copied"}" "${keepFile ? "Saved to $filePath" : "Copied to clipboard"}" -a "Screenshot" -i "image-x-generic" \
+            ${keepFile ? "" : "&& rm -f \"$filePath\""}`
+    }
+
     function screenshot() {
-        const saveDir = Config.options.screenSnip.savePath !== "" ? Config.options.screenSnip.savePath : "";
-        if (saveDir !== "") {
-            const cmd = `mkdir -p '${saveDir}' && filePath="${saveDir}/screenshot-$(date '+%Y-%m-%d_%H.%M.%S').png" && grim "$filePath" && cat "$filePath" | wl-copy && notify-send "Screenshot Saved" "Saved to $filePath" -a "Screenshot" -i "image-x-generic"`;
-            Quickshell.execDetached(["bash", "-c", cmd]);
-        } else {
-            const cmd = `grim - | wl-copy && notify-send "Screenshot Copied" "Copied to clipboard" -a "Screenshot" -i "image-x-generic"`;
-            Quickshell.execDetached(["bash", "-c", cmd]);
-        }
+        Quickshell.execDetached(["bash", "-c", root.captureCommand(false)]);
     }
 
     function areaScreenshot() {
         if (Persistent.states.record.enable) {
-            const saveDir = Config.options.screenSnip.savePath !== "" ? Config.options.screenSnip.savePath : "";
-            if (saveDir !== "") {
-                const cmd = `mkdir -p '${saveDir}' && filePath="${saveDir}/screenshot-$(date '+%Y-%m-%d_%H.%M.%S').png" && grim -g "$(slurp)" "$filePath" && cat "$filePath" | wl-copy && notify-send "Screenshot Saved" "Saved to $filePath" -a "Screen Snip" -i "image-x-generic"`;
-                Quickshell.execDetached(["bash", "-c", cmd]);
-            } else {
-                const cmd = `grim -g "$(slurp)" - | wl-copy && notify-send "Screenshot Copied" "Copied to clipboard" -a "Screen Snip" -i "image-x-generic"`;
-                Quickshell.execDetached(["bash", "-c", cmd]);
-            }
+            Quickshell.execDetached(["bash", "-c", root.captureCommand(true)]);
             return;
         }
-        root.action = RegionSelection.SnipAction.Copy
+        root.action = RegionSelection.SnipAction.Edit
         root.selectionMode = RegionSelection.SelectionMode.RectCorners
         GlobalStates.regionSelectorOpen = true
     }
