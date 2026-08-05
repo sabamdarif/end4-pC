@@ -34,6 +34,17 @@ Scope {
     }
 
     function screenshot() {
+        const saveDir = Config.options.screenSnip.savePath !== "" ? Config.options.screenSnip.savePath : "";
+        if (saveDir !== "") {
+            const cmd = `mkdir -p '${saveDir}' && filePath="${saveDir}/screenshot-$(date '+%Y-%m-%d_%H.%M.%S').png" && grim "$filePath" && cat "$filePath" | wl-copy && notify-send "Screenshot Saved" "Saved to $filePath" -a "Screenshot" -i "image-x-generic"`;
+            Quickshell.execDetached(["bash", "-c", cmd]);
+        } else {
+            const cmd = `grim - | wl-copy && notify-send "Screenshot Copied" "Copied to clipboard" -a "Screenshot" -i "image-x-generic"`;
+            Quickshell.execDetached(["bash", "-c", cmd]);
+        }
+    }
+
+    function areaScreenshot() {
         if (Persistent.states.record.enable) {
             const saveDir = Config.options.screenSnip.savePath !== "" ? Config.options.screenSnip.savePath : "";
             if (saveDir !== "") {
@@ -92,6 +103,9 @@ Scope {
         function screenshot() {
             root.screenshot()
         }
+        function areaScreenshot() {
+            root.areaScreenshot()
+        }
         function search() {
             root.search()
         }
@@ -107,9 +121,14 @@ Scope {
     }
 
     NiriSafeShortcut {
+        name: "screenshot"
+        description: "Takes a fullscreen screenshot"
+        onPressed: root.screenshot()
+    }
+    NiriSafeShortcut {
         name: "regionScreenshot"
         description: "Takes a screenshot of the selected region"
-        onPressed: root.screenshot()
+        onPressed: root.areaScreenshot()
     }
     NiriSafeShortcut {
         name: "regionSearch"

@@ -18,6 +18,7 @@ MouseArea {
     implicitHeight: vertical ? (contentLoader.item?.implicitHeight ?? 0) : Appearance.sizes.barHeight
 
     cursorShape: Qt.PointingHandCursor
+    hoverEnabled: !Config.options.bar.tooltips.clickToShow
     acceptedButtons: Qt.LeftButton | Qt.RightButton
 
     onClicked: (mouse) => {
@@ -145,6 +146,10 @@ MouseArea {
                 sourceComponent: Updates.checking ? spinnerComp : textComp
             }
         }
+    }
+
+    UpdatesPopup {
+        hoverTarget: root
     }
 
     Component {

@@ -7,10 +7,10 @@ import qs.modules.common.functions
 import qs.modules.common.widgets
 
 QuickToggleModel {
-    name: Translation.tr("Screen snip")
+    name: Translation.tr("Screenshot")
     hasStatusText: false
     toggled: false
-    icon: "screenshot_region"
+    icon: "screenshot_monitor"
 
     mainAction: () => {
         GlobalStates.sidebarRightOpen = false;
@@ -25,5 +25,5 @@ QuickToggleModel {
         }
     }
 
-    tooltipText: Translation.tr("Screen snip")
+    tooltipText: Translation.tr("Screenshot")
 }

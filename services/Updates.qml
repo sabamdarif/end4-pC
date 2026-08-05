@@ -15,6 +15,9 @@ Singleton {
     property bool available: false
     property alias checking: checkUpdatesProc.running
     property int count: 0
+    property int pacmanCount: 0
+    property int aurCount: 0
+    property int flatpakCount: 0
     
     readonly property bool updateAdvised: available && count > Config.options.updates.adviseUpdateThreshold
     readonly property bool updateStronglyAdvised: available && count > Config.options.updates.stronglyAdviseUpdateThreshold
@@ -48,10 +51,14 @@ Singleton {
 
     Process {
         id: checkUpdatesProc
-        command: ["bash", "-c", "pacman=$(checkupdates 2>/dev/null | wc -l); aur=$(yay -Qua 2>/dev/null | wc -l || paru -Qua 2>/dev/null | wc -l || echo 0); echo $((pacman + aur))"]
+        command: ["bash", "-c", "pacman=$(checkupdates 2>/dev/null | wc -l); if command -v yay >/dev/null; then aur=$(yay -Qua 2>/dev/null | wc -l); elif command -v paru >/dev/null; then aur=$(paru -Qua 2>/dev/null | wc -l); else aur=0; fi; flatpak=$(flatpak remote-ls --updates 2>/dev/null | wc -l); printf '%s %s %s\\n' \"$pacman\" \"$aur\" \"$flatpak\""]
         stdout: StdioCollector {
             onStreamFinished: {
-                root.count = parseInt(text.trim())
+                const counts = text.trim().split(/\\s+/).map(value => parseInt(value) || 0)
+                root.pacmanCount = counts[0] ?? 0
+                root.aurCount = counts[1] ?? 0
+                root.flatpakCount = counts[2] ?? 0
+                root.count = root.pacmanCount + root.aurCount + root.flatpakCount
             }
         }
     }

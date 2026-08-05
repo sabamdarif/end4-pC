@@ -33,18 +33,25 @@ Item {
         Component {
             id: screenSnipM3
             UtilButton {
-                iconText: "screenshot_region"
-                onClicked: Quickshell.execDetached(["qs", "-p", Quickshell.shellPath(""), "ipc", "call", "region", "screenshot"])
+                iconText: "screenshot_monitor"
+                onClicked: (event) => Quickshell.execDetached([
+                    "qs", "-p", Quickshell.shellPath(""), "ipc", "call", "region",
+                    event.modifiers & Qt.AltModifier ? "areaScreenshot" : "screenshot"
+                ])
             }
         }
 
         Component {
             id: legacyScreenSnip
             CircleUtilButton {
-                onClicked: Quickshell.execDetached(["qs", "-p", Quickshell.shellPath(""), "ipc", "call", "region", "screenshot"])
+                downAction: (event) => Quickshell.execDetached([
+                    "qs", "-p", Quickshell.shellPath(""), "ipc", "call", "region",
+                    event.modifiers & Qt.AltModifier ? "areaScreenshot" : "screenshot"
+                ])
+                altAction: () => Quickshell.execDetached(["qs", "-p", Quickshell.shellPath(""), "ipc", "call", "region", "areaScreenshot"])
                 MaterialSymbol {
                     horizontalAlignment: Qt.AlignHCenter
-                    fill: 1; text: "screenshot_region"
+                    fill: 1; text: "screenshot_monitor"
                     iconSize: Appearance.font.pixelSize.large
                     color: Appearance.colors.colOnLayer2
                 }
