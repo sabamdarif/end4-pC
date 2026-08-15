@@ -13,7 +13,8 @@ StyledPopup {
 
         RowLayout {
             Layout.fillWidth: true
-            Layout.leftMargin: 3
+            Layout.leftMargin: 10
+            Layout.rightMargin: 10
             spacing: 7
 
             MaterialShapeWrappedMaterialSymbol {
@@ -75,8 +76,8 @@ StyledPopup {
                     RowLayout {
                         anchors {
                             fill: parent
-                            leftMargin: 10
-                            rightMargin: 10
+                            leftMargin: 14
+                            rightMargin: 14
                         }
                         spacing: 8
 
