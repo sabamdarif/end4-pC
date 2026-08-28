@@ -42,6 +42,12 @@ Canvas {
         animation: root.animation
     }
 
+    // Canvas only repaints itself on a resize while the item is visible, and these
+    // shapes are usually drawn through an effect that hides the source item, so a
+    // shape sized after its context was created would otherwise stay blank.
+    onWidthChanged: requestPaint()
+    onHeightChanged: requestPaint()
+
     onProgressChanged: requestPaint()
     onColorChanged: requestPaint()
     onBorderWidthChanged: requestPaint()
