@@ -9,7 +9,9 @@ import Quickshell.Wayland
 LazyLoader {
     id: root
     property Item hoverTarget
-    default property Item contentItem
+    // Kept as a Component so the popup's contents are only built the first time
+    // the popup is shown, instead of with whatever widget declares it.
+    default property Component contentComponent
     property real popupBackgroundMargin: 0
     active: hoverTarget && hoverTarget.containsMouse
 
@@ -22,9 +24,6 @@ LazyLoader {
 
     component: PanelWindow {
         id: popupWindow
-
-        // Bring contentItem reference into this scope
-        property Item innerContent: root.contentItem
 
         color: "transparent"
         anchors.left: root.barEdge !== "right"
@@ -93,21 +92,18 @@ LazyLoader {
                 bottomMargin: Appearance.sizes.elevationMargin + root.popupBackgroundMargin * (!popupWindow.anchors.bottom)
             }
 
-            // Use local reference instead of crossing LazyLoader scope boundary
-            implicitWidth: (popupWindow.innerContent?.implicitWidth ?? 0) + margin * 2
-            implicitHeight: (popupWindow.innerContent?.implicitHeight ?? 0) + margin * 2
+            implicitWidth: contentLoader.implicitWidth + margin * 2
+            implicitHeight: contentLoader.implicitHeight + margin * 2
 
             color: Appearance.colors.colLayer1Base
             radius: Appearance.rounding.normal + 4
             border.width: 1
             border.color: Appearance.colors.colLayer0Border
 
-            // Reparent content here once the window is ready
-            Component.onCompleted: {
-                if (popupWindow.innerContent) {
-                    popupWindow.innerContent.parent = popupBackground
-                    popupWindow.innerContent.anchors.centerIn = popupBackground
-                }
+            Loader {
+                id: contentLoader
+                anchors.centerIn: parent
+                sourceComponent: root.contentComponent
             }
         }
     }

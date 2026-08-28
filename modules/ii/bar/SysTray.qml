@@ -48,7 +48,9 @@ Item {
     HyprlandFocusGrab {
         id: focusGrab
         active: false
-        windows: [trayOverflowLayout.QsWindow?.window, root.activeMenu]
+        // overflowPopup.item is the popup window itself, and is null while the
+        // popup is unloaded, which is the same as having nothing to grab.
+        windows: [overflowPopup.item, root.activeMenu]
         onCleared: {
             root.trayOverflowOpen = false
             if (root.activeMenu) {
