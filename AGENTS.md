@@ -1,75 +1,100 @@
-# Repository Guide
+# end4-pC
 
-## Project
+A personal fork of [pctrade/end4-pC](https://github.com/pctrade/end4-pC), itself a fork of end-4's illogical-impulse desktop shell. This fork ports the originally Hyprland-focused shell to niri while preserving Hyprland support, and adds personal features. Its design follows Android's Material 3 Expressive guidelines, continuing the visual direction of pctrade/end4-pC. It is a live-reloaded Quickshell/QML application for Wayland. `shell.qml` is the entry point; there is no conventional compile step.
 
-This repository is a personal fork of end-4's illogical-impulse desktop shell. It is a live-reloaded Quickshell/QML application for Wayland, with support for both Hyprland and niri.
+## Hard requirements
 
-There is no conventional compile step. `shell.qml` is the entry point, and Quickshell loads the QML tree directly.
+- **Preserve both compositors.** Compositor-specific behavior must branch on `NiriData.isNiri`.
+- **Preserve the visual language.** Reuse existing Material 3 Expressive components, `Appearance` values, symbols, and responsive patterns.
+- **Translate user-visible text.** Route it through `Translation.tr()`.
+- **Keep duplicated defaults synchronized.** `modules/common/Config.qml` and `defaults/ai/prompts/ii-Default.md` contain the default AI prompt and must remain byte-for-byte equivalent.
+- **Register top-level panels.** Import and register them in `panelFamilies/IllogicalImpulseFamily.qml`.
+- **Never hardcode settings page indexes.** Use stable keys or names.
+- **Keep this file accurate and below 1000 lines.** Update it when architecture or workflow changes.
 
-## Architecture
+## How to Work Here
 
-- `shell.qml`: initializes shared services and loads the selected panel family.
-- `panelFamilies/IllogicalImpulseFamily.qml`: registers top-level panels through `PanelLoader`.
-- `modules/ii/`: shell UI organized by feature, including bar, settings, launchers, sidebars, lock screen, wallpaper picker, and quick toggles.
-- `modules/common/`: shared configuration, functions, models, utilities, and reusable widgets.
-- `services/`: singleton state and system integrations. Prefer putting shared behavior here instead of duplicating shell commands in multiple delegates.
-- `scripts/`: Python and shell helpers for integrations that are impractical in QML.
-- `defaults/`: default user-facing content copied or loaded by the shell.
-- `translations/`: translation catalogs and tooling.
+### Output style
 
-## Configuration and settings
+- Use a casual, brief tone. Do not repeat the request.
+- Work silently. Speak only for a blocking question, a useful finding, or the final result.
+- Never expose reasoning traces or narrate tool calls.
+- Never use an em dash, or `--` as punctuation, in replies, code comments, docs, or commit messages.
+- Use Markdown. Prefer short sections and bullets for longer answers. Use tables first for comparisons, then give a recommendation.
+- Explain unfamiliar concepts plainly when asked.
 
-`modules/common/Config.qml` is the persisted configuration schema. For a new option:
+### Before implementing
 
-1. Add its default to the appropriate `JsonObject` in `Config.qml`.
-2. Bind the setting in the relevant file under `modules/ii/settings/pages/`.
-3. Reuse the existing settings widgets and structure: `ContentSection`, `GroupedList`, `ConfigRow`, `ConfigSwitch`, `ConfigComboBox`, and related components.
-4. Gate the feature at the point where it is created or activated, not only in the settings UI.
+For anything beyond a small fix, make and scrutinize a plan before editing. Check this repository's existing patterns and the idiomatic QML, JavaScript, Python, or shell solution. Prefer the smallest solution that meets this project's constraints, not the first generic pattern found.
 
-Settings search navigates by translated page and section titles. New user-visible section titles should work with the page's `goTo(term)` behavior.
+### YAGNI
 
-## Platform behavior
+Stop at the first option that works:
 
-- Any window-manager-specific behavior must branch on `NiriData.isNiri`.
-- Keep shared system state and actions in a service when multiple UI components use them.
-- Use `Quickshell.execDetached()` for fire-and-forget commands and `Process` when output, exit state, or cancellation matters.
-- Prefer safe file handling. User data removal should use the desktop trash mechanism where practical.
+1. Skip speculative work.
+2. Reuse a repository helper or pattern.
+3. Use the language or platform standard library.
+4. Write the minimum new code.
 
-## UI conventions
+Do not add one-use abstractions, future configuration, parallel infrastructure, or explanatory clutter. Never omit validation at trust boundaries, security checks, or error handling that prevents data loss.
 
-- Route user-visible strings through `Translation.tr()`.
-- Reuse `Appearance` colors, typography, spacing, and rounding instead of hardcoded styling.
-- Reuse existing Material symbols and shell widgets before introducing a new component.
-- Dynamic lists commonly use `Rectangle` + `ColumnLayout` + `Repeater`; `GroupedList` is intended primarily for static children.
-- Preserve the existing Material 3 Expressive visual language and responsive layout behavior.
+### Comments
 
-## Important synchronization points
+Write a comment only when a future reader could reasonably misunderstand an invariant or non-obvious constraint. Keep it to one or two lines above the relevant function or block. Do not restate code, describe the recent change, or reference local and ephemeral files.
 
-- The default AI prompt exists in both `modules/common/Config.qml` and `defaults/ai/prompts/ii-Default.md`. Keep them byte-for-byte equivalent when changing it.
-- Top-level panels must be imported and registered in `panelFamilies/IllogicalImpulseFamily.qml`.
-- Avoid hardcoded settings page indexes. Use stable page keys or names because navigation order changes.
+### Coding rules
 
-## Workflow
+- Keep code cohesive and easy to locate. Do not split simple behavior across unnecessary files.
+- Preserve unrelated local changes. Do not delete, overwrite, force-push, or otherwise perform destructive actions without explicit approval.
+- Keep comments and documentation synchronized with behavior.
+- Follow `.editorconfig`. If it is absent and indentation is unclear, follow neighboring files rather than reformatting unrelated code.
+- Put shared state and actions in `services/` when multiple UI components use them.
+- Use `Quickshell.execDetached()` for fire-and-forget commands. Use `Process` when output, exit state, or cancellation matters.
+- Prefer desktop trash for user-data removal when practical.
+- Add focused tests for verifiable new behavior. Do not add tests that only confirm deletion.
 
-- Implement tasks sequentially.
-- Keep each completed task in its own focused commit before starting the next task.
-- Preserve unrelated local and untracked files.
-- Update `tasks.md` when a tracked task changes state.
-- Do not claim verification that was not run.
+### Commit messages
 
-## Verification
+Use Conventional Commits: `type(scope): subject`. Choose from `fix`, `feat`, `test`, `refactor`, `docs`, or `chore`. Add a body only when the subject cannot carry the reason, and keep it to two or three sentences. Never list the diff in the body.
 
-For QML changes, use the checks appropriate to the task:
+## Build, Test, Lint
+
+Run checks appropriate to the change:
 
 ```bash
 git diff --check
 timeout 15s qs -p .
 ```
 
-A timeout from the second command is expected when the shell remains running. Confirm that the log reaches `Configuration Loaded` and inspect any new QML errors. Existing environment warnings, such as a missing compositor connection or another notification server already running, are not necessarily regressions.
+For the Quickshell check, a timeout is expected if the shell remains running. Confirm the log reaches `Configuration Loaded` and inspect new QML errors. Existing environment warnings, such as a missing compositor connection or another notification server, may be unrelated.
 
-Also exercise the affected UI manually. For window-manager-specific behavior, check both Hyprland and niri when available. For scripts or command integrations, run the underlying command independently with non-destructive test data.
+Manually exercise affected UI. Check Hyprland and niri for compositor-specific work when both are available. Test scripts and command integrations independently with non-destructive data. Never claim a check that was not run.
 
-## Current work areas
+## Documentation
 
-Recent changes concentrate on settings search and page organization, DNS and matugen controls, sidebar gating, system sound overrides, app inventory and Flatpak permissions, screenshots and annotation handoff, launcher layering, the lock screen, quick toggles, and wallpaper color variants. Check nearby implementations and recent commits before adding parallel infrastructure.
+`README.md` is the source of truth for user-visible installation and usage. Update it with behavior changes. Keep contributor-only architecture, invariants, and workflow here.
+
+## Architecture
+
+```text
+shell.qml -> panelFamilies/ -> modules/ii/ -> modules/common/ and services/ -> scripts/
+```
+
+- `shell.qml`: initializes services and loads the selected panel family.
+- `panelFamilies/IllogicalImpulseFamily.qml`: registers top-level panels through `PanelLoader`.
+- `modules/ii/`: feature UI, including the bar, settings, launchers, sidebars, lock screen, wallpaper picker, and toggles.
+- `modules/common/`: shared configuration, functions, models, utilities, and widgets.
+- `services/`: singleton state and system integrations.
+- `scripts/`: Python and shell helpers for integrations unsuitable for QML.
+- `defaults/`: default user-facing content.
+- `translations/`: translation catalogs and tooling.
+
+### Adding a setting
+
+1. Add the default to the appropriate `JsonObject` in `modules/common/Config.qml`.
+2. Bind it in the relevant `modules/ii/settings/pages/` file.
+3. Reuse `ContentSection`, `GroupedList`, `ConfigRow`, `ConfigSwitch`, `ConfigComboBox`, or neighboring components.
+4. Gate the feature where it is created or activated, not only in settings UI.
+5. Ensure translated page and section titles work with the page's `goTo(term)` settings search.
+
+Dynamic lists commonly use `Rectangle`, `ColumnLayout`, and `Repeater`. `GroupedList` is mainly for static children.
