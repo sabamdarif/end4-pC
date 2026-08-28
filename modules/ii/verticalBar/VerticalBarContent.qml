@@ -146,6 +146,7 @@ Item {
                             bgColor: root.getMaterialPillColor(modelData)
                             Loader {
                                 Layout.fillWidth: true
+                                asynchronous: true
                                 source: root.getWidgetUrl(modelData)
                                 onLoaded: {
                                     if (item && "vertical" in item) item.vertical = true
@@ -173,6 +174,7 @@ Item {
                         totalCount: root.effectiveLeftLayout.length
                         Loader {
                             Layout.fillWidth: true
+                            asynchronous: true
                             source: root.getWidgetUrl(modelData)
                             onLoaded: {
                                 if (item && "vertical" in item) item.vertical = true
@@ -222,6 +224,7 @@ Item {
                             bgColor: root.getMaterialPillColor(modelData)
                             Loader {
                                 Layout.fillWidth: true
+                                asynchronous: true
                                 source: root.getWidgetUrl(modelData)
                                 onLoaded: {
                                     if (item && "vertical" in item) item.vertical = true
@@ -249,6 +252,7 @@ Item {
                         totalCount: root.effectiveMiddleLayout.length
                         Loader {
                             Layout.fillWidth: true
+                            asynchronous: true
                             source: root.getWidgetUrl(modelData)
                             onLoaded: {
                                 if (item && "vertical" in item) item.vertical = true
@@ -299,6 +303,7 @@ Item {
                             bgColor: root.getMaterialPillColor(modelData)
                             Loader {
                                 Layout.fillWidth: true
+                                asynchronous: true
                                 source: root.getWidgetUrl(modelData)
                                 onLoaded: {
                                     if (item && "vertical" in item) item.vertical = true
@@ -326,6 +331,7 @@ Item {
                         totalCount: root.effectiveRightLayout.length
                         Loader {
                             Layout.fillWidth: true
+                            asynchronous: true
                             source: root.getWidgetUrl(modelData)
                             onLoaded: {
                                 if (item && "vertical" in item) item.vertical = true

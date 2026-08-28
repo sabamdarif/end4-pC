@@ -146,6 +146,7 @@ Item {
                             bgColor: root.getMaterialPillColor(modelData)
                             Loader {
                                 Layout.fillHeight: true
+                                asynchronous: true
                                 source: root.getWidgetUrl(modelData)
                                 onLoaded: {
                                     if (item && item.hasOwnProperty("mirrored"))
@@ -177,6 +178,7 @@ Item {
                         totalCount: root.effectiveLeftLayout.length
                         Loader {
                             Layout.fillHeight: true
+                            asynchronous: true
                             source: root.getWidgetUrl(modelData)
                             onLoaded: {
                                 if (item && item.hasOwnProperty("mirrored"))
@@ -192,6 +194,7 @@ Item {
                         Layout.fillHeight: false
                         Layout.topMargin: Config.options.bar.bottom ? -5 : 3
                         Layout.alignment: Qt.AlignVCenter
+                        asynchronous: true
                         source: root.getWidgetUrl(modelData)
                         onLoaded: {
                             if (item && item.hasOwnProperty("mirrored"))
@@ -239,6 +242,7 @@ Item {
                             bgColor: root.getMaterialPillColor(modelData)
                             Loader {
                                 Layout.fillHeight: true
+                                asynchronous: true
                                 source: root.getWidgetUrl(modelData)
                                 onLoaded: {
                                     if (item && item.hasOwnProperty("mirrored"))
@@ -270,6 +274,7 @@ Item {
                         totalCount: root.effectiveMiddleLayout.length
                         Loader {
                             Layout.fillHeight: true
+                            asynchronous: true
                             source: root.getWidgetUrl(modelData)
                             onLoaded: {
                                 if (item && item.hasOwnProperty("mirrored"))
@@ -284,6 +289,7 @@ Item {
                     Loader {
                         Layout.fillHeight: false
                         Layout.topMargin: Config.options.bar.bottom ? -5 : 3
+                        asynchronous: true
                         source: root.getWidgetUrl(modelData)
                         onLoaded: {
                             if (item && item.hasOwnProperty("mirrored"))
@@ -332,6 +338,7 @@ Item {
                             bgColor: root.getMaterialPillColor(modelData)
                             Loader {
                                 Layout.fillHeight: true
+                                asynchronous: true
                                 source: root.getWidgetUrl(modelData)
                                 onLoaded: {
                                     if (item && item.hasOwnProperty("mirrored"))
@@ -363,6 +370,7 @@ Item {
                         totalCount: root.effectiveRightLayout.length
                         Loader {
                             Layout.fillHeight: true
+                            asynchronous: true
                             source: root.getWidgetUrl(modelData)
                             onLoaded: {
                                 if (item && item.hasOwnProperty("mirrored"))
@@ -377,6 +385,7 @@ Item {
                     Loader {
                         Layout.fillHeight: false
                         Layout.topMargin: Config.options.bar.bottom ? -5 : 3
+                        asynchronous: true
                         source: root.getWidgetUrl(modelData)
                         onLoaded: {
                             if (item && item.hasOwnProperty("mirrored"))
