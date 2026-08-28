@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell
 import Quickshell.Bluetooth
 import qs.services
 import qs.modules.common
@@ -17,9 +18,10 @@ QuickToggleModel {
     available: BluetoothStatus.available
     toggled: BluetoothStatus.enabled
     mainAction: () => {
+        if (!Bluetooth.defaultAdapter) return;
         // rfkill-blocked adapter won't power on — unblock first
         Quickshell.execDetached(["bash", "-c", "rfkill unblock bluetooth"]);
-        Bluetooth.defaultAdapter.enabled = !Bluetooth.defaultAdapter?.enabled
+        Bluetooth.defaultAdapter.enabled = !Bluetooth.defaultAdapter.enabled;
     }
     hasMenu: true
 }

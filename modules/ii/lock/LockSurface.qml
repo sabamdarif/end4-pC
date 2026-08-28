@@ -16,6 +16,42 @@ import Quickshell.Services.SystemTray
 MouseArea {
     id: root
     required property LockContext context
+
+    // Effective wallpaper: lock-specific if set, otherwise fall back to desktop wallpaper
+    readonly property string effectiveWallpaperSource: {
+        const lockWall = Config.options.background.lockWall;
+        const desktopWall = Wallpapers.confirmedPath || Config.options.background.wallpaperPath;
+        return "file://" + (lockWall !== "" ? lockWall : desktopWall);
+    }
+
+    // Blurred wallpaper background, matching the blur settings from Background.qml
+    Image {
+        id: lockWallpaper
+        anchors.fill: parent
+        source: root.effectiveWallpaperSource
+        fillMode: Image.PreserveAspectCrop
+        cache: true
+        smooth: true
+        asynchronous: true
+        layer.enabled: true
+        visible: !blurOverlay.active
+    }
+
+    Loader {
+        id: blurOverlay
+        active: Config.options.lock.blur.enable
+        anchors.fill: parent
+        scale: Config.options.lock.blur.extraZoom
+        sourceComponent: GaussianBlur {
+            source: lockWallpaper
+            radius: Config.options.lock.blur.radius
+            samples: Config.options.lock.blur.size
+            Rectangle {
+                anchors.fill: parent
+                color: Qt.rgba(0, 0, 0, 0.3)
+            }
+        }
+    }
     property bool active: false
     property bool showInputField: active || context.currentText.length > 0
     readonly property bool requirePasswordToPower: Config.options.lock.security.requirePasswordToPower
