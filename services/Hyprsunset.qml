@@ -5,6 +5,7 @@ import qs.modules.common
 import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
+import qs.services
 
 /**
  * Night light service supporting both hyprsunset (Hyprland) and wlsunset (Niri / Wayland).
@@ -13,7 +14,7 @@ Singleton {
     id: root
     signal gammaChangeAttempt()
 
-    readonly property bool useWlsunset: NiriData.isNiri || Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE") === ""
+    readonly property bool useWlsunset: WM.compositor === "niri" || Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE") === ""
     readonly property real gammaLowerLimit: 25
 
     property string from: Config.options?.light?.night?.from ?? "19:00" 

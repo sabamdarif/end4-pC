@@ -30,13 +30,13 @@ Item {
     readonly property real glyphSize: isVertical ? root.height * 0.66 : root.height * 0.85
 
     readonly property real pos0X: isVertical ? root.width * 0.00 : root.width * 0.00
-    readonly property real pos1X: isVertical ? root.width * 0.34 : root.width * 0.16
+    readonly property real pos1X: isVertical ? root.width * 0.30 : root.width * 0.15
     readonly property real pos2X: isVertical ? root.width * 0.00 : root.width * 0.46
-    readonly property real pos3X: isVertical ? root.width * 0.34 : root.width * 0.58
+    readonly property real pos3X: isVertical ? root.width * 0.30 : root.width * 0.60
 
     readonly property real pos0Y: isVertical ? root.height * -0.04 : root.height * 0.05
     readonly property real pos1Y: isVertical ? root.height * -0.04 : root.height * 0.05
-    readonly property real pos2Y: isVertical ? root.height * 0.42  : root.height * 0.05
+    readonly property real pos2Y: isVertical ? root.height * 0.42 : root.height * 0.05
     readonly property real pos3Y: isVertical ? root.height * 0.42  : root.height * 0.05
 
     readonly property real colonX: root.pos1X + root.tileW + (root.pos2X - (root.pos1X + root.tileW)) / 2 - root.width * 0.03

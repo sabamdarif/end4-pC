@@ -41,11 +41,7 @@ Singleton {
     Connections {
         target: Persistent
         function onReadyChanged() {
-            if (!Persistent.isNewHyprlandInstance) {
-                root.inhibit = Persistent.states.idle.inhibit;
-            } else {
-                Persistent.states.idle.inhibit = root.inhibit;
-            }
+            root.inhibit = Persistent.states.idle.inhibit;
         }
     }
 

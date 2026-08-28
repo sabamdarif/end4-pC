@@ -33,6 +33,22 @@ Singleton {
     property real autoContentTransparency: 0.9
     property real backgroundTransparency: Config?.options.appearance.transparency.enable ? Config?.options.appearance.transparency.automatic ? autoBackgroundTransparency : Config?.options.appearance.transparency.backgroundTransparency : 0
     property real contentTransparency: Config?.options.appearance.transparency.automatic ? autoContentTransparency : Config?.options.appearance.transparency.contentTransparency
+    
+    function getColorFromName(name) {
+        switch (name) {
+            case "primary":            return colors.colPrimary
+            case "secondary":          return colors.colSecondary
+            case "tertiary":           return colors.colTertiary
+            case "primaryContainer":   return colors.colPrimaryContainer
+            case "secondaryContainer": return colors.colSecondaryContainer
+            case "tertiaryContainer":  return colors.colTertiaryContainer
+            case "layer0":             return colors.colLayer0
+            case "layer1":             return colors.colLayer1
+            case "layer0Border":       return colors.colLayer0Border
+            case "black":              return "black"
+            default:                   return colors.colPrimaryContainer
+        }
+    }
 
     m3colors: QtObject {
         property bool darkmode: true
@@ -382,7 +398,39 @@ Singleton {
             property int duration: 350
             property int type: Easing.OutExpo
         }
+
+        property QtObject sidebarSlideEnter: QtObject {
+            property int duration: 300
+            property int type: Easing.BezierSpline
+            property list<real> bezierCurve: animationCurves.standardDecel
+            property int velocity: 650
+            property Component numberAnimation: Component {
+                NumberAnimation {
+                    alwaysRunToEnd: true
+                    duration: root.animation.sidebarSlideEnter.duration
+                    easing.type: root.animation.sidebarSlideEnter.type
+                    easing.bezierCurve: root.animation.sidebarSlideEnter.bezierCurve
+                }
+            }
+        }
+
+        property QtObject sidebarSlideExit: QtObject {
+            property int duration: 250
+            property int type: Easing.BezierSpline
+            property list<real> bezierCurve: animationCurves.standardAccel
+            property int velocity: 650
+            property Component numberAnimation: Component {
+                NumberAnimation {
+                    alwaysRunToEnd: true
+                    duration: root.animation.sidebarSlideExit.duration
+                    easing.type: root.animation.sidebarSlideExit.type
+                    easing.bezierCurve: root.animation.sidebarSlideExit.bezierCurve
+                }
+            }
+        }
     }
+
+    
 
     sizes: QtObject {
         property real baseBarHeight: 40

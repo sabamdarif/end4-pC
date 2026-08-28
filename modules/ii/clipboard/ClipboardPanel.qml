@@ -22,7 +22,7 @@ Scope {
         WlrLayershell.layer: WlrLayer.Overlay
         // Niri has no focus-grab protocol, so OnDemand never routes keys to the layer
         // surface. Use Exclusive there; keep OnDemand on Hyprland.
-        WlrLayershell.keyboardFocus: GlobalStates.clipboardOpen ? (NiriData.isNiri ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.OnDemand) : WlrKeyboardFocus.None
+        WlrLayershell.keyboardFocus: GlobalStates.clipboardOpen ? (WM.compositor === "niri" ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.OnDemand) : WlrKeyboardFocus.None
         color: "transparent"
 
         anchors {
@@ -85,7 +85,7 @@ Scope {
         }
     }
 
-    NiriSafeShortcut {
+    CompositorGlobalShortcut {
         name: "clipboardToggle"
         description: "Toggle the clipboard manager"
 

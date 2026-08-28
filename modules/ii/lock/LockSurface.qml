@@ -183,7 +183,7 @@ MouseArea {
         }
     }
 
-    // Noctalia-style login panel: a compact rounded card near the bottom edge.
+    // Main toolbar: password box, styled as a compact rounded card near the bottom edge.
     Toolbar {
         id: mainIsland
         anchors {

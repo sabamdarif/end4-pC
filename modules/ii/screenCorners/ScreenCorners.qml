@@ -12,15 +12,12 @@ import Quickshell.Hyprland
 Scope {
     id: screenCorners
     readonly property Toplevel activeWindow: ToplevelManager.activeToplevel
+
     property var actionForCorner: ({
-        [RoundCorner.CornerEnum.TopLeft]: () => {
-            if (Config.options.sidebar.leftEnabled) GlobalStates.sidebarLeftOpen = !GlobalStates.sidebarLeftOpen;
-        },
-        [RoundCorner.CornerEnum.BottomLeft]: () => {
-            if (Config.options.sidebar.leftEnabled) GlobalStates.sidebarLeftOpen = !GlobalStates.sidebarLeftOpen;
-        },
+        [RoundCorner.CornerEnum.TopLeft]: () => GlobalStates.toggleState("sidebarLeftOpen"),
+        [RoundCorner.CornerEnum.BottomLeft]: () => GlobalStates.toggleState(Config.options.sidebar.cornerOpen.bottomLeftAction),
         [RoundCorner.CornerEnum.TopRight]: () => GlobalStates.sidebarRightOpen = !GlobalStates.sidebarRightOpen,
-        [RoundCorner.CornerEnum.BottomRight]: () => GlobalStates.sidebarRightOpen = !GlobalStates.sidebarRightOpen
+        [RoundCorner.CornerEnum.BottomRight]: () => GlobalStates.toggleState(Config.options.sidebar.cornerOpen.bottomRightAction)
     })
 
     component CornerPanelWindow: PanelWindow {
@@ -68,8 +65,8 @@ Scope {
                 active: {
                     if (!Config.options.sidebar.cornerOpen.enable) return false;
                     if (cornerPanelWindow.fullscreen) return false;
-                    if (cornerWidget.isLeft && !Config.options.sidebar.leftEnabled) return false;
-                    return (Config.options.sidebar.cornerOpen.bottom == cornerWidget.isBottom);
+                    if (cornerWidget.isTopLeft && !Config.options.sidebar.leftEnabled) return false;
+                    return true;
                 }
                 anchors {
                     top: (cornerWidget.isTopLeft || cornerWidget.isTopRight) ? parent.top : undefined
@@ -84,7 +81,7 @@ Scope {
                     implicitHeight: Config.options.sidebar.cornerOpen.cornerRegionHeight
                     hoverEnabled: true
                     onPositionChanged: {
-                        if (cornerWidget.isLeft && !Config.options.sidebar.leftEnabled) return;
+                        if (cornerWidget.isBottom) return;
                         if (!Config.options.sidebar.cornerOpen.clicklessCornerEnd) return;
                         const verticalOffset = Config.options.sidebar.cornerOpen.clicklessCornerVerticalOffset;
                         const correctX = (cornerWidget.isRight && mouseArea.mouseX >= mouseArea.width - 2) || (cornerWidget.isLeft && mouseArea.mouseX <= 2);
@@ -93,12 +90,11 @@ Scope {
                             screenCorners.actionForCorner[cornerPanelWindow.corner]();
                     }
                     onEntered: {
-                        if (cornerWidget.isLeft && !Config.options.sidebar.leftEnabled) return;
+                        if (cornerWidget.isBottom) return;
                         if (Config.options.sidebar.cornerOpen.clickless)
                             screenCorners.actionForCorner[cornerPanelWindow.corner]();
                     }
                     onPressed: {
-                        if (cornerWidget.isLeft && !Config.options.sidebar.leftEnabled) return;
                         screenCorners.actionForCorner[cornerPanelWindow.corner]();
                     }
                     onScrollDown: {

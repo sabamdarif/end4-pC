@@ -47,7 +47,9 @@ Scope {
     property var carouselModel: recentWallpapers.map(p => root.displayPathFor(p))
 
     // Auto-hide when the workspace changes
-    property int activeWorkspace: NiriData.isNiri ? NiriData.activeWorkspaceIdx : (Hyprland.focusedMonitor?.activeWorkspace?.id ?? 0)
+    property int activeWorkspace: WM.compositor === "niri"
+        ? (WM.activeWorkspace?.idx ?? 0)
+        : (Hyprland.focusedMonitor?.activeWorkspace?.id ?? 0)
     onActiveWorkspaceChanged: GlobalStates.desktopMenuOpen = false
 
     // Menu window

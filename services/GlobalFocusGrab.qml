@@ -3,12 +3,14 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
 import Quickshell.Hyprland
+import qs.services
 
 /**
  * Manages a HyprlandFocusGrab that's to be shared by all windows.
  * "Persistent" is for windows that should always be included but not closed on dismiss, like bar and onscreen keyboard.
- * "Dismissable" is for stuff like sidebars
- */ 
+ * "Dismissable" is for stuff like sidebars.
+ **/
+ 
 Singleton {
     id: root
 
@@ -23,7 +25,7 @@ Singleton {
     }
 
     Component.onCompleted: {
-        console.log("[GlobalFocusGrab] Initialized");
+        console.log("[GlobalFocusGrab] Initialized" + (WM.compositor !== "hyprland" ? " (inactive, non-Hyprland compositor)" : ""));
     }
 
     function addPersistent(window) {
@@ -39,12 +41,18 @@ Singleton {
         }
     }
 
-    property int lastWindowIdOnOpen: -1
+    // Compositors without a focus-grab protocol (niri) fall back to watching the
+    // focused window, so track which window was focused when the panel opened.
+    readonly property string focusedWindowId: {
+        const focused = WM.windowList.find(w => w.focused);
+        return focused ? String(focused.id) : "";
+    }
+    property string lastWindowIdOnOpen: ""
 
     function addDismissable(window) {
         if (root.dismissable.indexOf(window) === -1) {
             root.dismissable.push(window);
-            root.lastWindowIdOnOpen = NiriData.focusedWindowId;
+            root.lastWindowIdOnOpen = root.focusedWindowId;
         }
     }
 
@@ -65,26 +73,25 @@ Singleton {
 
     HyprlandFocusGrab {
         id: grab
-        windows: root.dismissable.every(w => !w?.focusable) || root.dismissable.some(w => hasActive(w?.contentItem)) ? [...root.dismissable, ...root.persistent] : [...root.dismissable]
-        active: root.dismissable.length > 0 && !NiriData.isNiri
+        windows: root.dismissable.every(w => !w?.focusable) || root.dismissable.some(w => root.hasActive(w?.contentItem)) ? [...root.dismissable, ...root.persistent] : [...root.dismissable]
+        active: WM.compositor === "hyprland" && root.dismissable.length > 0
         onCleared: () => {
             root.dismiss();
         }
     }
 
+    onFocusedWindowIdChanged: {
+        if (WM.compositor === "hyprland" || root.dismissable.length === 0) return;
+        if (root.focusedWindowId !== root.lastWindowIdOnOpen && root.focusedWindowId !== "")
+            root.dismiss();
+    }
+
     Connections {
-        target: NiriData
-        function onFocusedWindowIdChanged() {
-            if (NiriData.isNiri && root.dismissable.length > 0) {
-                if (NiriData.focusedWindowId !== root.lastWindowIdOnOpen && NiriData.focusedWindowId !== -1) {
-                    root.dismiss();
-                }
-            }
-        }
-        function onActiveWorkspaceIdxChanged() {
-            if (NiriData.isNiri && root.dismissable.length > 0) {
+        target: WM
+        enabled: WM.compositor !== "hyprland"
+        function onActiveWorkspaceChanged() {
+            if (root.dismissable.length > 0)
                 root.dismiss();
-            }
         }
     }
 }

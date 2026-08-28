@@ -7,6 +7,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
+import qs.services
 
 /**
  * A service that provides access to Hyprland keybinds.
@@ -28,7 +29,7 @@ Singleton {
 
     Connections {
         target: Hyprland
-        enabled: !NiriData.isNiri
+        enabled: WM.compositor !== "niri"
 
         function onRawEvent(event) {
             if (event.name == "configreloaded") {
@@ -40,7 +41,7 @@ Singleton {
 
     Process {
         id: getDefaultKeybinds
-        running: !NiriData.isNiri
+        running: WM.compositor !== "niri"
         command: [root.keybindParserPath, "--path", root.defaultKeybindConfigPath]
         
         stdout: SplitParser {
@@ -56,7 +57,7 @@ Singleton {
 
     Process {
         id: getUserKeybinds
-        running: !NiriData.isNiri
+        running: WM.compositor !== "niri"
         command: [root.keybindParserPath, "--path", root.userKeybindConfigPath]
         
         stdout: SplitParser {

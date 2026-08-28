@@ -10,6 +10,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
 import QtQuick
+import qs.services
 
 /**
  * For managing brightness of monitors. Supports both brightnessctl and ddcutil.
@@ -28,8 +29,8 @@ Singleton {
     }
 
     function getFocusedScreenName(): string {
-        if (NiriData.isNiri) {
-            return Quickshell.screens[0]?.name ?? "";
+        if (WM.compositor !== "hyprland") {
+            return WM.focusedMonitor?.name ?? Quickshell.screens[0]?.name ?? "";
         }
         return Hyprland.focusedMonitor?.name ?? Quickshell.screens[0]?.name ?? "";
     }
@@ -220,7 +221,7 @@ Singleton {
             property string screenName: modelData.name
             property string screenshotPath: `${root.screenshotDir}/screenshot-${screenName}.png`
             Connections {
-                enabled: !NiriData.isNiri && Config.options.light.antiFlashbang.enable && Appearance.m3colors.darkmode
+                enabled: WM.compositor !== "niri" && Config.options.light.antiFlashbang.enable && Appearance.m3colors.darkmode
                 target: Hyprland
                 function onRawEvent(event) {
                     if (["activewindowv2", "windowtitlev2"].includes(event.name)) {
@@ -276,13 +277,13 @@ Singleton {
         }
     }
 
-    NiriSafeShortcut {
+    CompositorGlobalShortcut {
         name: "brightnessIncrease"
         description: "Increase brightness"
         onPressed: root.increaseBrightness()
     }
 
-    NiriSafeShortcut {
+    CompositorGlobalShortcut {
         name: "brightnessDecrease"
         description: "Decrease brightness"
         onPressed: root.decreaseBrightness()

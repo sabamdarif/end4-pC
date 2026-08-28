@@ -12,7 +12,6 @@ import Quickshell.Hyprland
 LockScreen {
     id: root
 
-    // Monitor name -> workspace id to restore on unlock (set when locking)
     property var savedWorkspaces: ({})
     property string lastProcessedLockWall: ""
     property bool lastProcessedDarkmode: Appearance.m3colors.darkmode
@@ -22,7 +21,7 @@ LockScreen {
         interval: 150
         repeat: false
         onTriggered: {
-            if (NiriData.isNiri) return;
+            if (WM.compositor === "niri") return;
             var batch = ""
             for (var j = 0; j < Quickshell.screens.length; ++j) {
                 var monName = Quickshell.screens[j].name
@@ -53,48 +52,49 @@ LockScreen {
         }
     }
 
-    // Single batch for lock and unlock so we don't race multiple hyprctl calls
     Connections {
         target: GlobalStates
         function onScreenLockedChanged() {
-            if (GlobalStates.screenLocked) {
-                var wallChanged = Config.options.background.lockWall !== root.lastProcessedLockWall
-                var modeChanged = Appearance.m3colors.darkmode !== root.lastProcessedDarkmode
+            var wallChanged = Config.options.background.lockWall !== root.lastProcessedLockWall
+            var modeChanged = Appearance.m3colors.darkmode !== root.lastProcessedDarkmode
 
+            if (GlobalStates.screenLocked) {
                 if (Config.options.background.lockWall !== "" && (wallChanged || modeChanged)) {
                     lockThemeProc.running = true
                 } else if (Config.options.background.lockWall !== "") {
                     MaterialThemeLoader.useLockTheme()
                 }
+                
+                if (WM.compositor === "niri") {
+                    return;
+                }
 
                 // Lock: save workspace per monitor and move all to temp workspace in one batch
-                // Skip on Niri — hyprctl is not available
-                if (!NiriData.isNiri) {
-                    var next = {}
-                    var batch = "keyword animation workspaces,1,7,menu_decel,slidevert; "
-                    for (var i = 0; i < Quickshell.screens.length; ++i) {
-                        var mon = Quickshell.screens[i].name
-                        var mData = HyprlandData.monitors.find(m => m.name === mon)
-                        if (mData?.activeWorkspace == undefined) {
-                            return;
-                        }
-                        var ws = (mData?.activeWorkspace?.id ?? 1)
-                        next[mon] = ws
-                        batch += `hyprctl dispatch 'hl.dsp.focus({monitor="${mon}"})'; hyprctl dispatch 'hl.dsp.focus({workspace=${2147483647 - ws}})';`
+                var next = {}
+                var batch = "keyword animation workspaces,1,7,menu_decel,slidevert; "
+                for (var i = 0; i < Quickshell.screens.length; ++i) {
+                    var mon = Quickshell.screens[i].name
+                    var mData = HyprlandData.monitors.find(m => m.name === mon)
+                    if (mData?.activeWorkspace == undefined) {
+                        return;
                     }
-                    root.savedWorkspaces = next
-                    Quickshell.execDetached(["bash", "-c", batch])
+                    var ws = (mData?.activeWorkspace?.id ?? 1)
+                    next[mon] = ws
+                    batch += `hyprctl dispatch 'hl.dsp.focus({monitor="${mon}"})'; hyprctl dispatch 'hl.dsp.focus({workspace=${2147483647 - ws}})';`
                 }
+                root.savedWorkspaces = next
+                Quickshell.execDetached(["bash", "-c", batch])
             } else {
                 if (Config.options.background.lockWall !== "") {
                     MaterialThemeLoader.useLiveTheme()
                 }
-                restoreTimer.start()
+                if (WM.compositor !== "niri") {
+                    restoreTimer.start()
+                }
             }
         }
     }
 
-    // Push everything down (visual only; workspace switch is in Connections above)
     Variants {
         model: Quickshell.screens
         delegate: Scope {

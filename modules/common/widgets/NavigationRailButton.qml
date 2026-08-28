@@ -19,7 +19,7 @@ TabButton {
 
     Component.onCompleted: Qt.callLater(() => layoutAnimationReady = true)
 
-    property real baseSize: 56
+    property real baseSize: Config.options.settings.style === "minimal" ? 46 : 56
     property real baseHighlightHeight: 32
     property real highlightCollapsedTopMargin: 8
     padding: 0
@@ -120,6 +120,7 @@ TabButton {
 
         StyledText {
             id: itemText
+            visible: Config.options.settings.style !== "minimal"
             anchors {
                 top: itemIconBackground.bottom
                 topMargin: 2

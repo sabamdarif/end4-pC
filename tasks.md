@@ -46,3 +46,9 @@ Details for each task: see [plan.md](plan.md).
 | T22 | Noctalia-style lock screen | ✅ | Noctalia-inspired bottom login card with compact info/session rows; existing auth and actions preserved |
 | T23 | Android 12 quick toggles | ✅ | Verified default Android style, configurable grid, edit mode, and 17 toggle delegates |
 | T24 | AI system prompt sync | ✅ | Verified Config.qml and ii-Default.md match the requested prompt byte-for-byte |
+
+## Phase 4 — Upstream sync
+
+| ID | Task | Status | Notes |
+|----|------|--------|-------|
+| T25 | Merge pctrade/end4-pC (102 commits) | ✅ | Adopted upstream's `WM` backend abstraction; dropped `NiriData`/`NiriSafeShortcut` in favour of `WM` + `CompositorGlobalShortcut`; kept all fork features |

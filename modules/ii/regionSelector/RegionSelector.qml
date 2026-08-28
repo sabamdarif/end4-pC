@@ -121,32 +121,32 @@ Scope {
         }
     }
 
-    NiriSafeShortcut {
+    CompositorGlobalShortcut {
         name: "screenshot"
         description: "Takes a fullscreen screenshot"
         onPressed: root.screenshot()
     }
-    NiriSafeShortcut {
+    CompositorGlobalShortcut {
         name: "regionScreenshot"
         description: "Takes a screenshot of the selected region"
         onPressed: root.areaScreenshot()
     }
-    NiriSafeShortcut {
+    CompositorGlobalShortcut {
         name: "regionSearch"
         description: "Searches the selected region"
         onPressed: root.search()
     }
-    NiriSafeShortcut {
+    CompositorGlobalShortcut {
         name: "regionOcr"
         description: "Recognizes text in the selected region"
         onPressed: root.ocr()
     }
-    NiriSafeShortcut {
+    CompositorGlobalShortcut {
         name: "regionRecord"
         description: "Records the selected region"
         onPressed: root.record()
     }
-    NiriSafeShortcut {
+    CompositorGlobalShortcut {
         name: "regionRecordWithSound"
         description: "Records the selected region with sound"
         onPressed: root.recordWithSound()

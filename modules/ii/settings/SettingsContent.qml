@@ -16,6 +16,8 @@ Item {
     property real contentPadding: 8
     property int currentPage: 0
     property bool showingProfile: false
+    property bool isMinimal: Config.options.settings.style === "minimal"
+
     property string settingsSearchQuery: ""
     property var settingsSearchResults: []
     property int settingsSearchIndex: 0
@@ -128,7 +130,7 @@ Item {
         { key: "network",    name: Translation.tr("Network"),    icon: "wifi",           component: Qt.resolvedUrl("pages/NetworkConfig.qml") },
         { key: "apps",       name: Translation.tr("Apps"),       icon: "apps",           component: Qt.resolvedUrl("pages/AppsConfig.qml") },
         { key: "services",   name: Translation.tr("Services"),   icon: "settings",       component: Qt.resolvedUrl("pages/ServicesConfig.qml") },
-        NiriData.isNiri
+        WM.compositor === "niri"
             ? { key: "niri",     name: Translation.tr("Niri"),     icon: "select_window_2", component: Qt.resolvedUrl("pages/NiriConfig.qml") }
             : { key: "hyprland", name: Translation.tr("Hyprland"), icon: "select_window_2", component: Qt.resolvedUrl("pages/HyprlandConfig.qml") },
         { key: "shortcuts",  name: Translation.tr("Shortcuts"),  icon: "keyboard",       component: Qt.resolvedUrl("pages/ShortcutsConfig.qml") },
@@ -173,7 +175,7 @@ Item {
                 Layout.fillHeight: true
                 Layout.margins: 0
                 implicitWidth: navRail.expanded ? 195 : fab.baseSize
-                color: Appearance.m3colors.m3surfaceContainerLow
+                color: isMinimal ? "transparent" : Appearance.m3colors.m3surfaceContainerLow
                 radius: Appearance.rounding.normal
 
                 Behavior on implicitWidth {
@@ -187,11 +189,12 @@ Item {
                     expanded: root.railExpanded
 
                     RowLayout {
-                        visible: navRail.expanded
+                        visible: true
                         spacing: 10
                         Layout.fillWidth: true
-                        Layout.margins: 5
+                        Layout.margins: isMinimal ? 0 : 5
                         Layout.topMargin: 15
+                        Layout.bottomMargin: isMinimal ? -30 : 0
 
                         Rectangle {
                             id: avatarRect
@@ -235,6 +238,7 @@ Item {
                         ColumnLayout {
                             spacing: 2
                             Layout.fillWidth: true
+                            visible: !isMinimal
 
                             StyledText {
                                 text: Config.options.profile.displayName === "" ? SystemInfo.username : Config.options.profile.displayName
@@ -268,8 +272,9 @@ Item {
                     }
 
                     Rectangle {
-                        width: 160
-                        Layout.topMargin: -5
+                        Layout.preferredWidth: isMinimal ? 50 : 160
+                        Layout.topMargin: isMinimal ? 30 : -5
+                        Layout.bottomMargin: isMinimal ? -30 : 0
                         height: 2
                         gradient: Gradient {
                             orientation: Gradient.Horizontal
@@ -400,6 +405,7 @@ Item {
 
                     FloatingActionButton {
                         id: fab
+                        visible: !isMinimal
                         Layout.bottomMargin: -25
                         property bool justCopied: false
                         iconText: justCopied ? "check" : "edit"

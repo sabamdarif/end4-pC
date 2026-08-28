@@ -247,7 +247,7 @@ Scope {
         }
     }
 
-    NiriSafeShortcut {
+    CompositorGlobalShortcut {
         name: "mediaControlsToggle"
         description: "Toggles media controls on press"
 
@@ -255,7 +255,7 @@ Scope {
             GlobalStates.mediaControlsOpen = !GlobalStates.mediaControlsOpen;
         }
     }
-    NiriSafeShortcut {
+    CompositorGlobalShortcut {
         name: "mediaControlsOpen"
         description: "Opens media controls on press"
 
@@ -263,7 +263,7 @@ Scope {
             GlobalStates.mediaControlsOpen = true;
         }
     }
-    NiriSafeShortcut {
+    CompositorGlobalShortcut {
         name: "mediaControlsClose"
         description: "Closes media controls on press"
 

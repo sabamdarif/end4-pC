@@ -238,7 +238,7 @@ ContentPage {
 
         // ── Autostart (niri-native) ──────────────────────────────────────
         ContentSection {
-            visible: NiriData.isNiri
+            visible: WM.compositor === "niri"
             icon: "rocket_launch"
             shape: MaterialShape.Shape.Arch
             title: Translation.tr("Autostart")
@@ -802,7 +802,7 @@ ContentPage {
                         wrapMode: Text.Wrap
                     }
                     RippleButtonWithIcon {
-                        visible: NiriData.isNiri
+                        visible: WM.compositor === "niri"
                         materialIcon: "sync"
                         mainText: Translation.tr("Update autostart entry")
                         onClicked: page.applyCliphistToAutostart()

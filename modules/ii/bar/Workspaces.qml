@@ -9,15 +9,13 @@ import QtQuick
 import QtQuick.Effects
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Hyprland
 
 ButtonMouseArea {
     id: root
 
-    readonly property var monitor: NiriData.isNiri ? null : Hyprland.monitorFor(root.QsWindow.window?.screen)
     WorkspaceModel {
         id: wsModel
-        monitor: root.monitor
+        screen: root.QsWindow.window?.screen
     }
 
     property bool vertical: Config.options.bar.vertical
@@ -30,7 +28,7 @@ ButtonMouseArea {
     property real workspaceIconSizeShrinked: workspaceButtonWidth * 0.55
     property real workspaceIconOpacityShrinked: 1
     property real workspaceIconMarginShrinked: -4
-    property int workspaceIndexInGroup: NiriData.isNiri ? (wsModel.activeWorkspace - 1) % wsModel.shownCount : ((monitor?.activeWorkspace?.id - 1) % wsModel.shownCount)
+    property int workspaceIndexInGroup: (wsModel.activeNumber - 1) % wsModel.shownCount
     property real specialTextSize: workspaceButtonWidth * 0.5
 
     Layout.alignment: vertical ? Qt.AlignHCenter : Qt.AlignVCenter
@@ -54,11 +52,7 @@ ButtonMouseArea {
     }
 
     function switchWorkspaceToHovered() {
-        if (NiriData.isNiri) {
-            NiriData.focusWorkspace(wsModel.getWorkspaceIdAt(hoverIndex));
-        } else {
-            Hyprland.dispatch(`hl.dsp.focus({workspace = ${wsModel.getWorkspaceIdAt(hoverIndex)}})`);
-        }
+        WM.switchWorkspace(wsModel.getWorkspaceIdAt(hoverIndex));
     }
     onPressed: mouse => {
         if (mouse.button == Qt.LeftButton)
@@ -67,17 +61,10 @@ ButtonMouseArea {
             GlobalStates.overviewOpen = !GlobalStates.overviewOpen;
     }
     onWheel: event => {
-        if (NiriData.isNiri) {
-            if (event.angleDelta.y < 0)
-                NiriData.focusWorkspaceDown();
-            else if (event.angleDelta.y > 0)
-                NiriData.focusWorkspaceUp();
-        } else {
-            if (event.angleDelta.y < 0)
-                Hyprland.dispatch(`hl.dsp.focus({workspace = "r+1"})`);
-            else if (event.angleDelta.y > 0)
-                Hyprland.dispatch(`hl.dsp.focus({workspace = "r-1"})`);
-        }
+        if (event.angleDelta.y < 0)
+            WM.switchWorkspaceRelative("next");
+        else if (event.angleDelta.y > 0)
+            WM.switchWorkspaceRelative("prev");
     }
 
     // Indications
@@ -117,9 +104,9 @@ ButtonMouseArea {
                     id: wsBg
                     required property int index
                     readonly property int wsId: wsModel.getWorkspaceIdAt(index)
-                    property bool currentOccupied: (wsModel.occupied[index] ?? false) && wsId != wsModel.fakeWorkspace
-                    property bool previousOccupied: index > 0 && (wsModel.occupied[index - 1] ?? false) && (wsId - 1) != wsModel.fakeWorkspace
-                    property bool nextOccupied: index < wsModel.shownCount - 1 && (wsModel.occupied[index + 1] ?? false) && (wsId + 1) != wsModel.fakeWorkspace
+                    property bool currentOccupied: wsModel.occupied[index] && wsId != wsModel.fakeWorkspace
+                    property bool previousOccupied: index > 0 && wsModel.occupied[index - 1] && (wsId - 1) != wsModel.fakeWorkspace
+                    property bool nextOccupied: index < wsModel.shownCount - 1 && wsModel.occupied[index + 1] && (wsId + 1) != wsModel.fakeWorkspace
                     implicitWidth: root.workspaceButtonWidth
                     implicitHeight: root.workspaceButtonWidth
 
@@ -221,7 +208,7 @@ ButtonMouseArea {
                 delegate: WorkspaceItem {
                     id: wsApp
                     property var biggestWindow: wsModel.biggestWindow[index]
-                    property var mainAppIconSource: Quickshell.iconPath(AppSearch.guessIcon(biggestWindow?.app_id ?? biggestWindow?.class), "image-missing")
+                    property var mainAppIconSource: Quickshell.iconPath(AppSearch.guessIcon(biggestWindow?.class), "image-missing")
 
                     AppIcon {
                         id: appIcon

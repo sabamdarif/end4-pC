@@ -12,7 +12,6 @@ import Quickshell.Io
 import Quickshell
 import Quickshell.Widgets
 import Quickshell.Wayland
-import Quickshell.Hyprland
 
 Item {
     id: root
@@ -280,7 +279,8 @@ Item {
         id: previewPopup
         property var appTopLevel: root.lastHoveredButton?.appToplevel ?? null
 
-        property bool shouldShow: (popupMouseArea.containsMouse || root.buttonHovered)
+        property bool shouldShow: WM.compositor === "hyprland"
+                                  && (popupMouseArea.containsMouse || root.buttonHovered)
                                   && !root._dragging
                                   && appTopLevel
                                   && appTopLevel.toplevels
@@ -376,7 +376,7 @@ Item {
 
                     Repeater {
                         model: ScriptModel {
-                            values: previewPopup.appTopLevel?.toplevels ?? []
+                            values: WM.compositor === "hyprland" ? (previewPopup.appTopLevel?.toplevels ?? []) : []
                         }
 
                         RippleButton {

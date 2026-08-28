@@ -25,7 +25,6 @@ Item {
     id: root
     property int sidebarWidth: Appearance.sizes.sidebarWidth
     property int sidebarPadding: 10
-    property string settingsQmlPath: Quickshell.shellPath("settings.qml")
     property bool showAudioOutputDialog: false
     property bool showAudioInputDialog: false
     property bool showBluetoothDialog: false
@@ -33,6 +32,9 @@ Item {
     property bool showWifiDialog: false
     property bool editMode: false
     property bool showIconPickerDialog: false
+
+    readonly property bool animatedEntrance: WM.compositor !== "hyprland"
+    readonly property bool sidebarOpen: GlobalStates.sidebarRightOpen
 
     function closeDialogs() {
         showAudioOutputDialog = false;
@@ -92,6 +94,12 @@ Item {
 
     Connections {
         target: GlobalStates
+        function onRequestBluetoothDialog() {
+            if (!BluetoothStatus.available) return;
+            root.showBluetoothDialog = true;
+            GlobalStates.sidebarRightOpen = true;
+        }
+
         function onSidebarRightOpenChanged() {
             if (!GlobalStates.sidebarRightOpen) {
                 root.closeDialogs();
@@ -288,7 +296,7 @@ Item {
                                     toggled: false
                                     buttonIcon: "restart_alt"
                                     onClicked: {
-                                        if (NiriData.isNiri) {
+                                        if (WM.compositor === "niri") {
                                             Quickshell.execDetached(["niri", "msg", "action", "load-config-file"]);
                                         } else {
                                             Quickshell.execDetached(["hyprctl", "reload"]);
@@ -296,7 +304,7 @@ Item {
                                         Quickshell.reload(true);
                                     }
                                     StyledToolTip {
-                                        text: NiriData.isNiri ? Translation.tr("Reload Niri & Quickshell") : Translation.tr("Reload Hyprland & Quickshell")
+                                        text: WM.compositor === "niri" ? Translation.tr("Reload Niri & Quickshell") : Translation.tr("Reload Hyprland & Quickshell")
                                     }
                                 }
                                 QuickToggleButton {
@@ -377,6 +385,7 @@ Item {
             }
 
             BottomWidgetGroup {
+                visible: Config.options.sidebar.bottomGroup
                 id: bottomWidgetGroup
                 Layout.alignment: Qt.AlignHCenter
                 Layout.fillHeight: false
@@ -403,11 +412,13 @@ Item {
         shownPropertyString: "showBluetoothDialog"
         dialog: BluetoothDialog {}
         onShownChanged: {
+            const adapter = Bluetooth.defaultAdapter;
+            if (!adapter) return;
             if (!shown) {
-                Bluetooth.defaultAdapter.discovering = false;
+                adapter.discovering = false;
             } else {
-                Bluetooth.defaultAdapter.enabled = true;
-                Bluetooth.defaultAdapter.discovering = true;
+                adapter.enabled = true;
+                adapter.discovering = true;
             }
         }
     }
@@ -548,7 +559,7 @@ Item {
                 toggled: false
                 buttonIcon: "restart_alt"
                 onClicked: {
-                    if (NiriData.isNiri) {
+                    if (WM.compositor === "niri") {
                         Quickshell.execDetached(["niri", "msg", "action", "load-config-file"]);
                     } else {
                         Quickshell.execDetached(["hyprctl", "reload"]);
@@ -556,7 +567,9 @@ Item {
                     Quickshell.reload(true);
                 }
                 StyledToolTip {
-                    text: NiriData.isNiri ? Translation.tr("Reload Niri & Quickshell") : Translation.tr("Reload Hyprland & Quickshell")
+                    text: WM.compositor === "niri"
+                        ? Translation.tr("Reload Niri & Quickshell")
+                        : Translation.tr("Reload Hyprland & Quickshell")
                 }
             }
             QuickToggleButton {

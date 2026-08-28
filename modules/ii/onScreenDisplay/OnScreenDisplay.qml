@@ -13,7 +13,9 @@ import Quickshell.Hyprland
 Scope {
     id: root
     property string protectionMessage: ""
-    property var focusedScreen: Quickshell.screens.find(s => s.name === (NiriData.isNiri ? NiriData.currentOutput : Hyprland.focusedMonitor?.name)) ?? Quickshell.screens[0]
+    property var focusedScreen: Quickshell.screens.find(s => s.name === (WM.compositor === "hyprland"
+        ? Hyprland.focusedMonitor?.name
+        : WM.focusedMonitor?.name)) ?? Quickshell.screens[0]
 
     property string currentIndicator: "volume"
     property var indicators: [
@@ -260,7 +262,7 @@ Scope {
             root.triggerOsd();
         }
     }
-    NiriSafeShortcut {
+    CompositorGlobalShortcut {
         name: "osdVolumeTrigger"
         description: "Triggers volume OSD on press"
 
@@ -268,7 +270,7 @@ Scope {
             root.triggerOsd();
         }
     }
-    NiriSafeShortcut {
+    CompositorGlobalShortcut {
         name: "osdVolumeHide"
         description: "Hides volume OSD on press"
 

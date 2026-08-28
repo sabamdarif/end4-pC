@@ -56,6 +56,7 @@ ContentPage {
 
             Rectangle {
                 Layout.fillWidth: true
+                visible: WM.compositor !== "niri"
                 implicitHeight: wrapperCol.implicitHeight + 16
                 topLeftRadius: Appearance.rounding.verylarge
                 topRightRadius: Appearance.rounding.verylarge
@@ -144,6 +145,63 @@ ContentPage {
                 }
             }
 
+            Rectangle {
+                Layout.fillWidth: true
+                visible: WM.compositor === "niri"
+                implicitHeight: niriWrapperCol.implicitHeight + 16
+                topLeftRadius: Appearance.rounding.verylarge
+                topRightRadius: Appearance.rounding.verylarge
+                bottomLeftRadius: Appearance.rounding.normal
+                bottomRightRadius: Appearance.rounding.normal
+                color: Appearance.colors.colLayer1
+
+                ColumnLayout {
+                    id: niriWrapperCol
+                    anchors.fill: parent
+                    anchors.margins: 8
+                    spacing: 8
+
+                    Carousel {
+                        Layout.fillWidth: true
+                        implicitHeight: 280
+                        largeItemWidthRatio: 1
+                        mediumItemWidthRatio: 0
+                        itemSpacing: 8
+                        model: [page.displayPathFor(Config.options.background.wallpaperPath)]
+                        wheelEnabled: false
+                        dragEnabled: false
+                        clickAction: (index, modelData) => {
+                            GlobalStates.wallpaperSelectorTarget = "wallpaper"
+                            GlobalStates.wallpaperSelectorOpen = true
+                        }
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        implicitHeight: 24
+                        radius: Appearance.rounding.normal
+                        color: "transparent"
+
+                        RowLayout {
+                            anchors.centerIn: parent
+                            spacing: 8
+                            MaterialSymbol {
+                                text: "image"
+                                iconSize: Appearance.font.pixelSize.larger
+                                color: Appearance.colors.colPrimary
+                            }
+                            StyledText {
+                                text: Config.options.background.wallpaperPath.split("/").pop()
+                                font.pixelSize: Appearance.font.pixelSize.normal
+                                font.weight: Font.Medium
+                                color: Appearance.colors.colOnLayer1
+                                elide: Text.ElideMiddle
+                            }
+                        }
+                    }
+                }
+            }
+
             GroupedList {
                 Layout.topMargin: -2
 
@@ -165,6 +223,15 @@ ContentPage {
                     checked: Config.options.background.enableWallpaperPreview
                     onCheckedChanged: {
                         Config.options.background.enableWallpaperPreview = checked;
+                    }
+                }
+
+                ConfigSwitch {
+                    buttonIcon: "blur_on"
+                    text: Translation.tr("Blur wall")
+                    checked: Config.options.background.showBlur
+                    onCheckedChanged: {
+                        Config.options.background.showBlur = checked;
                     }
                 }
 
@@ -195,6 +262,11 @@ ContentPage {
                         { displayName: Translation.tr("Fade"), icon: "gradient", value: "transition" },
                         { displayName: Translation.tr("Pixelate"), icon: "grain", value: "pixelate" },
                         { displayName: Translation.tr("Stripes"), icon: "texture_minus", value: "stripes" },
+                        { displayName: Translation.tr("CRT"), icon: "tv", value: "crt" },
+                        { displayName: Translation.tr("Dissolve"), icon: "blur_on", value: "dissolve" },
+                        { displayName: Translation.tr("Glitch"), icon: "bug_report", value: "glitch" },
+                        { displayName: Translation.tr("Ripple"), icon: "water", value: "ripple" },
+                        { displayName: Translation.tr("Shatter"), icon: "broken_image", value: "shatter" },
                         { displayName: Translation.tr("Random"), icon: "shuffle", value: "random" },
                     ]
                     currentValue: Config.options.background.wallpaperAnimation
@@ -288,7 +360,7 @@ ContentPage {
                         onCheckedChanged: {
                             Config.options.background.centeredWallpaperOnlyWhenLocked = checked;
                         }
-                        enabled: Config.options.background.centeredWallpaper
+                        enabled: Config.options.background.centeredWallpaper && WM.compositor !== "niri"
                     }
                 }
 
@@ -369,6 +441,7 @@ ContentPage {
                 ConfigSwitch {
                     buttonIcon: "lock_clock"
                     text: Translation.tr("Show only when locked")
+                    enabled: WM.compositor !== "niri"
                     checked: Config.options.background.widgets.clock.showOnlyWhenLocked
                     onCheckedChanged: {
                         Config.options.background.widgets.clock.showOnlyWhenLocked = checked;
@@ -999,7 +1072,18 @@ ContentPage {
                             icon: "note_stack_add",
                             name: Translation.tr("Notes"),
                             enabled: Config.options.background.widgets.notes.enable
+                        },
+                        {
+                            icon: "add_task",
+                            name: Translation.tr("To-Do"),
+                            enabled: Config.options.background.widgets.todo.enable
+                        },
+                        {
+                            icon: "timer",
+                            name: Translation.tr("Timers"),
+                            enabled: Config.options.background.widgets.timers.enable
                         }
+                        
                     ]
                     delegate: Rectangle {
                         Layout.fillWidth: true
@@ -1046,6 +1130,10 @@ ContentPage {
                                             Config.options.background.widgets.userCard.enable = checked
                                         else if (modelData.icon === "note_stack_add")
                                             Config.options.background.widgets.notes.enable = checked
+                                        else if (modelData.icon === "add_task")
+                                            Config.options.background.widgets.todo.enable = checked
+                                        else if (modelData.icon === "timer")
+                                            Config.options.background.widgets.timers.enable = checked
                                     }
                                 }
                             }

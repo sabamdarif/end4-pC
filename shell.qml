@@ -28,7 +28,7 @@ ShellRoot {
         target: Config
         function onReadyChanged() {
             if (!Config.ready) return
-            if (!NiriData.isNiri &&
+            if (WM.compositor !== "niri" &&
                 Config.options.hyprland.autostartApps.enable &&
                 Config.options.hyprland.autostartApps.apps.length > 0) {
                 autostartProc.running = true
@@ -46,7 +46,7 @@ ShellRoot {
         Updates.load()
         LyricsService.restartLyrics()
     }
-
+    
     PanelFamilyLoader {
         identifier: "ii"
         component: IllogicalImpulseFamily {}

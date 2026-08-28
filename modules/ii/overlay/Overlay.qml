@@ -56,17 +56,17 @@ Scope {
             Connections {
                 target: GlobalStates
                 function onOverlayOpenChanged() {
-                    if (!NiriData.isNiri)
+                    if (WM.compositor !== "niri")
                         delayedGrabTimer.restart();
                 }
             }
 
-            // Niri fallback: dismiss overlay when focus shifts away
+            // No focus-grab protocol (niri): dismiss the overlay when focus shifts away
             Connections {
-                target: NiriData
-                enabled: NiriData.isNiri
+                target: GlobalFocusGrab
+                enabled: WM.compositor !== "hyprland"
                 function onFocusedWindowIdChanged() {
-                    if (GlobalStates.overlayOpen && NiriData.focusedWindowId !== -1) {
+                    if (GlobalStates.overlayOpen && GlobalFocusGrab.focusedWindowId !== "") {
                         GlobalStates.overlayOpen = false;
                     }
                 }
@@ -95,7 +95,7 @@ Scope {
         }
     }
 
-    NiriSafeShortcut {
+    CompositorGlobalShortcut {
         name: "overlayToggle"
         description: "Toggles overlay on press"
 

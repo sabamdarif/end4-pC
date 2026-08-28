@@ -13,6 +13,8 @@ AbstractQuickPanel {
     property bool editMode: false
     Layout.fillWidth: true
 
+    visible: root.editMode || root.toggles.length > 0
+
     implicitHeight: (editMode ? contentItem.implicitHeight : usedRows.implicitHeight) + root.padding * 2
     Behavior on implicitHeight {
         animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
@@ -25,9 +27,16 @@ AbstractQuickPanel {
     }
     readonly property real baseCellHeight: 56
 
-    readonly property list<string> availableToggleTypes: ["network", "bluetooth", "idleInhibitor", "easyEffects", "nightLight", "darkMode", "cloudflareWarp", "gameMode", "screenSnip", "colorPicker", "onScreenKeyboard", "mic", "audio", "notifications", "powerProfile","musicRecognition", "antiFlashbang"]
+    readonly property list<string> availableToggleTypes: {
+        const base = ["network", "bluetooth", "idleInhibitor", "easyEffects", "nightLight", "darkMode", "cloudflareWarp", "gameMode", "screenSnip", "colorPicker", "onScreenKeyboard", "mic", "audio", "notifications", "powerProfile","musicRecognition", "antiFlashbang"]
+        return WM.compositor === "hyprland" ? base : base.filter(t => t !== "gameMode")
+    }
     readonly property int columns: Config.options.sidebar.quickToggles.android.columns
-    readonly property list<var> toggles: Config.ready ? Config.options.sidebar.quickToggles.android.toggles : []
+    readonly property list<var> toggles: {
+        if (!Config.ready) return []
+        const raw = Config.options.sidebar.quickToggles.android.toggles
+        return WM.compositor === "hyprland" ? raw : raw.filter(t => !t || t.type !== "gameMode")
+    }
     readonly property list<var> toggleRows: toggleRowsForList(toggles)
     readonly property list<var> unusedToggles: {
         const types = availableToggleTypes.filter(type => !toggles.some(toggle => (toggle && toggle.type === type)))

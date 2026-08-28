@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Hyprland
 import qs.modules.common
 import qs.modules.common.functions
+import qs.services
 
 Singleton {
     id: root
@@ -56,7 +57,7 @@ Singleton {
 
     Connections {
         target: Hyprland
-        enabled: !NiriData.isNiri
+        enabled: WM.compositor !== "niri"
         function onRawEvent(event) {
             if (event.name == "configreloaded") {
                 root.reloaded()

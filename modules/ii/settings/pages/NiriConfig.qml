@@ -614,6 +614,7 @@ rm -f "$tmp"`]
             GroupedList {
                 ConfigComboBox {
                     buttonIcon: "mouse"
+                    fieldWidth: 70
                     text: Translation.tr("Cursor theme")
                     model: [{ displayName: Translation.tr("Default"), value: "" }]
                         .concat(SystemTheming.cursorThemes.map(t => ({ displayName: t, value: t })))

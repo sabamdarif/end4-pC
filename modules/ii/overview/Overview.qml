@@ -18,8 +18,8 @@ Scope {
     PanelWindow {
         id: panelWindow
         property string searchingText: ""
-        readonly property var monitor: NiriData.isNiri ? null : Hyprland.monitorFor(panelWindow.screen)
-        property bool monitorIsFocused: NiriData.isNiri ? true : (Hyprland.focusedMonitor?.id == monitor?.id)
+        readonly property var monitor: WM.compositor === "niri" ? null : Hyprland.monitorFor(panelWindow.screen)
+        property bool monitorIsFocused: WM.compositor === "niri" ? true : (Hyprland.focusedMonitor?.id == monitor?.id)
         visible: GlobalStates.overviewOpen
 
         WlrLayershell.namespace: "quickshell:overview"
@@ -28,7 +28,7 @@ Scope {
         // Niri has no focus-grab protocol, so OnDemand never routes keys to the layer surface.
         // Use Exclusive there; keep OnDemand on Hyprland (paired with HyprlandFocusGrab).
         WlrLayershell.keyboardFocus: GlobalStates.overviewOpen
-            ? (NiriData.isNiri ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.OnDemand)
+            ? (WM.compositor === "niri" ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.OnDemand)
             : WlrKeyboardFocus.None
         color: "transparent"
 
@@ -84,17 +84,11 @@ Scope {
                     GlobalStates.overviewOpen = false;
                 } else if (event.key === Qt.Key_Left) {
                     if (!panelWindow.searchingText) {
-                        if (NiriData.isNiri)
-                            NiriData.focusWorkspaceUp();
-                        else
-                            Hyprland.dispatch("workspace r-1");
+                        WM.switchWorkspaceRelative("prev");
                     }
                 } else if (event.key === Qt.Key_Right) {
                     if (!panelWindow.searchingText) {
-                        if (NiriData.isNiri)
-                            NiriData.focusWorkspaceDown();
-                        else
-                            Hyprland.dispatch("workspace r+1");
+                        WM.switchWorkspaceRelative("next");
                     }
                 }
             }
@@ -180,7 +174,7 @@ Scope {
         }
     }
 
-    NiriSafeShortcut {
+    CompositorGlobalShortcut {
         name: "searchToggle"
         description: "Toggles search on press"
 
@@ -188,7 +182,7 @@ Scope {
             GlobalStates.overviewOpen = !GlobalStates.overviewOpen;
         }
     }
-    NiriSafeShortcut {
+    CompositorGlobalShortcut {
         name: "overviewWorkspacesClose"
         description: "Closes overview on press"
 
@@ -196,7 +190,7 @@ Scope {
             GlobalStates.overviewOpen = false;
         }
     }
-    NiriSafeShortcut {
+    CompositorGlobalShortcut {
         name: "overviewWorkspacesToggle"
         description: "Toggles overview on press"
 
@@ -204,7 +198,7 @@ Scope {
             GlobalStates.overviewOpen = !GlobalStates.overviewOpen;
         }
     }
-    NiriSafeShortcut {
+    CompositorGlobalShortcut {
         name: "searchToggleRelease"
         description: "Toggles search on release"
 
@@ -220,7 +214,7 @@ Scope {
             GlobalStates.overviewOpen = !GlobalStates.overviewOpen;
         }
     }
-    NiriSafeShortcut {
+    CompositorGlobalShortcut {
         name: "searchToggleReleaseInterrupt"
         description: "Interrupts possibility of search being toggled on release. " + "This is necessary because GlobalShortcut.onReleased in quickshell triggers whether or not you press something else while holding the key. " + "To make sure this works consistently, use binditn = MODKEYS, catchall in an automatically triggered submap that includes everything."
 
@@ -228,7 +222,7 @@ Scope {
             GlobalStates.superReleaseMightTrigger = false;
         }
     }
-    NiriSafeShortcut {
+    CompositorGlobalShortcut {
         name: "overviewEmojiToggle"
         description: "Toggle emoji query on overview widget"
 
@@ -237,7 +231,7 @@ Scope {
         }
     }
 
-    NiriSafeShortcut {
+    CompositorGlobalShortcut {
         name: "overviewSymbolsToggle"
         description: "Toggle material symbols search on overview widget"
 

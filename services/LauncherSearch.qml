@@ -93,7 +93,7 @@ Singleton {
         { page: "Network",   path: "NetworkConfig.qml" },
         { page: "Apps",      path: "AppsConfig.qml" },
         { page: "Services",  path: "ServicesConfig.qml" },
-        NiriData.isNiri
+        WM.compositor === "niri"
             ? { page: "Niri",     path: "NiriConfig.qml" }
             : { page: "Hyprland", path: "HyprlandConfig.qml" },
         { page: "Shortcuts", path: "ShortcutsConfig.qml" },

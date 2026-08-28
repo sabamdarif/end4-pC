@@ -10,7 +10,6 @@ import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
 import qs.modules.common.models
-import Quickshell.Hyprland
 
 ContentPage {
     id: page
@@ -576,7 +575,7 @@ ContentPage {
                     Layout.fillWidth: true
                     fieldWidth: 300
                     buttonIcon: "newsmode"
-                    text: Translation.tr("New")
+                    text: Translation.tr("Save as")
                     placeholderText: Translation.tr("Name, description (optional)")
 
                     confirmButtonVisible: presetNameField.value.trim() !== ""

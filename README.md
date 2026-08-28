@@ -88,6 +88,20 @@ hl.bind("SUPER + escape", hl.dsp.global("quickshell:settingsToggle"), {descripti
 
 > **Note:** Settings is an overlay panel, not a regular window — `Super + Q` won't close it. Use the same keybind to toggle it or press `Escape`.
 
+---
+
+## ❓ FAQ
+
+### How do I see my keybinds?
+
+Open the launcher (`SUPER`) and type `<` — it'll show you the full list of configured keybinds.
+
+### Why doesn't Settings have a search bar?
+
+It doesn't need one — the launcher already does that job. Open the launcher (`SUPER`) and just type what you're looking for (e.g. `wallpaper`, `bar`, `blur`); it'll match against page names and section keywords and jump you straight to the right Settings page, so there's no need for a separate search inside Settings itself.
+
+---
+
 ## 🙏 Credits
 
 Huge thanks to the people who made this possible:
@@ -95,6 +109,7 @@ Huge thanks to the people who made this possible:
 - **[@end-4](https://github.com/end-4)** — for creating the original [dots-hyprland](https://github.com/end-4/dots-hyprland) / illogical-impulse shell. An absolute masterpiece of a dotfiles project 🫡
 - **[@gh0stzk](https://github.com/gh0stzk)** — for providing the weather API integration that made the weather widget possible 🙌
 - **[@StarS2112](https://github.com/StarS2112)** — for showcasing this fork 🙌
+- **[@simeulinuxkaliaiwr](https://github.com/simeulinuxkaliaiwr)** — for some shader transitions 🎨
 
 ---
 

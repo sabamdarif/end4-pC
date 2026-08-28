@@ -58,10 +58,10 @@ Item {
         }
     }
 
-    // Niri fallback: dismiss tray when focus shifts away
+    // No focus-grab protocol (niri): dismiss tray when focus shifts away
     Connections {
-        target: NiriData
-        enabled: NiriData.isNiri
+        target: GlobalFocusGrab
+        enabled: WM.compositor !== "hyprland"
         function onFocusedWindowIdChanged() {
             if (focusGrab.active) {
                 root.trayOverflowOpen = false

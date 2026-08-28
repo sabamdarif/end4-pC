@@ -6,6 +6,7 @@ import qs.modules.common.functions
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import qs.services
 
 /**
  * Niri keybinds service (Shortcuts settings page backend).
@@ -92,7 +93,7 @@ Singleton {
 
     Connections {
         target: NiriConfig.options
-        enabled: NiriData.isNiri
+        enabled: WM.compositor === "niri"
 
         function onBindOverridesChanged() {
             refreshDelay.restart()
@@ -101,7 +102,7 @@ Singleton {
 
     Process {
         id: getBinds
-        running: NiriData.isNiri
+        running: WM.compositor === "niri"
         command: ["python3", root.parserPath, "--path", root.configPath]
 
         stdout: StdioCollector {
