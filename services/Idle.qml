@@ -1,17 +1,42 @@
 pragma Singleton
+import qs
 import qs.modules.common
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
 
-/**
- * A nice wrapper for date and time strings.
- */
 Singleton {
     id: root
 
     property alias inhibit: idleInhibitor.enabled
     inhibit: false
+
+    // Convert the human-readable timeout string to seconds (0 = disabled)
+    readonly property int idleTimeoutSeconds: {
+        switch (Config.options.lock.idleTimeout) {
+            case "5 minutes":  return 300;
+            case "10 minutes": return 600;
+            case "20 minutes": return 1200;
+            case "30 minutes": return 1800;
+            default:           return 0; // "infinity" or unknown → disabled
+        }
+    }
+
+    IdleMonitor {
+        id: idleMonitor
+        timeout: root.idleTimeoutSeconds
+        enabled: root.idleTimeoutSeconds > 0
+        respectInhibitors: true
+        onIsIdleChanged: {
+            if (isIdle && !GlobalStates.screenLocked) {
+                if (Config.options.lock.useSwaylock) {
+                    Quickshell.execDetached(["bash", "-c", "pidof swaylock || swaylock"]);
+                } else {
+                    GlobalStates.screenLocked = true;
+                }
+            }
+        }
+    }
 
     Connections {
         target: Persistent

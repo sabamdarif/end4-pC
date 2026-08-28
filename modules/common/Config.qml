@@ -548,8 +548,9 @@ Singleton {
             }
 
             property JsonObject lock: JsonObject {
-                property bool useHyprlock: false
+                property bool useSwaylock: false
                 property bool launchOnStartup: false
+                property string idleTimeout: "5 minutes"
                 property bool showWidgets: false
                 property bool showMedia: true
                 property bool showToolbars: true

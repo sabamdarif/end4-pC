@@ -93,8 +93,8 @@ Scope {
     }
 
     function lock() {
-        if (Config.options.lock.useHyprlock) {
-            Quickshell.execDetached(["bash", "-c", "pidof hyprlock || hyprlock"]);
+        if (Config.options.lock.useSwaylock) {
+            Quickshell.execDetached(["bash", "-c", "pidof swaylock || swaylock"]);
             return;
         }
         GlobalStates.screenLocked = true;

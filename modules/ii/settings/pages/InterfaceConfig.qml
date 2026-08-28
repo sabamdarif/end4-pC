@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
@@ -247,15 +248,28 @@ ContentPage {
             GroupedList {
                 ConfigSwitch {
                     buttonIcon: "water_drop"
-                    text: Translation.tr("Use Hyprlock (instead of Quickshell)")
-                    checked: Config.options.lock.useHyprlock
-                    onCheckedChanged: { Config.options.lock.useHyprlock = checked }
+                    text: Translation.tr("Use Swaylock (instead of Quickshell)")
+                    checked: Config.options.lock.useSwaylock
+                    onCheckedChanged: { Config.options.lock.useSwaylock = checked }
                 }
                 ConfigSwitch {
                     buttonIcon: "account_circle"
                     text: Translation.tr("Launch on startup")
                     checked: Config.options.lock.launchOnStartup
                     onCheckedChanged: { Config.options.lock.launchOnStartup = checked }
+                }
+                ConfigComboBox {
+                    buttonIcon: "timer"
+                    text: Translation.tr("Auto-lock after")
+                    model: [
+                        { displayName: Translation.tr("5 minutes"),  value: "5 minutes" },
+                        { displayName: Translation.tr("10 minutes"), value: "10 minutes" },
+                        { displayName: Translation.tr("20 minutes"), value: "20 minutes" },
+                        { displayName: Translation.tr("30 minutes"), value: "30 minutes" },
+                        { displayName: Translation.tr("Never"),      value: "infinity" },
+                    ]
+                    currentValue: Config.options.lock.idleTimeout
+                    onSelected: (value) => { Config.options.lock.idleTimeout = value; }
                 }
                 ConfigSwitch {
                     buttonIcon: "widgets"
