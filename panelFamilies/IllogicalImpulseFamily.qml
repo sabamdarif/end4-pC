@@ -4,50 +4,39 @@ import Quickshell
 import qs.modules.common
 import qs.modules.ii.background
 import qs.modules.ii.bar
-import qs.modules.ii.clipboard
 import qs.modules.ii.dock
-import qs.modules.ii.lock
-import qs.modules.ii.mediaControls
-import qs.modules.ii.notificationPopup
-import qs.modules.ii.onScreenDisplay
-import qs.modules.ii.onScreenKeyboard
-import qs.modules.ii.overview
-import qs.modules.ii.polkit
-import qs.modules.ii.settings
-import qs.modules.ii.regionSelector
 import qs.modules.ii.screenCorners
-import qs.modules.ii.screenTranslator
-import qs.modules.ii.sessionScreen
-import qs.modules.ii.sidebarLeft
-import qs.modules.ii.sidebarRight
-import qs.modules.ii.overlay
 import qs.modules.ii.verticalBar
-import qs.modules.ii.wallpaperSelector
-import qs.modules.ii.desktopMenu
-import qs.modules.ii.dropover
 
 Scope {
+    // Panels with a surface on screen from the moment the shell starts.
     PanelLoader { extraCondition: !Config.options.bar.vertical; immediate: true; component: Bar {} }
-    PanelLoader { immediate: true; component: Background {} }
-    PanelLoader { component: ClipboardPanel {} }
-    PanelLoader { extraCondition: Config.options.dock.enable; immediate: true; component: Dock {} }
-    PanelLoader { component: Lock {} }
-    PanelLoader { component: MediaControls {} }
-    PanelLoader { component: NotificationPopup {} }
-    PanelLoader { component: OnScreenDisplay {} }
-    PanelLoader { component: OnScreenKeyboard {} }
-    PanelLoader { component: Overlay {} }
-    PanelLoader { component: Overview {} }
-    PanelLoader { component: Polkit {} }
-    PanelLoader { component: RegionSelector {} }
-    PanelLoader { immediate: true; component: ScreenCorners {} }
-    PanelLoader { component: ScreenTranslator {} }
-    PanelLoader { component: SessionScreen {} }
-    PanelLoader { extraCondition: Config.options.sidebar.leftEnabled; component: SidebarLeft {} }
-    PanelLoader { component: SidebarRight {} }
     PanelLoader { extraCondition: Config.options.bar.vertical; immediate: true; component: VerticalBar {} }
-    PanelLoader { component: WallpaperSelector {} }
-    PanelLoader { component: Settings {} }
-    PanelLoader { component: DesktopMenu {} }
-    PanelLoader { component: DropShelfPanel {} }
+    PanelLoader { component: Background {} }
+    PanelLoader { component: ScreenCorners {} }
+    PanelLoader { extraCondition: Config.options.dock.enable; immediate: true; component: Dock {} }
+
+    // Everything else lives in DeferredPanels.qml. Referencing those types here
+    // would compile their whole type tree before this document could finish
+    // loading, which is roughly half a second of work ahead of the first frame.
+    // Naming the document by path hands that work to the QML worker thread.
+    LazyLoader {
+        id: deferredPanels
+
+        Component.onCompleted: {
+            const component = Qt.createComponent("DeferredPanels.qml", Component.Asynchronous, deferredPanels);
+            const activate = () => {
+                if (component.status === Component.Error) {
+                    console.error(`[IllogicalImpulseFamily] Could not load DeferredPanels.qml: ${component.errorString()}`);
+                    return;
+                }
+                deferredPanels.component = component;
+                deferredPanels.activeAsync = true;
+            };
+            if (component.status === Component.Loading)
+                component.statusChanged.connect(activate);
+            else
+                activate();
+        }
+    }
 }
