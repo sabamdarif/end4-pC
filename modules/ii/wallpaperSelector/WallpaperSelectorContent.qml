@@ -18,6 +18,10 @@ MouseArea {
     property string source: "local"
     property string selectedResolution: "1080p"
     property bool filterFieldFocused: false
+    // Toolbar fields live inside Loaders, so their ids are out of scope here.
+    readonly property Item searchField: root.source === "local"
+        ? (localToolbarLoader.item?.searchField ?? null)
+        : (onlineToolbarLoader.item?.searchField ?? null)
 
     function updateThumbnails() {
         const item = gridLoader.item;
@@ -100,20 +104,21 @@ MouseArea {
             event.accepted = true;
         } else if (event.key === Qt.Key_Backspace) {
             if (!root.filterFieldFocused) {
-                filterField.forceActiveFocus();
+                root.searchField?.forceActiveFocus();
             }
             event.accepted = true;
         } else if (event.modifiers & Qt.ControlModifier && event.key === Qt.Key_L) {
             addressBar.focusBreadcrumb();
             event.accepted = true;
         } else if (event.key === Qt.Key_Slash) {
-            filterField.forceActiveFocus();
+            root.searchField?.forceActiveFocus();
             event.accepted = true;
         } else {
-            if (event.text.length > 0 && !root.filterFieldFocused) {
-                filterField.text += event.text;
-                filterField.cursorPosition = filterField.text.length;
-                filterField.forceActiveFocus();
+            const searchField = root.searchField;
+            if (event.text.length > 0 && !root.filterFieldFocused && searchField) {
+                searchField.text += event.text;
+                searchField.cursorPosition = searchField.text.length;
+                searchField.forceActiveFocus();
             }
             event.accepted = true;
         }
@@ -232,9 +237,11 @@ MouseArea {
                         anchors.centerIn: parent
 
                         Loader {
+                            id: localToolbarLoader
                             active: root.source === "local"
                             visible: active
                             sourceComponent: RowLayout {
+                                property alias searchField: filterField
                                 spacing: 4
                                 IconToolbarButton {
                                     implicitWidth: height
@@ -279,9 +286,11 @@ MouseArea {
                         }
 
                         Loader {
+                            id: onlineToolbarLoader
                             active: root.source !== "local"
                             visible: active
                             sourceComponent: RowLayout {
+                                property alias searchField: onlineSearchField
                                 spacing: 4
                                 Repeater {
                                     model: ["1080p", "2K", "4K"]
@@ -316,13 +325,6 @@ MouseArea {
                                         function onWallpaperSelectorOpenChanged() {
                                             if (!GlobalStates.wallpaperSelectorOpen) onlineSearchField.text = ""
                                         }
-                                    }
-                                    Keys.onPressed: event => {
-                                        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                                            event.accepted = true;
-                                            return;
-                                        }
-                                        event.accepted = false;
                                     }
                                 }
                                 IconToolbarButton {
@@ -417,7 +419,7 @@ MouseArea {
         function onWallpaperSelectorOpenChanged() {
             if (GlobalStates.wallpaperSelectorOpen && monitorIsFocused) {
                 if (root.source === "local")
-                    filterField.forceActiveFocus()
+                    root.searchField?.forceActiveFocus()
                 else
                     root.forceActiveFocus()
             } else if (!GlobalStates.wallpaperSelectorOpen) {

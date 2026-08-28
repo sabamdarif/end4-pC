@@ -20,6 +20,7 @@ Singleton {
     property string seed:       ""          
     property var    results:    []           // list [ {thumb, full, id, provider} ]
     property int totalPages: 0
+    property bool _refetchQueued: false
 
     signal fetched()
     signal fetchError(string message)
@@ -56,7 +57,13 @@ Singleton {
     })
 
     function fetch() {
-        if (root.loading) return;
+        // A single Process backs every request, so a search issued mid-request
+        // waits for that one to finish instead of being dropped.
+        if (root.loading) {
+            root._refetchQueued = true;
+            return;
+        }
+        root._refetchQueued = false;
         root.page = 1;
         root.seed = "";
         root.appending = false;
@@ -234,14 +241,16 @@ Singleton {
             root.loading = false;
             if (exitCode !== 0) {
                 root.fetchError("curl exited with code " + exitCode);
-                return;
-            }
-            if (fetchProc.provider === "wallhaven") {
+            } else if (fetchProc.provider === "wallhaven") {
                 root._parseWallhaven(fetchProc.buffer);
             } else if (fetchProc.provider === "unsplash") {
                 root._parseUnsplash(fetchProc.buffer);
             } else if (fetchProc.provider === "pexels") {
                 root._parsePexels(fetchProc.buffer);
+            }
+            if (root._refetchQueued) {
+                root._refetchQueued = false;
+                root.fetch();
             }
         }
     }
