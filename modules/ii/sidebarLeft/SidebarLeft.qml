@@ -66,11 +66,20 @@ Scope { // Scope
         else root.pin = !root.pin;
     }
 
+    // The window this content lives in may still be incubating when the panel
+    // itself finishes loading, so attach from whichever side gets there last.
+    function attachContent() {
+        if (!root.sidebarContent) return;
+        const window = root.detach ? detachedSidebarLoader.item : sidebarLoader.item;
+        if (!window) return;
+        window.contentParent.children = [root.sidebarContent];
+    }
+
     Component.onCompleted: {
         root.sidebarContent = contentComponent.createObject(null, {
             "scopeRoot": root,
         });
-        sidebarLoader.item.contentParent.children = [root.sidebarContent];
+        root.attachContent();
     }
 
     onDetachChanged: {
@@ -91,6 +100,7 @@ Scope { // Scope
     Loader {
         id: sidebarLoader
         active: true
+        onLoaded: root.attachContent()
         
         sourceComponent: PanelWindow { // Window
             id: panelWindow

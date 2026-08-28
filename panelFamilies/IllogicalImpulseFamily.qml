@@ -27,10 +27,10 @@ import qs.modules.ii.desktopMenu
 import qs.modules.ii.dropover
 
 Scope {
-    PanelLoader { extraCondition: !Config.options.bar.vertical; component: Bar {} }
-    PanelLoader { component: Background {} }
+    PanelLoader { extraCondition: !Config.options.bar.vertical; immediate: true; component: Bar {} }
+    PanelLoader { immediate: true; component: Background {} }
     PanelLoader { component: ClipboardPanel {} }
-    PanelLoader { extraCondition: Config.options.dock.enable; component: Dock {} }
+    PanelLoader { extraCondition: Config.options.dock.enable; immediate: true; component: Dock {} }
     PanelLoader { component: Lock {} }
     PanelLoader { component: MediaControls {} }
     PanelLoader { component: NotificationPopup {} }
@@ -40,12 +40,12 @@ Scope {
     PanelLoader { component: Overview {} }
     PanelLoader { component: Polkit {} }
     PanelLoader { component: RegionSelector {} }
-    PanelLoader { component: ScreenCorners {} }
+    PanelLoader { immediate: true; component: ScreenCorners {} }
     PanelLoader { component: ScreenTranslator {} }
     PanelLoader { component: SessionScreen {} }
     PanelLoader { extraCondition: Config.options.sidebar.leftEnabled; component: SidebarLeft {} }
     PanelLoader { component: SidebarRight {} }
-    PanelLoader { extraCondition: Config.options.bar.vertical; component: VerticalBar {} }
+    PanelLoader { extraCondition: Config.options.bar.vertical; immediate: true; component: VerticalBar {} }
     PanelLoader { component: WallpaperSelector {} }
     PanelLoader { component: Settings {} }
     PanelLoader { component: DesktopMenu {} }
