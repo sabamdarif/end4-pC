@@ -4,6 +4,7 @@ import qs.services
 import qs.modules.common
 import qs.modules.common.models
 import qs.modules.common.functions
+import qs.modules.ii.settings
 import QtQuick
 import Qt.labs.folderlistmodel
 import Quickshell
@@ -41,15 +42,13 @@ Singleton {
             }
             
             let currentPage = pendingPages.shift();
-            let fullPath = FileUtils.trimFileProtocol(
-                Quickshell.shellPath("modules/ii/settings/pages/" + currentPage.path)
-            )
+            let fullPath = FileUtils.trimFileProtocol(String(currentPage.path))
 
             let rawCommand = "grep -oP \"title:\\s*Translation.tr\\(['\\\"].*?['\\\"]\\)\" " + fullPath + " | sed -E \"s/title:\\s*Translation.tr\\(['\\\"](.*)['\\\"]\\)/\\1/g\" | tr '\\n' ' '";
             
             command = ["bash", "-c", rawCommand];
             
-            keywordHarvester.currentPageName = currentPage.page;
+            keywordHarvester.currentPageName = currentPage.key;
             running = true;
         }
 
@@ -84,22 +83,14 @@ Singleton {
 
     property var settingsKeywordsCache: ({})
 
-    property var settingsIndex: [
-        { page: "General",   path: "GeneralConfig.qml" },
-        { page: "Bar",       path: "BarConfig.qml" },
-        { page: "Desktop",   path: "BackgroundConfig.qml" },
-        { page: "Interface", path: "InterfaceConfig.qml" },
-        { page: "Sound",     path: "SoundConfig.qml" },
-        { page: "Network",   path: "NetworkConfig.qml" },
-        { page: "Apps",      path: "AppsConfig.qml" },
-        { page: "Services",  path: "ServicesConfig.qml" },
-        NiriData.isNiri
-            ? { page: "Niri",     path: "NiriConfig.qml" }
-            : { page: "Hyprland", path: "HyprlandConfig.qml" },
-        { page: "Shortcuts", path: "ShortcutsConfig.qml" },
-        { page: "About",     path: "About.qml" },
-        { page: "Quick",     path: "QuickConfig.qml" },
-    ]
+    // Mirrors the settings nav tree so the two never drift; `key` is what
+    // GlobalStates.settingsPage expects.
+    readonly property var settingsIndex: SettingsPages.leaves.map(l => ({
+        key: l.key,
+        page: l.name,
+        group: l.groupName,
+        path: l.component
+    }))
 
     // Load user action scripts from ~/.config/illogical-impulse/actions/
     // Uses FolderListModel to auto-reload when scripts are added/removed
@@ -384,13 +375,13 @@ Singleton {
         const settingsQuery = root.query.toLowerCase().trim();
 
         const settingsResults = root.settingsIndex.reduce((acc, page) => {
-            const dynamicKeywords = (root.settingsKeywordsCache[page.page] || "").toLowerCase();
+            const dynamicKeywords = (root.settingsKeywordsCache[page.key] || "").toLowerCase();
             const query = root.query.toLowerCase().trim();
             if (query === "") return acc;
 
-            if (page.page.toLowerCase().includes(query) || dynamicKeywords.includes(query)) {
+            if (page.page.toLowerCase().includes(query) || page.group.toLowerCase().includes(query) || dynamicKeywords.includes(query)) {
                 acc.push(resultComp.createObject(null, {
-                    name: page.page,
+                    name: `${page.group} • ${page.page}`,
                     comment: dynamicKeywords.includes(query) ? "Section: " + query : "Settings for " + page.page,
                     verb: Translation.tr("Go"),
                     type: Translation.tr("Settings"),
@@ -399,7 +390,7 @@ Singleton {
                     execute: () => {
                         GlobalStates.settingsOpen = true;
                         Qt.callLater(() => {
-                            GlobalStates.settingsPage = page.page + ":" + query;
+                            GlobalStates.settingsPage = page.key + ":" + query;
                         });
                         root.query = "";
                     }

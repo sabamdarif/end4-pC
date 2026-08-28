@@ -7,7 +7,10 @@ import Quickshell.Hyprland
 import qs.modules.common
 
 /**
- * Exposes the active Hyprland Xkb keyboard layout name and code for indicators.
+ * Exposes the active Xkb keyboard layout name and code for indicators.
+ *
+ * Both compositors report the layout as an xkb *description* ("English (US)"),
+ * which is looked up in base.lst to get the short code shown in the bar.
  */
 Singleton {
     id: root
@@ -115,6 +118,38 @@ Singleton {
                 // Mark layout code list to be updated when config is reloaded
                 root.needsLayoutRefresh = true;
             }
+        }
+    }
+
+    // niri reports layouts as the same xkb descriptions Hyprland does, so the
+    // base.lst lookup above works for both without a separate code path.
+    Process {
+        id: fetchNiriLayoutsProc
+        running: NiriData.isNiri
+        command: ["niri", "msg", "-j", "keyboard-layouts"]
+
+        stdout: StdioCollector {
+            id: niriLayoutsCollector
+            onStreamFinished: {
+                try {
+                    const parsed = JSON.parse(niriLayoutsCollector.text);
+                    const names = parsed["names"] ?? [];
+                    if (names.length === 0) return;
+                    root.layoutCodes = names;
+                    root.currentLayoutName = names[parsed["current_idx"] ?? 0];
+                    Config.options.osk.layout = root.currentLayoutName.split(" (")[0];
+                } catch (e) {
+                    console.log("[HyprlandXkb] Could not parse niri keyboard-layouts:", e);
+                }
+            }
+        }
+    }
+
+    Connections {
+        target: NiriData
+        enabled: NiriData.isNiri
+        function onRawEvent(line) {
+            if (line.includes("KeyboardLayout")) fetchNiriLayoutsProc.running = true;
         }
     }
 }

@@ -16,6 +16,9 @@ Item {
     width: parent.width
     readonly property real barPadding: 0
     readonly property bool isMaterial: Config.options.bar.cornerStyle === 3
+    readonly property real compositorGapsOut: NiriData.isNiri
+        ? NiriConfig.options.layout.gaps
+        : root.compositorGapsOut
     readonly property real centerPillX: centerPill.x
     readonly property real centerPillWidth: centerPill.width
 
@@ -111,7 +114,7 @@ Item {
         // Left
         Item {
             anchors.left: parent.left
-            anchors.leftMargin: root.isMaterial ? (Config.options.hyprland.general.gapsOut || 5) : (Config.options.bar.cornerStyle === 1 ? 4 : 10)
+            anchors.leftMargin: root.isMaterial ? root.compositorGapsOut : (Config.options.bar.cornerStyle === 1 ? 4 : 10)
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             width: root.isMaterial ? leftMaterialPill.implicitWidth : leftRow.implicitWidth
@@ -303,7 +306,7 @@ Item {
         // Right
         Item {
             anchors.right: parent.right
-            anchors.rightMargin: root.isMaterial ? (Config.options.hyprland.general.gapsOut || 5) : (Config.options.bar.cornerStyle === 1 ? 4 : 10)
+            anchors.rightMargin: root.isMaterial ? root.compositorGapsOut : (Config.options.bar.cornerStyle === 1 ? 4 : 10)
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             width: root.isMaterial ? rightMaterialPill.implicitWidth : rightRow.implicitWidth

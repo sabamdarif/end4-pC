@@ -602,6 +602,8 @@ Singleton {
                 }
             }
 
+            // Only read by modules/ii/overview, whose loader is currently
+            // active: false — there is no settings UI for these any more.
             property JsonObject overview: JsonObject {
                 property bool enable: true
                 property string style: "default"

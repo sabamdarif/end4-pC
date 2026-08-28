@@ -132,7 +132,7 @@ Scope {
 
     function initIfReady() {
         if (!Config.ready || !Persistent.ready) return;
-        if (Config.options.lock.launchOnStartup && Persistent.isNewHyprlandInstance) {
+        if (Config.options.lock.launchOnStartup && Persistent.isNewCompositorInstance) {
             root.lock();
         } else {
             KeyringStorage.fetchKeyringData();

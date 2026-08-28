@@ -12,12 +12,17 @@ Singleton {
     property string filePath: `${root.fileDir}/${root.fileName}`
 
     property bool ready: false
-    property string previousHyprlandInstanceSignature: ""
-    property bool isNewHyprlandInstance: previousHyprlandInstanceSignature !== states.hyprlandInstanceSignature
+    property string previousCompositorSignature: ""
+    // Niri has no instance signature, but its socket path is per-session, so it
+    // works the same way. Without this both sides stay "" on niri and nothing
+    // that keys off a fresh session ever fires.
+    readonly property string compositorSignature: Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE")
+        || Quickshell.env("NIRI_SOCKET") || ""
+    property bool isNewCompositorInstance: previousCompositorSignature !== states.compositorSignature
 
     onReadyChanged: {
-        root.previousHyprlandInstanceSignature = root.states.hyprlandInstanceSignature
-        root.states.hyprlandInstanceSignature = Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE") || ""
+        root.previousCompositorSignature = root.states.compositorSignature
+        root.states.compositorSignature = root.compositorSignature
     }
 
     Timer {
@@ -56,7 +61,7 @@ Singleton {
         adapter: JsonAdapter {
             id: persistentStatesJsonAdapter
 
-            property string hyprlandInstanceSignature: ""
+            property string compositorSignature: ""
 
             property JsonObject ai: JsonObject {
                 property string model: "gemini-2.5-flash"

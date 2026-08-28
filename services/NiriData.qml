@@ -13,6 +13,10 @@ Singleton {
 
     readonly property bool isNiri: Quickshell.env("NIRI_SOCKET") !== ""
 
+    // One line of `niri msg event-stream`, for services that need events the
+    // workspace/window snapshots below do not cover (e.g. layout switches).
+    signal rawEvent(string line)
+
     property var workspaces: []
     property var workspaceById: ({})
     property var windows: []
@@ -147,6 +151,7 @@ Singleton {
         stdout: SplitParser {
             onRead: line => {
                 root.updateAll();
+                root.rawEvent(line);
             }
         }
     }

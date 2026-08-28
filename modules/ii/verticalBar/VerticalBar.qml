@@ -14,6 +14,9 @@ import qs.modules.common.functions
 Scope {
     id: bar
     property bool showBarBackground: Config.options.bar.showBackground
+    readonly property real compositorGapsOut: NiriData.isNiri
+        ? NiriConfig.options.layout.gaps
+        : bar.compositorGapsOut
 
     Variants {
         model: {
@@ -52,10 +55,10 @@ Scope {
                 exclusionMode: ExclusionMode.Ignore
                 exclusiveZone: (Config?.options.bar.autoHide.enable && (!mustShow || !Config?.options.bar.autoHide.pushWindows)) ? 0 :
                     Appearance.sizes.baseVerticalBarWidth + (Config.options.bar.cornerStyle === 1 ? Appearance.sizes.hyprlandGapsOut : 0)
-                    + (Config.options.bar.cornerStyle === 3 ? (Config.options.hyprland.general.gapsOut || 5) : 0)
+                    + (Config.options.bar.cornerStyle === 3 ? bar.compositorGapsOut : 0)
                 WlrLayershell.namespace: "quickshell:verticalBar"
                 implicitWidth: Appearance.sizes.verticalBarWidth + Appearance.rounding.screenRounding
-                    + (Config.options.bar.cornerStyle === 3 ? (Config.options.hyprland.general.gapsOut || 5) : 0)
+                    + (Config.options.bar.cornerStyle === 3 ? bar.compositorGapsOut : 0)
                 mask: Region { item: hoverMaskRegion }
                 color: "transparent"
 
@@ -150,7 +153,7 @@ Scope {
                             right: undefined
                             leftMargin: (Config?.options.bar.autoHide.enable && !mustShow) 
                                 ? -Appearance.sizes.verticalBarWidth 
-                                : (Config.options.bar.cornerStyle === 3 ? (Config.options.hyprland.general.gapsOut || 5) : 0)
+                                : (Config.options.bar.cornerStyle === 3 ? bar.compositorGapsOut : 0)
                         }
                         Behavior on anchors.leftMargin {
                             animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)

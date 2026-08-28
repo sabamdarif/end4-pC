@@ -17,6 +17,9 @@ Item {
 
     readonly property real barPadding: 0
     readonly property bool isMaterial: Config.options.bar.cornerStyle === 3
+    readonly property real compositorGapsOut: NiriData.isNiri
+        ? NiriConfig.options.layout.gaps
+        : root.compositorGapsOut
     readonly property bool trayHasItems: SystemTray.items.values.length > 0
 
     function filterLayout(layout) {
@@ -111,7 +114,7 @@ Item {
         // Top
         Item {
             anchors.top: parent.top
-            anchors.topMargin: root.isMaterial ? (Config.options.hyprland.general.gapsOut || 5) : (Config.options.bar.cornerStyle === 1 ? 4 : 10)
+            anchors.topMargin: root.isMaterial ? root.compositorGapsOut : (Config.options.bar.cornerStyle === 1 ? 4 : 10)
             anchors.left: parent.left
             anchors.right: parent.right
             height: root.isMaterial ? topMaterialPill.implicitHeight : topCol.implicitHeight
@@ -268,7 +271,7 @@ Item {
         // Bottom
         Item {
             anchors.bottom: parent.bottom
-            anchors.bottomMargin: root.isMaterial ? (Config.options.hyprland.general.gapsOut || 5) : (Config.options.bar.cornerStyle === 1 ? 4 : 10)
+            anchors.bottomMargin: root.isMaterial ? root.compositorGapsOut : (Config.options.bar.cornerStyle === 1 ? 4 : 10)
             anchors.left: parent.left
             anchors.right: parent.right
             height: root.isMaterial ? bottomMaterialPill.implicitHeight : bottomCol.implicitHeight

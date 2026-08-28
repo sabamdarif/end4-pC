@@ -44,30 +44,6 @@ ContentPage {
         if (NiriData.isNiri) NiriKeybinds.refresh()
     }
 
-    function goTo(term) {
-        const t = term.toLowerCase().trim()
-
-        function findTarget(rootItem) {
-            for (let i = 0; i < rootItem.children.length; i++) {
-                let child = rootItem.children[i]
-                if (child.title && child.title.toLowerCase().includes(t)) {
-                    return child
-                }
-            }
-            for (let i = 0; i < rootItem.children.length; i++) {
-                let found = findTarget(rootItem.children[i])
-                if (found) return found
-            }
-            return null
-        }
-
-        let target = findTarget(mainLayout)
-        if (target) {
-            let pos = target.mapToItem(mainLayout, 0, 0)
-            page.contentY = Math.max(0, pos.y - 0)
-        }
-    }
-
     function matchesSearch(bind) {
         const q = page.searchText.toLowerCase().trim()
         if (q === "") return true

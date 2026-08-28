@@ -280,7 +280,7 @@ Scope {
                             onClicked: {
                                 GlobalStates.desktopMenuOpen = false
                                 GlobalStates.settingsOpen = true
-                                Qt.callLater(() => GlobalStates.settingsPage = "Desktop")
+                                Qt.callLater(() => GlobalStates.settingsPage = "desktop-widgets")
                             }
                         }
                     }

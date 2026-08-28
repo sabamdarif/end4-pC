@@ -7,18 +7,50 @@ import Qt5Compat.GraphicalEffects
 import qs
 import qs.services
 import qs.modules.common
-import qs.modules.ii.settings.pages
+import qs.modules.ii.settings
 import qs.modules.common.widgets
 import qs.modules.common.functions as CF
 
 Item {
     id: root
     property real contentPadding: 8
-    property int currentPage: 0
+    property string currentLeaf: SettingsPages.leaves.length > 0 ? SettingsPages.leaves[0].key : ""
     property bool showingProfile: false
+    // Group key -> expanded. Multiple groups may be open at once.
+    property var expandedGroups: ({})
     property string settingsSearchQuery: ""
     property var settingsSearchResults: []
     property int settingsSearchIndex: 0
+
+    function isGroupExpanded(key) {
+        return root.expandedGroups[key] === true
+    }
+
+    function setGroupExpanded(key, value) {
+        let next = Object.assign({}, root.expandedGroups)
+        next[key] = value
+        root.expandedGroups = next
+    }
+
+    function selectLeaf(key) {
+        if (SettingsPages.leafIndex(key) < 0) return
+        root.currentLeaf = key
+        root.showingProfile = false
+        const group = SettingsPages.groupOf(key)
+        if (group !== "") root.setGroupExpanded(group, true)
+    }
+
+    Component.onCompleted: {
+        Config.readWriteDelay = 0
+        const group = SettingsPages.groupOf(root.currentLeaf)
+        if (group !== "") root.setGroupExpanded(group, true)
+    }
+
+    onCurrentLeafChanged: {
+        if (root.currentLeaf !== "about") return
+        if (SystemInfo.cpu === "") SystemInfo.refresh()
+        Updates.refresh()
+    }
 
     function collectSearchSections(item, results) {
         if (!item) return
@@ -31,6 +63,9 @@ Item {
         }
     }
 
+    // Group and leaf names come from the registry, so results exist before a page
+    // has ever been built. Section titles need the page loaded, so they fill in
+    // as pages are visited (Loader.onLoaded re-runs this).
     function updateSettingsSearch() {
         const query = settingsSearchQuery.toLowerCase().trim()
         if (query === "") {
@@ -40,21 +75,21 @@ Item {
         }
 
         let results = []
-        for (let pageIndex = 0; pageIndex < pages.length; pageIndex++) {
-            const pageData = pages[pageIndex]
-            if (pageData.name.toLowerCase().includes(query)) {
-                results.push({ pageIndex: pageIndex, pageName: pageData.name, sectionName: "", icon: pageData.icon })
+        for (let i = 0; i < SettingsPages.leaves.length; i++) {
+            const leaf = SettingsPages.leaves[i]
+            if (leaf.name.toLowerCase().includes(query) || leaf.groupName.toLowerCase().includes(query)) {
+                results.push({ leafKey: leaf.key, pageName: leaf.name, groupName: leaf.groupName, sectionName: "", icon: leaf.icon })
             }
 
-            const loader = pagesRepeater.itemAt(pageIndex)
+            const loader = pagesRepeater.itemAt(i)
             if (!loader || !loader.item) continue
             let sectionNames = []
             collectSearchSections(loader.item, sectionNames)
-            for (let sectionIndex = 0; sectionIndex < sectionNames.length; sectionIndex++) {
-                const sectionName = sectionNames[sectionIndex]
-                if (sectionName.toLowerCase().includes(query)) {
-                    results.push({ pageIndex: pageIndex, pageName: pageData.name, sectionName: sectionName, icon: pageData.icon })
-                }
+            for (let s = 0; s < sectionNames.length; s++) {
+                const sectionName = sectionNames[s]
+                if (!sectionName.toLowerCase().includes(query)) continue
+                if (sectionName.toLowerCase() === leaf.name.toLowerCase()) continue
+                results.push({ leafKey: leaf.key, pageName: leaf.name, groupName: leaf.groupName, sectionName: sectionName, icon: leaf.icon })
             }
         }
         settingsSearchResults = results.slice(0, 12)
@@ -63,12 +98,11 @@ Item {
 
     function openSettingsSearchResult(result) {
         if (!result) return
-        currentPage = result.pageIndex
-        showingProfile = false
+        root.selectLeaf(result.leafKey)
         settingsSearchQuery = ""
         if (result.sectionName === "") return
 
-        const loader = pagesRepeater.itemAt(result.pageIndex)
+        const loader = pagesRepeater.itemAt(SettingsPages.leafIndex(result.leafKey))
         if (loader && loader.item && typeof loader.item.goTo === "function") {
             Qt.callLater(() => loader.item.goTo(result.sectionName))
         }
@@ -76,6 +110,7 @@ Item {
 
     // Not a plain `width > 900` binding: width is 0 for the first frames, so the
     // rail would start collapsed and animate open every time the window opens.
+    // Clicking a group icon in the collapsed rail also sets this directly.
     property bool railExpanded: true
     onWidthChanged: if (width > 0) railExpanded = (width > 900)
 
@@ -83,19 +118,24 @@ Item {
         target: GlobalStates
         function onSettingsPageChanged() {
             if (GlobalStates.settingsPage === "") return
-            
-            let parts = GlobalStates.settingsPage.split(":");
-            let pageName = parts[0];
-            let searchTerm = parts.length > 1 ? parts[1] : "";
 
-            const idx = root.pages.findIndex(p => p.name.toLowerCase() === pageName.toLowerCase());
-            
-            if (idx >= 0) {
-                root.currentPage = idx;
-                root.showingProfile = false;
-                
+            const parts = GlobalStates.settingsPage.split(":");
+            const target = parts[0];
+            const searchTerm = parts.length > 1 ? parts[1] : "";
+
+            // Prefer the stable key; fall back to display names so an old-style
+            // link ("Desktop") still lands somewhere sensible.
+            let leafKey = SettingsPages.leafIndex(target) >= 0 ? target : ""
+            if (leafKey === "") {
+                const byName = SettingsPages.leaves.find(l => l.name.toLowerCase() === target.toLowerCase())
+                    ?? SettingsPages.leaves.find(l => l.groupName.toLowerCase() === target.toLowerCase())
+                if (byName) leafKey = byName.key
+            }
+
+            if (leafKey !== "") {
+                root.selectLeaf(leafKey)
                 if (searchTerm !== "") {
-                    let loader = pagesRepeater.itemAt(idx);
+                    const loader = pagesRepeater.itemAt(SettingsPages.leafIndex(leafKey));
                     if (loader && loader.item && typeof loader.item.goTo === "function") {
                         loader.item.goTo(searchTerm);
                     } else if (loader) {
@@ -108,52 +148,6 @@ Item {
                 }
             }
             GlobalStates.settingsPage = "";
-        }
-    }
-
-    onCurrentPageChanged: {
-        if (currentPage >= 0 && currentPage < pages.length && pages[currentPage].key === "about") {
-            if (SystemInfo.cpu === "") SystemInfo.refresh()
-            Updates.refresh()
-        }
-    }
-    
-    property var pages: [
-        { key: "quick",      name: Translation.tr("Quick"),      icon: "instant_mix",    component: Qt.resolvedUrl("pages/QuickConfig.qml") },
-        { key: "general",    name: Translation.tr("General"),    icon: "browse",         component: Qt.resolvedUrl("pages/GeneralConfig.qml") },
-        { key: "interface",  name: Translation.tr("Interface"),  icon: "bottom_app_bar", component: Qt.resolvedUrl("pages/InterfaceConfig.qml") },
-        { key: "desktop",    name: Translation.tr("Desktop"),    icon: "texture",        component: Qt.resolvedUrl("pages/BackgroundConfig.qml") },
-        { key: "bar",        name: Translation.tr("Bar"),        icon: "toast",          iconRotation: 180, component: Qt.resolvedUrl("pages/BarConfig.qml") },
-        { key: "sound",      name: Translation.tr("Sound"),      icon: "volume_up",      component: Qt.resolvedUrl("pages/SoundConfig.qml") },
-        { key: "network",    name: Translation.tr("Network"),    icon: "wifi",           component: Qt.resolvedUrl("pages/NetworkConfig.qml") },
-        { key: "apps",       name: Translation.tr("Apps"),       icon: "apps",           component: Qt.resolvedUrl("pages/AppsConfig.qml") },
-        { key: "services",   name: Translation.tr("Services"),   icon: "settings",       component: Qt.resolvedUrl("pages/ServicesConfig.qml") },
-        NiriData.isNiri
-            ? { key: "niri",     name: Translation.tr("Niri"),     icon: "select_window_2", component: Qt.resolvedUrl("pages/NiriConfig.qml") }
-            : { key: "hyprland", name: Translation.tr("Hyprland"), icon: "select_window_2", component: Qt.resolvedUrl("pages/HyprlandConfig.qml") },
-        { key: "shortcuts",  name: Translation.tr("Shortcuts"),  icon: "keyboard",       component: Qt.resolvedUrl("pages/ShortcutsConfig.qml") },
-        { key: "about",      name: Translation.tr("About"),      icon: "info",           component: Qt.resolvedUrl("pages/About.qml") }
-    ]
-
-    Component.onCompleted: {
-        Config.readWriteDelay = 0
-        preloadTimer.start()
-    }
-
-    // Preload every page so switching is instant, but one per frame — building all
-    // 12 in a single callLater froze the window for the whole startup.
-    Timer {
-        id: preloadTimer
-        interval: 16
-        repeat: true
-        property int nextPage: 0
-        onTriggered: {
-            const loader = pagesRepeater.itemAt(nextPage)
-            if (loader) loader.active = true
-            if (++nextPage >= root.pages.length) {
-                if (profileLoader) profileLoader.active = true
-                running = false
-            }
         }
     }
 
@@ -172,7 +166,7 @@ Item {
                 id: navRailWrapper
                 Layout.fillHeight: true
                 Layout.margins: 0
-                implicitWidth: navRail.expanded ? 195 : fab.baseSize
+                implicitWidth: navRail.expanded ? 250 : 56
                 color: Appearance.m3colors.m3surfaceContainerLow
                 radius: Appearance.rounding.normal
 
@@ -182,7 +176,7 @@ Item {
 
                 NavigationRail {
                     id: navRail
-                    anchors { left: parent.left; top: parent.top; bottom: parent.bottom; leftMargin: 20 }
+                    anchors { left: parent.left; right: parent.right; top: parent.top; bottom: parent.bottom; leftMargin: 14; rightMargin: 10 }
                     spacing: 10
                     expanded: root.railExpanded
 
@@ -203,8 +197,8 @@ Item {
                             Image {
                                 id: avatarImage
                                 anchors.fill: parent
-                                source: Config.options.profile.avatarPath !== "" 
-                                    ? "file://" + Config.options.profile.avatarPicture 
+                                source: Config.options.profile.avatarPicture !== ""
+                                    ? "file://" + Config.options.profile.avatarPicture
                                     : "file:///home/" + (Quickshell.env("USER") ?? "user") + "/.face"
                                 sourceSize.width: avatarImage.width * 2
                                 sourceSize.height: avatarImage.height * 2
@@ -268,6 +262,7 @@ Item {
                     }
 
                     Rectangle {
+                        visible: navRail.expanded
                         width: 160
                         Layout.topMargin: -5
                         height: 2
@@ -372,9 +367,10 @@ Item {
                                                     elide: Text.ElideRight
                                                 }
                                                 StyledText {
-                                                    visible: modelData.sectionName !== ""
                                                     Layout.fillWidth: true
-                                                    text: modelData.pageName
+                                                    text: modelData.sectionName === ""
+                                                        ? modelData.groupName
+                                                        : `${modelData.groupName} • ${modelData.pageName}`
                                                     color: Appearance.colors.colSubtext
                                                     font.pixelSize: Appearance.font.pixelSize.smaller
                                                     elide: Text.ElideRight
@@ -400,7 +396,8 @@ Item {
 
                     FloatingActionButton {
                         id: fab
-                        Layout.bottomMargin: -25
+                        baseSize: 42
+                        Layout.bottomMargin: -18
                         property bool justCopied: false
                         iconText: justCopied ? "check" : "edit"
                         buttonText: justCopied ? Translation.tr("Path copied") : Translation.tr("Config file")
@@ -423,32 +420,85 @@ Item {
                         }
                     }
 
-                    NavigationRailTabArray {
-                        currentIndex: root.currentPage
-                        expanded: navRail.expanded
-                        colToggled: root.showingProfile ? "transparent" : Appearance.colors.colSecondaryContainer
-                        Repeater {
-                            model: root.pages
-                            NavigationRailButton {
-                                required property var index
-                                required property var modelData
-                                toggled: root.currentPage === index && !root.showingProfile
-                                onPressed: {
-                                    root.currentPage = index
-                                    root.showingProfile = false
+                    // The tree is taller than the window's 400 px minimum once a
+                    // couple of groups are open, so it scrolls on its own.
+                    StyledFlickable {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        Layout.topMargin: 25
+                        contentHeight: navTree.implicitHeight
+                        clip: true
+
+                        ColumnLayout {
+                            id: navTree
+                            width: parent.width
+                            spacing: 2
+
+                            Repeater {
+                                model: SettingsPages.groups
+
+                                ColumnLayout {
+                                    id: groupColumn
+                                    required property var modelData
+                                    readonly property bool isLeafGroup: groupColumn.modelData.children.length === 0
+                                    Layout.fillWidth: true
+                                    spacing: 2
+
+                                    SettingsNavGroup {
+                                        groupIcon: groupColumn.modelData.icon
+                                        groupIconRotation: groupColumn.modelData.iconRotation ?? 0
+                                        groupName: groupColumn.modelData.name
+                                        hasChildren: !groupColumn.isLeafGroup
+                                        showLabel: navRail.expanded
+                                        expanded: root.isGroupExpanded(groupColumn.modelData.key)
+                                        toggled: root.showingProfile ? false
+                                            : groupColumn.isLeafGroup
+                                                ? root.currentLeaf === groupColumn.modelData.key
+                                                : (!navRail.expanded && SettingsPages.groupOf(root.currentLeaf) === groupColumn.modelData.key)
+                                        onPressed: {
+                                            // Collapsed rail shows group icons only; a click opens the rail onto the group.
+                                            if (!navRail.expanded) {
+                                                root.railExpanded = true
+                                                if (groupColumn.isLeafGroup) root.selectLeaf(groupColumn.modelData.key)
+                                                else root.setGroupExpanded(groupColumn.modelData.key, true)
+                                                return
+                                            }
+                                            if (groupColumn.isLeafGroup) root.selectLeaf(groupColumn.modelData.key)
+                                            else root.setGroupExpanded(groupColumn.modelData.key, !root.isGroupExpanded(groupColumn.modelData.key))
+                                        }
+                                    }
+
+                                    Revealer {
+                                        vertical: true
+                                        reveal: navRail.expanded && !groupColumn.isLeafGroup
+                                            && root.isGroupExpanded(groupColumn.modelData.key)
+                                        Layout.fillWidth: true
+
+                                        ColumnLayout {
+                                            width: parent.width
+                                            spacing: 2
+
+                                            Repeater {
+                                                model: groupColumn.modelData.children
+
+                                                NavigationRailButton {
+                                                    required property var modelData
+                                                    Layout.leftMargin: 12
+                                                    baseSize: 44
+                                                    expanded: true
+                                                    toggled: root.currentLeaf === modelData.key && !root.showingProfile
+                                                    buttonIcon: modelData.icon
+                                                    buttonIconRotation: modelData.iconRotation ?? 0
+                                                    buttonText: modelData.name
+                                                    onPressed: root.selectLeaf(modelData.key)
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
-                                expanded: navRail.expanded
-                                buttonIcon: modelData.icon
-                                buttonIconRotation: modelData.iconRotation || 0
-                                buttonText: modelData.name
-                                showToggledHighlight: false
                             }
                         }
                     }
-
-                    // Soaks up leftover vertical space. Without it the ColumnLayout
-                    // spreads the slack across every cell and inflates the gaps.
-                    Item { Layout.fillHeight: true }
                 }
             }
 
@@ -463,25 +513,26 @@ Item {
 
                     Repeater {
                         id: pagesRepeater
-                        model: root.pages
+                        model: SettingsPages.leaves
                         Loader {
                             id: pageLoader
                             required property var modelData
                             required property var index
                             source: modelData.component
 
-                            active: Config.ready && (root.currentPage === index || item !== null)
+                            // Built on first visit, then kept alive so switching back is instant.
+                            active: Config.ready && (root.currentLeaf === modelData.key || item !== null)
 
                             anchors.fill: parent
 
-                            property bool isActive: root.currentPage === index && !root.showingProfile
+                            property bool isActive: root.currentLeaf === modelData.key && !root.showingProfile
                             opacity: isActive ? 1 : 0
                             enabled: isActive
                             visible: isActive
                             anchors.topMargin: isActive ? 0 : 12
 
                             onLoaded: {
-                                if (root.currentPage === index) {
+                                if (root.currentLeaf === modelData.key) {
                                     GlobalStates.currentPageInstance = item;
                                 }
                                 if (root.settingsSearchQuery !== "") {
@@ -508,7 +559,7 @@ Item {
 
                     Loader {
                         id: profileLoader
-                        active: false
+                        active: root.showingProfile || item !== null
                         anchors.fill: parent
                         source: Qt.resolvedUrl("pages/Profile.qml")
 

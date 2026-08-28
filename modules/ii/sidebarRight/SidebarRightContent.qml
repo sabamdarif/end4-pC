@@ -25,6 +25,9 @@ Item {
     id: root
     property int sidebarWidth: Appearance.sizes.sidebarWidth
     property int sidebarPadding: 10
+    readonly property real compositorRounding: NiriData.isNiri
+        ? NiriConfig.options.decoration.rounding
+        : Config.options.hyprland.decoration.rounding
     property string settingsQmlPath: Quickshell.shellPath("settings.qml")
     property bool showAudioOutputDialog: false
     property bool showAudioInputDialog: false
@@ -161,7 +164,7 @@ Item {
                         Rectangle {
                             id: sysRect
                             anchors.fill: parent
-                            radius: Config.options.hyprland.decoration.rounding - 2
+                            radius: root.compositorRounding - 2
                             color: Appearance.colors.colLayer1
 
                             Rectangle {

@@ -89,12 +89,30 @@ shell.qml -> panelFamilies/ -> modules/ii/ -> modules/common/ and services/ -> s
 - `defaults/`: default user-facing content.
 - `translations/`: translation catalogs and tooling.
 
+### Settings navigation
+
+`modules/ii/settings/SettingsPages.qml` is the single registry for the settings window's
+two-level nav rail: collapsible groups of leaf pages, ordered after Android's Settings.
+`modules/ii/settings/SettingsContent.qml` renders it and `services/LauncherSearch.qml`
+reuses it for the launcher's `settings:` search, so neither keeps its own page list.
+
+- One leaf page is one `ContentPage` holding only its own sections, under
+  `modules/ii/settings/pages/<group>/`.
+- Every leaf has a stable, untranslated `key`. `GlobalStates.settingsPage` takes
+  `"<leafKey>[:<sectionTitle>]"` for deep links.
+- Compositor-specific leaves choose their component with the `NiriData.isNiri` ternary
+  inside the registry.
+- Leaf pages build on first visit and stay alive afterwards. `ContentPage.goTo(term)`
+  scrolls to a matching section or subsection; leaf pages do not define their own copy.
+- The rail collapses to group icons below 900 px; clicking one reopens the rail on that group.
+
 ### Adding a setting
 
 1. Add the default to the appropriate `JsonObject` in `modules/common/Config.qml`.
-2. Bind it in the relevant `modules/ii/settings/pages/` file.
+2. Bind it on the leaf page that owns it under `modules/ii/settings/pages/<group>/`.
 3. Reuse `ContentSection`, `GroupedList`, `ConfigRow`, `ConfigSwitch`, `ConfigComboBox`, or neighboring components.
 4. Gate the feature where it is created or activated, not only in settings UI.
-5. Ensure translated page and section titles work with the page's `goTo(term)` settings search.
+5. For a whole new page, add the `ContentPage` and register it as a leaf in `SettingsPages.qml`.
+6. Ensure translated section titles work with `ContentPage.goTo(term)` settings search.
 
 Dynamic lists commonly use `Rectangle`, `ColumnLayout`, and `Repeater`. `GroupedList` is mainly for static children.
