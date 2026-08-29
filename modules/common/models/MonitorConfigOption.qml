@@ -3,7 +3,6 @@ import QtQml
 import QtQuick
 import Quickshell.Io
 import qs.services
-import "../"
 
 /**
  * Monitor list and per-output overrides, backed by niri.
