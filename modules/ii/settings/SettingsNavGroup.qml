@@ -25,6 +25,8 @@ RippleButton {
     padding: 0
     implicitHeight: baseSize
     buttonRadius: Appearance.rounding.full
+    // Same palette as NavigationRailButton, so a childless group highlights
+    // exactly like a leaf under an expanded group.
     colBackground: ColorUtils.transparentize(Appearance.colors.colLayer1Hover, 1)
     colBackgroundHover: Appearance.colors.colLayer1Hover
     colBackgroundToggled: Appearance.colors.colSecondaryContainer
