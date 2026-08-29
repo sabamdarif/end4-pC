@@ -82,7 +82,11 @@ Singleton {
     }
 
     function disconnectWifiNetwork(): void {
-        if (active) disconnectProc.exec(["nmcli", "connection", "down", active.ssid]);
+        // Taking the profile down by SSID fails whenever the profile name is not
+        // the SSID (NetworkManager suffixes duplicates, e.g. "MyWifi 1"), and a
+        // manual disconnect should also block autoconnect until the user picks a
+        // network again, so disconnect the wifi device itself.
+        disconnectProc.exec(["bash", "-c", "dev=$(nmcli -g DEVICE,TYPE,STATE device status | awk -F: '$2 == \"wifi\" && $3 ~ /^connected/ { print $1; exit }'); [ -n \"$dev\" ] && nmcli device disconnect \"$dev\""]);
     }
 
     function openPublicWifiPortal() {

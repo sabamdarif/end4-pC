@@ -21,9 +21,10 @@ Singleton {
     id: root
 
     // ── Connection list ──────────────────────────────────────────────────
-    // Each entry: {name, type, active, autoconnect, device}
+    // Each entry: {name, type, active, autoconnect, device, uuid}
     property list<var> connections: []
     readonly property list<var> vpnConnections: connections.filter(c => c.type === "vpn" || c.type === "wireguard")
+    readonly property list<var> wifiConnections: connections.filter(c => c.type === "802-11-wireless")
     readonly property list<var> dnsCapableConnections: connections.filter(c => c.type === "802-11-wireless" || c.type === "802-3-ethernet")
     readonly property string activeConnectionName: connections.find(c => c.active && (c.type === "802-11-wireless" || c.type === "802-3-ethernet"))?.name ?? ""
 
@@ -33,6 +34,10 @@ Singleton {
 
     function autoconnectFor(name) {
         return connections.find(c => c.name === name)?.autoconnect ?? false;
+    }
+
+    function wifiConnectionFor(ssid) {
+        return connections.find(c => c.type === "802-11-wireless" && c.name === ssid) ?? null;
     }
 
     // ── Ethernet devices ─────────────────────────────────────────────────
@@ -104,8 +109,9 @@ Singleton {
     }
 
     // ── Wifi extras ──────────────────────────────────────────────────────
-    function forgetWifi(ssid) {
-        runAction({ "SSID": ssid }, 'nmcli connection delete id "$SSID"');
+    // Deleting by uuid, since connection names are not unique
+    function forgetConnection(uuid) {
+        runAction({ "UUID": uuid }, 'nmcli connection delete uuid "$UUID"');
     }
 
     function setAutoconnect(name, on) {
@@ -239,7 +245,7 @@ Singleton {
         environment: ({ LANG: "C", LC_ALL: "C" })
         command: ["bash", "-c",
             'echo :::CONNECTIONS\n'
-            + 'nmcli -t -f NAME,TYPE,ACTIVE,AUTOCONNECT,DEVICE connection show 2>/dev/null\n'
+            + 'nmcli -t -f NAME,TYPE,ACTIVE,AUTOCONNECT,DEVICE,UUID connection show 2>/dev/null\n'
             + 'echo :::ETHERNET\n'
             + 'nmcli -t -f GENERAL.DEVICE,GENERAL.TYPE,GENERAL.STATE,GENERAL.HWADDR,GENERAL.CONNECTION,IP4.ADDRESS,IP6.ADDRESS device show 2>/dev/null\n'
             + 'echo :::BLOCKY\n'
@@ -257,7 +263,7 @@ Singleton {
                     if (bucket && bucket in sections) sections[bucket].push(line);
                 }
 
-                // Connections: NAME:TYPE:ACTIVE:AUTOCONNECT:DEVICE, ':' in values escaped as '\:'
+                // Connections: NAME:TYPE:ACTIVE:AUTOCONNECT:DEVICE:UUID, ':' in values escaped as '\:'
                 const PLACEHOLDER = "STRINGWHICHHOPEFULLYWONTBEUSED";
                 const conns = [];
                 for (const line of sections.CONNECTIONS) {
@@ -269,7 +275,8 @@ Singleton {
                         type: parts[1],
                         active: parts[2] === "yes",
                         autoconnect: parts[3] === "yes",
-                        device: parts[4] ?? ""
+                        device: parts[4] ?? "",
+                        uuid: parts[5] ?? ""
                     });
                 }
                 root.connections = conns;

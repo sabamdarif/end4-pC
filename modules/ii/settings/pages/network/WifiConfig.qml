@@ -6,8 +6,16 @@ import qs.modules.common
 import qs.modules.common.widgets
 
 ContentPage {
-    id: page
+    id: root
     forceWidth: true
+
+    property string editingUuid: ""
+
+    function openEditor(uuid) {
+        if (uuid === "") return;
+        WifiProfile.load(uuid);
+        root.editingUuid = uuid;
+    }
 
     function wifiSignalIcon(strength) {
         return strength > 80 ? "signal_wifi_4_bar"
@@ -17,7 +25,14 @@ ContentPage {
             : "signal_wifi_0_bar"
     }
 
+    Component.onCompleted: NetworkExtras.refresh()
+
+    // The editor replaces the lists in place: everything here lives in one
+    // ContentPage column, so it cannot be overlaid on top of them.
+    readonly property bool editing: root.editingUuid !== ""
+
     ContentSection {
+        visible: !root.editing
         icon: "wifi"
         shape: MaterialShape.Shape.Circle
         title: Translation.tr("Wi-Fi")
@@ -92,106 +107,65 @@ ContentPage {
                         id: wifiRow
                         required property var modelData
                         readonly property bool known: NetworkExtras.isKnownWifi(modelData.ssid)
-                        property bool confirmingForget: false
                         Layout.fillWidth: true
                         spacing: 2
 
-                        RowLayout {
+                        RippleButton {
                             Layout.fillWidth: true
-                            spacing: 10
-
-                            RippleButton {
-                                Layout.fillWidth: true
-                                implicitHeight: 44
-                                buttonRadius: Appearance.rounding.small
-                                colBackground: "transparent"
-                                onClicked: {
-                                    if (wifiRow.modelData.active)
-                                        Network.disconnectWifiNetwork()
-                                    else
-                                        Network.connectToWifiNetwork(wifiRow.modelData)
+                            implicitHeight: 44
+                            buttonRadius: Appearance.rounding.small
+                            colBackground: "transparent"
+                            onClicked: {
+                                if (wifiRow.modelData.active)
+                                    Network.disconnectWifiNetwork()
+                                else
+                                    Network.connectToWifiNetwork(wifiRow.modelData)
+                            }
+                            StyledToolTip {
+                                text: wifiRow.modelData.active ? Translation.tr("Click to disconnect") : Translation.tr("Click to connect")
+                            }
+                            contentItem: RowLayout {
+                                spacing: 10
+                                MaterialSymbol {
+                                    text: root.wifiSignalIcon(wifiRow.modelData.strength)
+                                    iconSize: Appearance.font.pixelSize.huge
+                                    color: Appearance.colors.colOnSecondaryContainer
                                 }
-                                StyledToolTip {
-                                    text: wifiRow.modelData.active ? Translation.tr("Click to disconnect") : Translation.tr("Click to connect")
-                                }
-                                contentItem: RowLayout {
-                                    spacing: 10
-                                    MaterialSymbol {
-                                        text: page.wifiSignalIcon(wifiRow.modelData.strength)
-                                        iconSize: Appearance.font.pixelSize.huge
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 0
+                                    StyledText {
+                                        Layout.fillWidth: true
+                                        text: wifiRow.modelData.ssid
+                                        elide: Text.ElideRight
                                         color: Appearance.colors.colOnSecondaryContainer
                                     }
-                                    ColumnLayout {
+                                    StyledText {
                                         Layout.fillWidth: true
-                                        spacing: 0
-                                        StyledText {
-                                            Layout.fillWidth: true
-                                            text: wifiRow.modelData.ssid
-                                            elide: Text.ElideRight
-                                            color: Appearance.colors.colOnSecondaryContainer
-                                        }
-                                        StyledText {
-                                            Layout.fillWidth: true
-                                            font.pixelSize: Appearance.font.pixelSize.smaller
-                                            color: Appearance.colors.colSubtext
-                                            text: {
-                                                let parts = []
-                                                parts.push(wifiRow.modelData.isSecure ? wifiRow.modelData.security : Translation.tr("Open"))
-                                                if (wifiRow.modelData.active) parts.push(Translation.tr("Connected"))
-                                                else if (Network.wifiConnectTarget === wifiRow.modelData) parts.push(Translation.tr("Connecting…"))
-                                                if (wifiRow.known) parts.push(Translation.tr("Saved"))
-                                                return parts.join(" • ")
-                                            }
-                                        }
-                                    }
-                                    MaterialSymbol {
-                                        visible: wifiRow.modelData.active
-                                        text: "check_circle"
-                                        iconSize: Appearance.font.pixelSize.larger
-                                        color: Appearance.colors.colPrimary
-                                    }
-                                    MaterialSymbol {
-                                        visible: !wifiRow.modelData.active && wifiRow.modelData.isSecure
-                                        text: "lock"
-                                        iconSize: Appearance.font.pixelSize.larger
+                                        font.pixelSize: Appearance.font.pixelSize.smaller
                                         color: Appearance.colors.colSubtext
+                                        text: {
+                                            let parts = []
+                                            parts.push(wifiRow.modelData.isSecure ? wifiRow.modelData.security : Translation.tr("Open"))
+                                            if (wifiRow.modelData.active) parts.push(Translation.tr("Connected"))
+                                            else if (Network.wifiConnectTarget === wifiRow.modelData) parts.push(Translation.tr("Connecting…"))
+                                            if (wifiRow.known) parts.push(Translation.tr("Saved"))
+                                            return parts.join(" • ")
+                                        }
                                     }
                                 }
-                            }
-
-                            // Autoconnect toggle (saved networks only)
-                            StyledSwitch {
-                                visible: wifiRow.known
-                                checked: NetworkExtras.autoconnectFor(wifiRow.modelData.ssid)
-                                onClicked: NetworkExtras.setAutoconnect(wifiRow.modelData.ssid, checked)
-                                StyledToolTip {
-                                    text: Translation.tr("Connect automatically")
+                                MaterialSymbol {
+                                    visible: wifiRow.modelData.active
+                                    text: "check_circle"
+                                    iconSize: Appearance.font.pixelSize.larger
+                                    color: Appearance.colors.colPrimary
                                 }
-                            }
-
-                            // Forget (saved networks only), two-step confirm
-                            RippleButtonWithIcon {
-                                visible: wifiRow.known && !wifiRow.confirmingForget
-                                materialIcon: "delete"
-                                mainText: ""
-                                onClicked: wifiRow.confirmingForget = true
-                                StyledToolTip {
-                                    text: Translation.tr("Forget this network")
+                                MaterialSymbol {
+                                    visible: !wifiRow.modelData.active && wifiRow.modelData.isSecure
+                                    text: "lock"
+                                    iconSize: Appearance.font.pixelSize.larger
+                                    color: Appearance.colors.colSubtext
                                 }
-                            }
-                            DialogButton {
-                                visible: wifiRow.confirmingForget
-                                buttonText: Translation.tr("Forget?")
-                                colText: Appearance.m3colors.m3error
-                                onClicked: {
-                                    wifiRow.confirmingForget = false
-                                    NetworkExtras.forgetWifi(wifiRow.modelData.ssid)
-                                }
-                            }
-                            DialogButton {
-                                visible: wifiRow.confirmingForget
-                                buttonText: Translation.tr("Cancel")
-                                onClicked: wifiRow.confirmingForget = false
                             }
                         }
 
@@ -227,6 +201,172 @@ ContentPage {
                     }
                 }
             }
+        }
+    }
+
+    ContentSection {
+        visible: !root.editing
+        icon: "bookmark"
+        shape: MaterialShape.Shape.Clover4Leaf
+        title: Translation.tr("Saved networks")
+
+        Rectangle {
+            Layout.fillWidth: true
+            implicitHeight: savedListCol.implicitHeight + 20
+            radius: Appearance.rounding.normal
+            color: Appearance.colors.colLayer1
+
+            ColumnLayout {
+                id: savedListCol
+                anchors { fill: parent; margins: 10 }
+                spacing: 2
+
+                StyledText {
+                    visible: NetworkExtras.wifiConnections.length === 0
+                    Layout.leftMargin: 8
+                    text: Translation.tr("No saved Wi-Fi networks")
+                    color: Appearance.colors.colSubtext
+                }
+
+                Repeater {
+                    model: NetworkExtras.wifiConnections
+                    delegate: RowLayout {
+                        id: savedRow
+                        required property var modelData
+                        // Saved profiles are matched to scan results by name,
+                        // which is the SSID for every profile NetworkManager
+                        // creates itself.
+                        readonly property var inRange: Network.wifiNetworks.find(n => n.ssid === savedRow.modelData.name) ?? null
+                        property bool confirmingForget: false
+                        Layout.fillWidth: true
+                        spacing: 6
+
+                        RippleButton {
+                            Layout.fillWidth: true
+                            implicitHeight: 48
+                            buttonRadius: Appearance.rounding.small
+                            colBackground: "transparent"
+                            onClicked: root.openEditor(savedRow.modelData.uuid)
+                            StyledToolTip {
+                                text: Translation.tr("Edit this network")
+                            }
+                            contentItem: RowLayout {
+                                spacing: 10
+                                MaterialSymbol {
+                                    text: savedRow.inRange ? root.wifiSignalIcon(savedRow.inRange.strength) : "wifi_off"
+                                    iconSize: Appearance.font.pixelSize.huge
+                                    color: savedRow.modelData.active ? Appearance.colors.colPrimary : Appearance.colors.colOnSecondaryContainer
+                                }
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 0
+                                    StyledText {
+                                        Layout.fillWidth: true
+                                        text: savedRow.modelData.name
+                                        elide: Text.ElideRight
+                                        color: Appearance.colors.colOnSecondaryContainer
+                                    }
+                                    StyledText {
+                                        Layout.fillWidth: true
+                                        font.pixelSize: Appearance.font.pixelSize.smaller
+                                        color: Appearance.colors.colSubtext
+                                        elide: Text.ElideRight
+                                        text: {
+                                            let parts = []
+                                            if (savedRow.modelData.active) parts.push(Translation.tr("Connected"))
+                                            else if (savedRow.inRange) parts.push(Translation.tr("In range"))
+                                            else parts.push(Translation.tr("Not in range"))
+                                            if (!savedRow.modelData.autoconnect) parts.push(Translation.tr("Auto-connect off"))
+                                            return parts.join(" • ")
+                                        }
+                                    }
+                                }
+                                MaterialSymbol {
+                                    text: "chevron_right"
+                                    iconSize: Appearance.font.pixelSize.larger
+                                    color: Appearance.colors.colSubtext
+                                }
+                            }
+                        }
+
+                        RippleButtonWithIcon {
+                            visible: !savedRow.confirmingForget
+                            materialIcon: "delete"
+                            mainText: ""
+                            onClicked: savedRow.confirmingForget = true
+                            StyledToolTip {
+                                text: Translation.tr("Forget this network")
+                            }
+                        }
+                        DialogButton {
+                            visible: savedRow.confirmingForget
+                            buttonText: Translation.tr("Forget?")
+                            colText: Appearance.m3colors.m3error
+                            onClicked: {
+                                savedRow.confirmingForget = false
+                                const uuid = savedRow.modelData.uuid
+                                if (root.editingUuid === uuid) root.editingUuid = ""
+                                NetworkExtras.forgetConnection(uuid)
+                            }
+                        }
+                        DialogButton {
+                            visible: savedRow.confirmingForget
+                            buttonText: Translation.tr("Cancel")
+                            onClicked: savedRow.confirmingForget = false
+                        }
+                    }
+                }
+            }
+        }
+
+        StyledText {
+            visible: NetworkExtras.lastActionOutput !== ""
+            Layout.leftMargin: 8
+            Layout.fillWidth: true
+            text: NetworkExtras.lastActionOutput
+            font.pixelSize: Appearance.font.pixelSize.smaller
+            color: Appearance.colors.colSubtext
+            wrapMode: Text.Wrap
+        }
+    }
+
+    // Shown while nmcli is reading the profile the editor is about to build from
+    ColumnLayout {
+        visible: root.editing && !editorLoader.active
+        Layout.fillWidth: true
+        spacing: 14
+
+        StyledIndeterminateProgressBar {
+            Layout.fillWidth: true
+            visible: WifiProfile.lastError === ""
+        }
+        StyledText {
+            Layout.fillWidth: true
+            horizontalAlignment: Text.AlignHCenter
+            text: WifiProfile.lastError === "" ? Translation.tr("Reading connection…") : WifiProfile.lastError
+            color: WifiProfile.lastError === "" ? Appearance.colors.colSubtext : Appearance.m3colors.m3error
+            wrapMode: Text.Wrap
+        }
+        DialogButton {
+            Layout.alignment: Qt.AlignHCenter
+            buttonText: Translation.tr("Back")
+            onClicked: root.editingUuid = ""
+        }
+    }
+
+    // A Loader, not a `visible` binding: the editor's rows read their values
+    // once at build time, so it may only be created after WifiProfile is ready.
+    // Loaded by URL because page directories are not QML modules, so a sibling
+    // file cannot be referenced as a type from here.
+    Loader {
+        id: editorLoader
+        Layout.fillWidth: true
+        active: root.editing && WifiProfile.ready && WifiProfile.uuid === root.editingUuid
+        visible: active
+        source: Qt.resolvedUrl("WifiProfileEditor.qml")
+        onLoaded: {
+            item.uuid = root.editingUuid;
+            item.closeRequested.connect(() => root.editingUuid = "");
         }
     }
 }
