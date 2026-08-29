@@ -27,11 +27,12 @@ Singleton {
         {
             key: "network", name: Translation.tr("Network & Internet"), icon: "wifi",
             children: [
-                { key: "wifi",     name: Translation.tr("Wi-Fi"),    icon: "wifi",     component: root.page("network/WifiConfig.qml") },
-                { key: "ethernet", name: Translation.tr("Ethernet"), icon: "lan",      component: root.page("network/EthernetConfig.qml") },
-                { key: "vpn",      name: Translation.tr("VPN"),      icon: "vpn_key",  component: root.page("network/VpnConfig.qml") },
-                { key: "dns",      name: Translation.tr("DNS"),      icon: "dns",      component: root.page("network/DnsConfig.qml") },
-                { key: "blocky",   name: Translation.tr("Blocky"),   icon: "shield",   component: root.page("network/BlockyConfig.qml") },
+                { key: "wifi",      name: Translation.tr("Wi-Fi"),     icon: "wifi",      component: root.page("network/WifiConfig.qml") },
+                { key: "bluetooth", name: Translation.tr("Bluetooth"), icon: "bluetooth", component: root.page("network/BluetoothConfig.qml") },
+                { key: "ethernet",  name: Translation.tr("Ethernet"),  icon: "lan",       component: root.page("network/EthernetConfig.qml") },
+                { key: "vpn",       name: Translation.tr("VPN"),       icon: "vpn_key",   component: root.page("network/VpnConfig.qml") },
+                { key: "dns",       name: Translation.tr("DNS"),       icon: "dns",       component: root.page("network/DnsConfig.qml") },
+                { key: "blocky",    name: Translation.tr("Blocky"),    icon: "shield",    component: root.page("network/BlockyConfig.qml") },
             ]
         },
         {

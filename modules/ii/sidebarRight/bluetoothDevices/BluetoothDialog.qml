@@ -59,8 +59,10 @@ WindowDialog {
         DialogButton {
             buttonText: Translation.tr("Details")
             onClicked: {
-                Quickshell.execDetached(["bash", "-c", `${Config.options.apps.bluetooth}`]);
+                root.dismiss();
                 GlobalStates.sidebarRightOpen = false;
+                GlobalStates.settingsOpen = true;
+                Qt.callLater(() => GlobalStates.settingsPage = "bluetooth");
             }
         }
 
