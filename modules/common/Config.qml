@@ -621,6 +621,7 @@ Singleton {
                 property bool leftEnabled: true
                 property bool banner: false
                 property bool mediaPlayer: false
+                property bool calendar: true
                 property string bannerImage: ""
                 property bool keepRightSidebarLoaded: true
                 property JsonObject translator: JsonObject {

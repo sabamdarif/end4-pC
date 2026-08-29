@@ -34,6 +34,15 @@ ContentPage {
             }
 
             ConfigSwitch {
+                buttonIcon: "calendar_month"
+                text: Translation.tr('Calendar')
+                checked: Config.options.sidebar.calendar
+                onCheckedChanged: {
+                    Config.options.sidebar.calendar = checked;
+                }
+            }
+
+            ConfigSwitch {
                 buttonIcon: "memory"
                 text: Translation.tr('Keep right sidebar loaded')
                 checked: Config.options.sidebar.keepRightSidebarLoaded

@@ -378,11 +378,13 @@ Item {
                 Layout.fillWidth: true
             }
 
-            BottomWidgetGroup {
-                id: bottomWidgetGroup
+            Loader {
+                active: Config.options.sidebar.calendar
+                visible: active
                 Layout.alignment: Qt.AlignHCenter
                 Layout.fillHeight: false
                 Layout.fillWidth: true
+                sourceComponent: BottomWidgetGroup {}
             }
         }
     }
