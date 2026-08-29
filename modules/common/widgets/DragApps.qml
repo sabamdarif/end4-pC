@@ -12,7 +12,6 @@ import Quickshell.Io
 import Quickshell
 import Quickshell.Widgets
 import Quickshell.Wayland
-import Quickshell.Hyprland
 
 Item {
     id: root
@@ -139,8 +138,8 @@ Item {
 
                 property var appToplevel: slotItem.appEntry
 
-                topInset:    Appearance.sizes.hyprlandGapsOut + 8
-                bottomInset: Appearance.sizes.hyprlandGapsOut + 8
+                topInset:    Appearance.sizes.windowGapsOut + 8
+                bottomInset: Appearance.sizes.windowGapsOut + 8
 
                 implicitWidth: implicitHeight - topInset - bottomInset
 

@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Hyprland
 import Quickshell.Services.SystemTray
 import qs.services
 import qs.modules.common
@@ -28,7 +27,11 @@ Item {
         if (unpinnedItems.length == 0) root.closeOverflowMenu()
     }
 
-    function grabFocus() { focusGrab.active = true }
+    // niri has no focus-grab protocol, so the tray tracks its own "grabbed"
+    // state and closes when niri reports focus moving elsewhere.
+    property bool focusGrabbed: false
+
+    function grabFocus() { root.focusGrabbed = true }
     function setExtraWindowAndGrabFocus(window) {
         if (root.activeMenu && root.activeMenu !== window) {
             if (typeof root.activeMenu.close === "function")
@@ -38,41 +41,24 @@ Item {
         root.activeMenu = window
         root.grabFocus()
     }
-    function releaseFocus() { focusGrab.active = false }
-    function closeOverflowMenu() { focusGrab.active = false }
+    function releaseFocus() { root.focusGrabbed = false }
+    function closeOverflowMenu() { root.focusGrabbed = false }
 
     onTrayOverflowOpenChanged: {
         if (root.trayOverflowOpen) root.grabFocus()
     }
 
-    HyprlandFocusGrab {
-        id: focusGrab
-        active: false
-        // overflowPopup.item is the popup window itself, and is null while the
-        // popup is unloaded, which is the same as having nothing to grab.
-        windows: [overflowPopup.item, root.activeMenu]
-        onCleared: {
+    // Dismiss the tray when focus shifts away
+    Connections {
+        target: NiriData
+        function onFocusedWindowIdChanged() {
+            if (!root.focusGrabbed) return
             root.trayOverflowOpen = false
             if (root.activeMenu) {
                 root.activeMenu.close()
                 root.activeMenu = null
             }
-        }
-    }
-
-    // Niri fallback: dismiss tray when focus shifts away
-    Connections {
-        target: NiriData
-        enabled: NiriData.isNiri
-        function onFocusedWindowIdChanged() {
-            if (focusGrab.active) {
-                root.trayOverflowOpen = false
-                if (root.activeMenu) {
-                    root.activeMenu.close()
-                    root.activeMenu = null
-                }
-                focusGrab.active = false
-            }
+            root.focusGrabbed = false
         }
     }
 

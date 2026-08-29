@@ -5,7 +5,6 @@ import qs.modules.common
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import Quickshell.Hyprland
 
 Scope {
     id: root
@@ -14,7 +13,7 @@ Scope {
         GlobalStates.screenTranslatorOpen = false
     }
 
-    readonly property var currentScreen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? null
+    readonly property var currentScreen: Quickshell.screens.find(s => s.name === NiriData.currentOutput) ?? null
     
     Loader {
         id: translatorLoader
@@ -48,11 +47,5 @@ Scope {
         function translate() {
             root.translate()
         }
-    }
-
-    NiriSafeShortcut {
-        name: "screenTranslate"
-        description: "Translates screen content"
-        onPressed: root.translate()
     }
 }

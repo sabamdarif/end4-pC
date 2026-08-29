@@ -48,7 +48,7 @@ Item {
             }
         }
         Revealer {
-            reveal: Hyprsunset.temperatureActive
+            reveal: Wlsunset.temperatureActive
             MaterialSymbol {
                 text: Config.options.light.night.automatic ? "night_sight_auto" : "bedtime"
                 iconSize: Appearance.font.pixelSize.larger
@@ -71,16 +71,8 @@ Item {
                 color: root.isMaterial ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer1
             }
         }
-        Revealer {
-            reveal: HyprlandAntiFlashbangShader.enabled
-            MaterialSymbol {
-                text: !HyprlandAntiFlashbangShader.weak ? "flash_off" : "sunny_snowing"
-                iconSize: Appearance.font.pixelSize.larger
-                color: root.isMaterial ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer1
-            }
-        }
         Loader {
-            source: "HyprlandXkbIndicator.qml"
+            source: "XkbIndicator.qml"
             onLoaded: item.color = root.isMaterial ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer1
         }
         MaterialSymbol {

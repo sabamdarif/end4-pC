@@ -93,11 +93,6 @@ ContentPage {
                 icon: "schedule"
                 currentValue: Config.options.time.format
                 onSelected: newValue => {
-                    // hyprlock.conf only exists on a Hyprland install
-                    if (!NiriData.isNiri) {
-                        const swap = newValue === "hh:mm" ? "s/\\TIME12\\b/TIME/" : "s/\\TIME\\b/TIME12/";
-                        Quickshell.execDetached(["bash", "-c", `sed -i '${swap}' '${FileUtils.trimFileProtocol(Directories.config)}/hypr/hyprlock.conf'`]);
-                    }
                     Config.options.time.format = newValue;
                 }
                 options: [

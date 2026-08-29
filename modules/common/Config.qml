@@ -161,50 +161,6 @@ Singleton {
 
             }
 
-            property JsonObject hyprland: JsonObject {
-                property JsonObject animations: JsonObject {
-                    property string animation: "normal"
-                    property bool enable: true
-                }
-                property JsonObject autostartApps: JsonObject {
-                    property bool enable: false
-                    property list<var> apps: []
-                }
-                property JsonObject decoration: JsonObject {
-                    property int rounding: 22
-                    property real activeOpacity: 1.0
-                    property real inactiveOpacity: 0.9
-                    property JsonObject blur: JsonObject {
-                        property bool enabled: true
-                        property int size: 1
-                        property int passes: 3
-                    }
-                    property JsonObject shadow: JsonObject {
-                        property bool enabled: true
-                        property int range: 4
-                    }
-                }
-                property JsonObject general: JsonObject {
-                    property int borderSize: 1
-                    property int gapsIn: 2
-                    property int gapsOut: 5
-                    property string layout: "dwindle"
-                }
-                property JsonObject input: JsonObject {
-                    property string kbLayout: "us"
-                    property bool numlock: true
-                    property int repeatDelay: 250
-                    property int repeatRate: 35
-                    property int followMouse: 1
-                    property JsonObject touchpad: JsonObject {
-                        property bool naturalScroll: false
-                        property bool disableWhileTyping: true
-                        property bool clickfingerBehavior: false
-                        property real scrollFactor: 0.7
-                    }
-                }
-            }
-
             property JsonObject apps: JsonObject {
                 property string bluetooth: "kcmshell6 kcm_bluetooth"
                 property string changePassword: "kitty -1 --hold=yes fish -i -c 'passwd'"
@@ -214,7 +170,7 @@ Singleton {
                 property string taskManager: "plasma-systemmonitor --page-name Processes"
                 property string terminal: "kitty -1" // This is only for shell actions
                 property string update: "kitty -1 --hold=yes fish -i -c 'pkexec pacman -Syu'"
-                property string volumeMixer: `~/.config/hypr/hyprland/scripts/launch_first_available.sh "pavucontrol-qt" "pavucontrol"`
+                property string volumeMixer: "bash -c 'pavucontrol-qt || pavucontrol'"
                 // [{from, to}] — window app IDs remapped before bar/dock icon lookup
                 property list<var> idSubstitutions: []
             }
@@ -425,7 +381,7 @@ Singleton {
                     property list<string> rightLayout: ["systemIcons", "bluetooth"]
                 }
                 
-                property list<string> screenList: [] // List of names, like "eDP-1", find out with 'hyprctl monitors' command
+                property list<string> screenList: [] // List of names, like "eDP-1", find out with 'niri msg outputs' command
                 property JsonObject utilButtons: JsonObject {
                     property bool showScreenSnip: true
                     property bool showColorPicker: false
@@ -517,7 +473,8 @@ Singleton {
                     property int mouseScrollFactor: 120
                     property int touchpadScrollFactor: 450
                 }
-                property JsonObject deadPixelWorkaround: JsonObject { // Hyprland leaves out 1 pixel on the right for interactions
+                // Some compositors leave out 1 pixel on the right for interactions
+                property JsonObject deadPixelWorkaround: JsonObject {
                     property bool enable: false
                 }
             }
@@ -541,9 +498,6 @@ Singleton {
                     property string from: "19:00" // Format: "HH:mm", 24-hour time
                     property string to: "06:30"   // Format: "HH:mm", 24-hour time
                     property int colorTemperature: 5000
-                }
-                property JsonObject antiFlashbang: JsonObject {
-                    property bool enable: false
                 }
             }
 
@@ -604,24 +558,10 @@ Singleton {
 
             // Only read by modules/ii/overview, whose loader is currently
             // active: false — there is no settings UI for these any more.
-            property JsonObject overview: JsonObject {
-                property bool enable: true
-                property string style: "default"
-                property real scale: 0.18 // Relative to screen size
-                property real rows: 2
-                property real columns: 5
-                property bool orderRightLeft: false
-                property bool orderBottomUp: false
-                property bool centerIcons: true
-            }
-
             property JsonObject regionSelector: JsonObject {
                 property JsonObject targetRegions: JsonObject {
-                    property bool windows: true
-                    property bool layers: false
                     property bool content: true
                     property bool showLabel: false
-                    property real opacity: 0.3
                     property real contentRegionOpacity: 0.8
                     property int selectionPadding: 5
                 }

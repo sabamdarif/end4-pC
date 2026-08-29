@@ -6,7 +6,6 @@ import qs.modules.common.functions
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import Quickshell.Hyprland
 
 Scope {
     id: root
@@ -119,36 +118,5 @@ Scope {
         function recordWithSound() {
             root.recordWithSound()
         }
-    }
-
-    NiriSafeShortcut {
-        name: "screenshot"
-        description: "Takes a fullscreen screenshot"
-        onPressed: root.screenshot()
-    }
-    NiriSafeShortcut {
-        name: "regionScreenshot"
-        description: "Takes a screenshot of the selected region"
-        onPressed: root.areaScreenshot()
-    }
-    NiriSafeShortcut {
-        name: "regionSearch"
-        description: "Searches the selected region"
-        onPressed: root.search()
-    }
-    NiriSafeShortcut {
-        name: "regionOcr"
-        description: "Recognizes text in the selected region"
-        onPressed: root.ocr()
-    }
-    NiriSafeShortcut {
-        name: "regionRecord"
-        description: "Records the selected region"
-        onPressed: root.record()
-    }
-    NiriSafeShortcut {
-        name: "regionRecordWithSound"
-        description: "Records the selected region with sound"
-        onPressed: root.recordWithSound()
     }
 }

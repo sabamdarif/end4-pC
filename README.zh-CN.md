@@ -33,7 +33,7 @@
 | 🎵 歌词 | 🖼️ 在线壁纸 |
 |:---:|:---:|
 | ![截图 1](screenshots/1.png) | ![截图 2](screenshots/2.png) |
-| 🪟 桌面小组件 | 🔧 Hyprland 配置 |
+| 🪟 桌面小组件 | 🔧 Niri 配置 |
 | ![截图 5](screenshots/5.png) | ![截图 6](screenshots/6.png) |
 | ⚙️ 可配置的状态栏 | ✨ 以及更多功能 |
 | ![截图 3](screenshots/3.png) | ![截图 4](screenshots/4.png) |
@@ -45,7 +45,7 @@
 ## ⚡ 安装
 
 > [!NOTE]
-> 此分支会独立管理自己的配置文件夹，**不会**覆盖或修改任何现有设置。不过，它要求已安装并正在运行 [illogical-impulse](https://github.com/end-4/dots-hyprland)。
+> 此分支仅支持 [niri](https://github.com/YaLTeR/niri)。它会独立管理自己的配置文件夹，**不会**覆盖或修改任何现有设置。
 
 ```bash
 cd ~/.config/quickshell/
@@ -53,40 +53,28 @@ git clone https://github.com/pctrade/end4-pC.git
 killall qs 2>/dev/null; qs -c end4-pC > /dev/null 2>&1 & disown
 ```
 
-### 🔧 设为默认 shell（可选）
+### 🔧 随 niri 启动（可选）
 
-如果你喜欢它，并希望它默认加载以取代 `ii`，请编辑：
+若希望登录时自动加载，请将以下内容添加到 `~/.config/niri/config.kdl`：
 
-```bash
-~/.config/hypr/hyprland/variables.lua
-```
-
-将这一行：
-
-```lua
-hl.env("qsConfig", "ii")
-```
-
-改为：
-
-```lua
-hl.env("qsConfig", "end4-pC")
+```kdl
+spawn-at-startup "qs" "-c" "end4-pC"
 ```
 
 > [!TIP]
-> 保存后，重启 Hyprland 或运行 `hyprctl reload` 即可应用更改。
+> niri 会在保存时自动重载配置，因此只需重启 shell 本身：`killall qs; qs -c end4-pC & disown`。
 
 ---
 
 ### ⚙️ 设置快捷键
 
-要打开设置面板，请将以下内容添加到 Hyprland 配置中：
+本 shell 不注册自己的全局快捷键，按键由 niri 管理，并通过 IPC 驱动 shell。要打开设置面板，请将以下内容添加到 niri 的按键绑定中：
 
-```lua
-hl.bind("SUPER + escape", hl.dsp.global("quickshell:settingsToggle"), {description = "Toggle settings"})
+```kdl
+Mod+Escape { spawn "qs" "-c" "end4-pC" "ipc" "call" "settings" "toggle"; }
 ```
 
-> **注意：** 设置是一个覆盖面板，而不是普通窗口，因此 `Super + Q` 无法将其关闭。请使用同一个快捷键进行切换，或按 `Escape`。
+> **注意：** 设置是一个覆盖面板，而不是普通窗口，因此 `Mod + Q` 无法将其关闭。请使用同一个快捷键进行切换，或按 `Escape`。
 
 ## 🙏 致谢
 

@@ -9,11 +9,10 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
-import Quickshell.Hyprland
 
 Scope {
     id: root
-    property var focusedScreen: Quickshell.screens.find(s => s.name === (NiriData.isNiri ? NiriData.currentOutput : Hyprland.focusedMonitor?.name)) ?? Quickshell.screens[0]
+    property var focusedScreen: Quickshell.screens.find(s => s.name === NiriData.currentOutput) ?? Quickshell.screens[0]
 
     Loader {
         id: sessionLoader
@@ -305,33 +304,6 @@ Scope {
 
         function open(): void {
             GlobalStates.sessionOpen = true;
-        }
-    }
-
-    NiriSafeShortcut {
-        name: "sessionToggle"
-        description: "Toggles session screen on press"
-
-        onPressed: {
-            GlobalStates.sessionOpen = !GlobalStates.sessionOpen;
-        }
-    }
-
-    NiriSafeShortcut {
-        name: "sessionOpen"
-        description: "Opens session screen on press"
-
-        onPressed: {
-            GlobalStates.sessionOpen = true;
-        }
-    }
-
-    NiriSafeShortcut {
-        name: "sessionClose"
-        description: "Closes session screen on press"
-
-        onPressed: {
-            GlobalStates.sessionOpen = false;
         }
     }
 }

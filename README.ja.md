@@ -33,7 +33,7 @@
 | 🎵 歌詞 | 🖼️ オンライン壁紙 |
 |:---:|:---:|
 | ![スクリーンショット 1](screenshots/1.png) | ![スクリーンショット 2](screenshots/2.png) |
-| 🪟 デスクトップウィジェット | 🔧 Hyprland の設定 |
+| 🪟 デスクトップウィジェット | 🔧 Niri の設定 |
 | ![スクリーンショット 5](screenshots/5.png) | ![スクリーンショット 6](screenshots/6.png) |
 | ⚙️ カスタマイズ可能なバー | ✨ その他の機能 |
 | ![スクリーンショット 3](screenshots/3.png) | ![スクリーンショット 4](screenshots/4.png) |
@@ -45,7 +45,7 @@
 ## ⚡ インストール
 
 > [!NOTE]
-> このフォークは独自の設定フォルダーを個別に管理するため、既存の設定を上書きまたは変更することは**ありません**。ただし、[illogical-impulse](https://github.com/end-4/dots-hyprland) がインストールされ、実行中である必要があります。
+> このフォークは [niri](https://github.com/YaLTeR/niri) 専用です。独自の設定フォルダーを個別に管理するため、既存の設定を上書きまたは変更することは**ありません**。
 
 ```bash
 cd ~/.config/quickshell/
@@ -53,40 +53,28 @@ git clone https://github.com/pctrade/end4-pC.git
 killall qs 2>/dev/null; qs -c end4-pC > /dev/null 2>&1 & disown
 ```
 
-### 🔧 デフォルトのシェルに設定する（任意）
+### 🔧 niri と一緒に起動する（任意）
 
-気に入って、`ii` の代わりにデフォルトで読み込むようにする場合は、次のファイルを編集します。
+ログイン時に自動で読み込むには、`~/.config/niri/config.kdl` に次の内容を追加します。
 
-```bash
-~/.config/hypr/hyprland/variables.lua
-```
-
-次の行を、
-
-```lua
-hl.env("qsConfig", "ii")
-```
-
-以下のように変更します。
-
-```lua
-hl.env("qsConfig", "end4-pC")
+```kdl
+spawn-at-startup "qs" "-c" "end4-pC"
 ```
 
 > [!TIP]
-> 保存後、Hyprland を再起動するか `hyprctl reload` を実行して変更を適用してください。
+> niri は保存時に設定を再読み込みするため、シェル自体だけを再起動すれば十分です。`killall qs; qs -c end4-pC & disown`
 
 ---
 
 ### ⚙️ 設定用キーバインド
 
-設定パネルを開くには、Hyprland の設定に次の内容を追加します。
+このシェルは独自のグローバルショートカットを登録しません。キー配列は niri が管理し、シェルは IPC 経由で操作します。設定パネルを開くには、niri のキーバインドに次の内容を追加します。
 
-```lua
-hl.bind("SUPER + escape", hl.dsp.global("quickshell:settingsToggle"), {description = "Toggle settings"})
+```kdl
+Mod+Escape { spawn "qs" "-c" "end4-pC" "ipc" "call" "settings" "toggle"; }
 ```
 
-> **注意：** 設定は通常のウィンドウではなくオーバーレイパネルであるため、`Super + Q` では閉じられません。同じキーバインドで切り替えるか、`Escape` を押してください。
+> **注意：** 設定は通常のウィンドウではなくオーバーレイパネルであるため、`Mod + Q` では閉じられません。同じキーバインドで切り替えるか、`Escape` を押してください。
 
 ## 🙏 クレジット
 

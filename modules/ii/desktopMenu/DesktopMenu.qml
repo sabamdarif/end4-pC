@@ -4,7 +4,6 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
-import Quickshell.Hyprland
 import Quickshell.Io
 import qs
 import qs.services
@@ -20,7 +19,7 @@ Scope {
             GlobalStates.desktopMenuOpen = false
             return
         }
-        const focusedName = Hyprland.focusedMonitor?.name
+        const focusedName = NiriData.currentOutput
         const screen = Quickshell.screens.find(s => s.name === focusedName) ?? Quickshell.screens[0]
         GlobalStates.desktopMenuScreen = screen
         GlobalStates.desktopMenuX = screen.width / 2
@@ -32,7 +31,7 @@ Scope {
         if (!path) return path
         // Videos are displayed via the thumbnail switchwall.sh keeps per file
         return /\.(mp4|webm|mkv|avi|mov)$/i.test(path)
-            ? `${FileUtils.trimFileProtocol(Directories.config)}/hypr/custom/scripts/mpvpaper_thumbnails/${path.split("/").pop()}.jpg`
+            ? `${Directories.videoWallpaperThumbnails}/${path.split("/").pop()}.jpg`
             : path
     }
 
@@ -47,7 +46,7 @@ Scope {
     property var carouselModel: recentWallpapers.map(p => root.displayPathFor(p))
 
     // Auto-hide when the workspace changes
-    property int activeWorkspace: NiriData.isNiri ? NiriData.activeWorkspaceIdx : (Hyprland.focusedMonitor?.activeWorkspace?.id ?? 0)
+    property int activeWorkspace: NiriData.activeWorkspaceIdx
     onActiveWorkspaceChanged: GlobalStates.desktopMenuOpen = false
 
     // Menu window

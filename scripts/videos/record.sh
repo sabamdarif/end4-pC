@@ -23,7 +23,7 @@ getaudiooutput() {
     pactl list sources | grep 'Name' | grep 'monitor' | cut -d ' ' -f2
 }
 getactivemonitor() {
-    hyprctl monitors -j | jq -r '.[] | select(.focused == true) | .name'
+    niri msg -j focused-output | jq -r '.name'
 }
 
 mkdir -p "$RECORDING_DIR"

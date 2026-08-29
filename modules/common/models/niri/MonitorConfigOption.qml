@@ -6,7 +6,7 @@ import qs.services
 import "../"
 
 /**
- * Same interface as models/hyprland/MonitorConfigOption, backed by niri.
+ * Monitor list and per-output overrides, backed by niri.
  * Fetches via `niri msg -j outputs`, applies live via `niri msg output`,
  * persists via NiriConfig (qssettings/outputs.kdl).
  */

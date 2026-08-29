@@ -8,7 +8,6 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
-import Quickshell.Hyprland
 
 Scope {
     id: root
@@ -44,39 +43,13 @@ Scope {
                 right: true
             }
 
-            HyprlandFocusGrab {
-                id: grab
-                windows: [overlayWindow]
-                active: false
-                onCleared: () => {
-                    if (!active) GlobalStates.overlayOpen = false;
-                }
-            }
-
-            Connections {
-                target: GlobalStates
-                function onOverlayOpenChanged() {
-                    if (!NiriData.isNiri)
-                        delayedGrabTimer.restart();
-                }
-            }
-
-            // Niri fallback: dismiss overlay when focus shifts away
+            // Dismiss the overlay when focus shifts away
             Connections {
                 target: NiriData
-                enabled: NiriData.isNiri
                 function onFocusedWindowIdChanged() {
                     if (GlobalStates.overlayOpen && NiriData.focusedWindowId !== -1) {
                         GlobalStates.overlayOpen = false;
                     }
-                }
-            }
-
-            Timer {
-                id: delayedGrabTimer
-                interval: Appearance.animation.elementMoveFast.duration
-                onTriggered: {
-                    grab.active = GlobalStates.overlayOpen;
                 }
             }
 
@@ -91,15 +64,6 @@ Scope {
         target: "overlay"
 
         function toggle(): void {
-            GlobalStates.overlayOpen = !GlobalStates.overlayOpen;
-        }
-    }
-
-    NiriSafeShortcut {
-        name: "overlayToggle"
-        description: "Toggles overlay on press"
-
-        onPressed: {
             GlobalStates.overlayOpen = !GlobalStates.overlayOpen;
         }
     }

@@ -18,25 +18,6 @@ ContentPage {
             title: Translation.tr("Hint target regions")
             GroupedList {
                 ConfigSwitch {
-                    // HyprlandData.windowList is always empty on niri
-                    visible: !NiriData.isNiri
-                    buttonIcon: "select_window"
-                    text: Translation.tr('Windows')
-                    checked: Config.options.regionSelector.targetRegions.windows
-                    onCheckedChanged: {
-                        Config.options.regionSelector.targetRegions.windows = checked;
-                    }
-                }
-                ConfigSwitch {
-                    visible: !NiriData.isNiri
-                    buttonIcon: "right_panel_open"
-                    text: Translation.tr('Layers')
-                    checked: Config.options.regionSelector.targetRegions.layers
-                    onCheckedChanged: {
-                        Config.options.regionSelector.targetRegions.layers = checked;
-                    }
-                }
-                ConfigSwitch {
                     buttonIcon: "nearby"
                     text: Translation.tr('Content')
                     checked: Config.options.regionSelector.targetRegions.content

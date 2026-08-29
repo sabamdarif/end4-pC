@@ -13,11 +13,9 @@ Singleton {
 
     property bool ready: false
     property string previousCompositorSignature: ""
-    // Niri has no instance signature, but its socket path is per-session, so it
-    // works the same way. Without this both sides stay "" on niri and nothing
-    // that keys off a fresh session ever fires.
-    readonly property string compositorSignature: Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE")
-        || Quickshell.env("NIRI_SOCKET") || ""
+    // niri has no instance signature, but its socket path is per-session, so it
+    // works the same way for spotting a fresh session.
+    readonly property string compositorSignature: Quickshell.env("NIRI_SOCKET") || ""
     property bool isNewCompositorInstance: previousCompositorSignature !== states.compositorSignature
 
     onReadyChanged: {

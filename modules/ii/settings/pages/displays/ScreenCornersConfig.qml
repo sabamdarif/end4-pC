@@ -19,12 +19,7 @@ ContentPage {
                 icon: "rounded_corner"
                 currentValue: Config.options.appearance.fakeScreenRounding
                 onSelected: newValue => { Config.options.appearance.fakeScreenRounding = newValue; }
-                // "When not fullscreen" needs Hyprland's fullscreen state; niri's
-                // window IPC exposes no fullscreen flag, so it would behave like "Yes".
-                options: NiriData.isNiri ? [
-                    { displayName: Translation.tr("No"),  icon: "close", value: 0 },
-                    { displayName: Translation.tr("Yes"), icon: "check", value: 1 }
-                ] : [
+                options: [
                     { displayName: Translation.tr("No"),                  icon: "close",           value: 0 },
                     { displayName: Translation.tr("Yes"),                 icon: "check",           value: 1 },
                     { displayName: Translation.tr("When not fullscreen"), icon: "fullscreen_exit", value: 2 }

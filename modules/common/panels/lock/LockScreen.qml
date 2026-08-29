@@ -7,7 +7,6 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
-import Quickshell.Hyprland
 
 Scope {
     id: root
@@ -107,25 +106,6 @@ Scope {
             root.lock();
         }
         function focus(): void {
-            lockContext.shouldReFocus();
-        }
-    }
-
-    NiriSafeShortcut {
-        name: "lock"
-        description: "Locks the screen"
-
-        onPressed: {
-            root.lock()
-        }
-    }
-
-    NiriSafeShortcut {
-        name: "lockFocus"
-        description: "Re-focuses the lock screen. This is because Hyprland after waking up for whatever reason"
-            + "decides to keyboard-unfocus the lock screen"
-
-        onPressed: {
             lockContext.shouldReFocus();
         }
     }

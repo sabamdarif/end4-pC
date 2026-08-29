@@ -5,17 +5,16 @@ import QtQuick
 import Quickshell.Io
 import Quickshell
 import Quickshell.Wayland
-import Quickshell.Hyprland
 
 Scope {
     id: root
     property int sidebarWidth: Appearance.sizes.sidebarWidth
     readonly property bool centerOnly: Config.options.bar.layouts.leftLayout.length === 0 && Config.options.bar.layouts.rightLayout.length === 0 && !Config.options.bar.vertical
 
-    // Niri: full-screen transparent click-catcher to dismiss sidebar when clicking outside
+    // Full-screen transparent click-catcher to dismiss the sidebar when clicking outside
     PanelWindow {
         id: dismissCatcher
-        visible: GlobalStates.sidebarRightOpen && NiriData.isNiri
+        visible: GlobalStates.sidebarRightOpen
         color: "transparent"
 
         WlrLayershell.namespace: "quickshell:sidebarRight:dismiss"
@@ -73,9 +72,8 @@ Scope {
         exclusiveZone: 0
         implicitWidth: sidebarWidth
         WlrLayershell.namespace: "quickshell:sidebarRight"
-        WlrLayershell.keyboardFocus: GlobalStates.sidebarRightOpen
-            ? (NiriData.isNiri ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.OnDemand)
-            : WlrKeyboardFocus.None
+        // niri has no focus-grab protocol, so OnDemand never routes keys to the layer surface.
+        WlrLayershell.keyboardFocus: GlobalStates.sidebarRightOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
         color: "transparent"
 
         anchors {
@@ -89,9 +87,9 @@ Scope {
                 if (!centerOnly) return 0;
                 switch (Config.options.bar.cornerStyle) {
                     case 0: return -Appearance.sizes.barHeight;
-                    case 1: return -Appearance.sizes.barHeight + Appearance.sizes.hyprlandGapsOut;
-                    case 2: return -Appearance.sizes.barHeight + Appearance.sizes.hyprlandGapsOut;
-                    case 3: return -Appearance.sizes.barHeight - Appearance.sizes.hyprlandGapsOut;
+                    case 1: return -Appearance.sizes.barHeight + Appearance.sizes.windowGapsOut;
+                    case 2: return -Appearance.sizes.barHeight + Appearance.sizes.windowGapsOut;
+                    case 3: return -Appearance.sizes.barHeight - Appearance.sizes.windowGapsOut;
                     default: return 0;
                 }
             }
@@ -116,11 +114,11 @@ Scope {
             active: GlobalStates.sidebarRightOpen || Config?.options.sidebar.keepRightSidebarLoaded
             anchors {
                 fill: parent
-                margins: Appearance.sizes.hyprlandGapsOut
+                margins: Appearance.sizes.windowGapsOut
                 leftMargin: Appearance.sizes.elevationMargin
             }
-            width: sidebarWidth - Appearance.sizes.hyprlandGapsOut - Appearance.sizes.elevationMargin
-            height: parent.height - Appearance.sizes.hyprlandGapsOut * 2
+            width: sidebarWidth - Appearance.sizes.windowGapsOut - Appearance.sizes.elevationMargin
+            height: parent.height - Appearance.sizes.windowGapsOut * 2
 
             focus: GlobalStates.sidebarRightOpen
             Keys.onPressed: event => {
@@ -146,31 +144,6 @@ Scope {
 
         function open(): void {
             GlobalStates.sidebarRightOpen = true;
-        }
-    }
-
-    NiriSafeShortcut {
-        name: "sidebarRightToggle"
-        description: "Toggles right sidebar on press"
-
-        onPressed: {
-            GlobalStates.sidebarRightOpen = !GlobalStates.sidebarRightOpen;
-        }
-    }
-    NiriSafeShortcut {
-        name: "sidebarRightOpen"
-        description: "Opens right sidebar on press"
-
-        onPressed: {
-            GlobalStates.sidebarRightOpen = true;
-        }
-    }
-    NiriSafeShortcut {
-        name: "sidebarRightClose"
-        description: "Closes right sidebar on press"
-
-        onPressed: {
-            GlobalStates.sidebarRightOpen = false;
         }
     }
 }

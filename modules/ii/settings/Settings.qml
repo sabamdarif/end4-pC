@@ -20,7 +20,7 @@ Scope {
 
     Component.onCompleted: {
         GlobalStates.settingsOpen = false;
-        if (NiriData.isNiri) csdCheckProc.running = true;
+        csdCheckProc.running = true;
     }
 
     Process {
@@ -53,7 +53,7 @@ Scope {
             }
 
             Component.onCompleted: {
-                if (NiriData.isNiri) csdCheckProc.running = true;
+                csdCheckProc.running = true;
             }
 
             ColumnLayout {
@@ -62,7 +62,7 @@ Scope {
 
                 Rectangle {
                     id: titleBar
-                    visible: !(NiriData.isNiri && root.preferNoCsd)
+                    visible: !root.preferNoCsd
                     Layout.fillWidth: true
                     implicitHeight: 44
                     color: Appearance.m3colors.m3surfaceContainerLow
@@ -160,11 +160,5 @@ Scope {
         function toggle(): void { GlobalStates.settingsOpen = !GlobalStates.settingsOpen; }
         function open(): void   { GlobalStates.settingsOpen = true; }
         function close(): void  { GlobalStates.settingsOpen = false; }
-    }
-
-    NiriSafeShortcut {
-        name: "settingsToggle"
-        description: "Toggles settings panel"
-        onPressed: GlobalStates.settingsOpen = !GlobalStates.settingsOpen;
     }
 }

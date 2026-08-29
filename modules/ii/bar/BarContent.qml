@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Services.UPower
-import Quickshell.Hyprland
 import Quickshell.Services.SystemTray
 import qs
 import qs.services
@@ -16,9 +15,7 @@ Item {
     width: parent.width
     readonly property real barPadding: 0
     readonly property bool isMaterial: Config.options.bar.cornerStyle === 3
-    readonly property real compositorGapsOut: NiriData.isNiri
-        ? NiriConfig.options.layout.gaps
-        : root.compositorGapsOut
+    readonly property real compositorGapsOut: NiriConfig.options.layout.gaps
     readonly property real centerPillX: centerPill.x
     readonly property real centerPillWidth: centerPill.width
 
@@ -75,7 +72,7 @@ Item {
     Rectangle {
         id: barBackground
         anchors.fill: parent
-        anchors.margins: Config.options.bar.cornerStyle === 1 ? Appearance.sizes.hyprlandGapsOut : 0
+        anchors.margins: Config.options.bar.cornerStyle === 1 ? Appearance.sizes.windowGapsOut : 0
         color: (!centerOnly && Config.options.bar.showBackground && Config.options.bar.cornerStyle !== 2 && !root.isMaterial) 
             ? Appearance.colors.colLayer0 : "transparent"
         radius: Config.options.bar.cornerStyle === 1 ? Appearance.rounding.windowRounding : 0
@@ -94,7 +91,7 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         anchors.horizontalCenter: parent.horizontalCenter
         width: middleRow.implicitWidth + 10
-        height: parent.height - (Config.options.bar.cornerStyle === 1 ? Appearance.sizes.hyprlandGapsOut * 2 : 0)
+        height: parent.height - (Config.options.bar.cornerStyle === 1 ? Appearance.sizes.windowGapsOut * 2 : 0)
         color: Appearance.colors.colLayer0
         radius: Config.options.bar.cornerStyle === 1 ? Appearance.rounding.windowRounding : 0
         border.width: Config.options.bar.cornerStyle === 1 ? 1 : 0

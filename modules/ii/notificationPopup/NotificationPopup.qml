@@ -6,7 +6,6 @@ import QtQuick
 import QtQuick.Controls
 import Quickshell
 import Quickshell.Wayland
-import Quickshell.Hyprland
 
 Scope {
     id: notificationPopup
@@ -14,7 +13,7 @@ Scope {
     PanelWindow {
         id: root
         visible: (Notifications.popupList.length > 0) && !GlobalStates.screenLocked
-        screen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? null
+        screen: Quickshell.screens.find(s => s.name === NiriData.currentOutput) ?? null
 
         property string position: {
             const raw = Config.options.notifications.position ?? "top_right"

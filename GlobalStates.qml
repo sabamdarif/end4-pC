@@ -2,7 +2,6 @@ import qs.modules.common
 import qs.services
 import QtQuick
 import Quickshell
-import Quickshell.Hyprland
 import Quickshell.Io
 pragma Singleton
 pragma ComponentBehavior: Bound
@@ -53,29 +52,9 @@ Singleton {
         }
     }
 
-    NiriSafeShortcut {
-        name: "workspaceNumber"
-        description: "Hold to show workspace numbers, release to show icons"
-
-        onPressed: {
-            root.superDown = true
-        }
-        onReleased: {
-            root.superDown = false
-        }
-    }
-
     IpcHandler {
         target: "background"
         function toggleCenteredWallpaper(): void {
-            Config.options.background.centeredWallpaper = !Config.options.background.centeredWallpaper
-        }
-    }
-
-    NiriSafeShortcut {
-        name: "centeredWallpaperToggle"
-        description: "Toggles centered wallpaper"
-        onPressed: {
             Config.options.background.centeredWallpaper = !Config.options.background.centeredWallpaper
         }
     }

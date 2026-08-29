@@ -484,7 +484,7 @@ MouseArea {
                 Loader {
                     anchors.verticalCenter: parent.verticalCenter
                     sourceComponent: StyledText {
-                        text: HyprlandXkb.currentLayoutCode
+                        text: NiriXkb.currentLayoutCode
                         color: Appearance.colors.colOnSurfaceVariant
                         animateChange: true
                     }

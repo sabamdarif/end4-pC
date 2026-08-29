@@ -35,14 +35,6 @@ ContentPage {
                 checked: Config.options.bar.workspaces.showAppIcons
                 onCheckedChanged: { Config.options.bar.workspaces.showAppIcons = checked; }
             }
-            ConfigSpinBox {
-                // niri derives the count from NiriData.workspaceCount
-                visible: !NiriData.isNiri
-                icon: "view_column"; text: Translation.tr("Workspaces shown")
-                value: Config.options.bar.workspaces.shown
-                from: 1; to: 30
-                onValueChanged: { Config.options.bar.workspaces.shown = value; }
-            }
             ConfigSelectionArray {
                 text: Translation.tr("Indicator style")
                 icon: "page_control"

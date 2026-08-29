@@ -41,7 +41,7 @@ ContentPage {
     ]
 
     Component.onCompleted: {
-        if (NiriData.isNiri) NiriKeybinds.refresh()
+        NiriKeybinds.refresh()
     }
 
     function matchesSearch(bind) {
@@ -161,17 +161,6 @@ ContentPage {
             title: Translation.tr("Shortcuts")
 
             StyledText {
-                visible: !NiriData.isNiri
-                Layout.leftMargin: 8
-                Layout.fillWidth: true
-                text: Translation.tr("The shortcuts editor is only available on niri. On Hyprland, use the cheatsheet (Super+/).")
-                font.pixelSize: Appearance.font.pixelSize.smaller
-                color: Appearance.colors.colSubtext
-                wrapMode: Text.Wrap
-            }
-
-            StyledText {
-                visible: NiriData.isNiri
                 Layout.leftMargin: 8
                 Layout.fillWidth: true
                 text: Translation.tr("Read from config.kdl and its included files. Edits are saved as overrides to ~/.config/niri/qssettings/binds.kdl (later binds win per key) — your own config files are never modified. Requires the qssettings include lines: see the Setup button on the Niri page.")
@@ -181,7 +170,6 @@ ContentPage {
             }
 
             RowLayout {
-                visible: NiriData.isNiri
                 Layout.fillWidth: true
                 spacing: 10
 
@@ -202,7 +190,6 @@ ContentPage {
             }
 
             StyledText {
-                visible: NiriData.isNiri
                 Layout.leftMargin: 8
                 text: Translation.tr("%1 shortcuts • %2 overrides")
                     .arg(NiriKeybinds.binds.length)
@@ -214,7 +201,6 @@ ContentPage {
 
         // ── Add a shortcut ───────────────────────────────────────────────
         ContentSection {
-            visible: NiriData.isNiri
             icon: "add_circle"
             shape: MaterialShape.Shape.Circle
             title: Translation.tr("Add a shortcut")
@@ -380,7 +366,7 @@ ContentPage {
                 id: catSection
                 required property var modelData
                 readonly property var catBinds: page.bindsFor(modelData.id)
-                visible: NiriData.isNiri && catBinds.length > 0
+                visible: catBinds.length > 0
                 icon: modelData.icon
                 shape: modelData.shape
                 title: modelData.title
@@ -616,7 +602,7 @@ ContentPage {
 
         // ── No results ───────────────────────────────────────────────────
         StyledText {
-            visible: NiriData.isNiri && page.searchText.trim() !== ""
+            visible: page.searchText.trim() !== ""
                 && page.categories.every(c => page.bindsFor(c.id).length === 0)
             Layout.leftMargin: 8
             text: Translation.tr("No shortcuts match \"%1\"").arg(page.searchText)

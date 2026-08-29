@@ -50,7 +50,6 @@ ContentPage {
     }
 
     ContentSection {
-        visible: NiriData.isNiri
         icon: "rocket_launch"
         shape: MaterialShape.Shape.Arch
         title: Translation.tr("Autostart")
@@ -447,15 +446,5 @@ ContentPage {
                 }
             }
         }
-    }
-
-    ContentSection {
-        icon: "app_registration"
-        shape: MaterialShape.Shape.Sunny
-        title: Translation.tr("Autostart Apps")
-        visible: !NiriData.isNiri
-        Layout.fillWidth: true
-
-        AutostartApps {}
     }
 }

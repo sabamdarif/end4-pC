@@ -11,7 +11,6 @@ import Quickshell.Io
 import Quickshell
 import Quickshell.Widgets
 import Quickshell.Wayland
-import Quickshell.Hyprland
 
 Scope {
     id: root
@@ -26,13 +25,10 @@ Scope {
             screen: modelData
             visible: !GlobalStates.screenLocked
 
-            property HyprlandMonitor hyprMonitor: Hyprland.monitorFor(modelData)
-            property list<HyprlandWorkspace> monitorWorkspaces: Hyprland.workspaces.values.filter(
-                ws => ws.monitor && ws.monitor.name === hyprMonitor.name
-            )
-            property bool fullscreenOnThisMonitor: monitorWorkspaces.some(
-                ws => ws.active && ws.toplevels.values.some(w => w.wayland?.fullscreen)
-            )
+            // niri's IPC exposes no per-output fullscreen flag, so go by the focused
+            // toplevel and the output niri currently has focus on.
+            property bool fullscreenOnThisMonitor: (ToplevelManager.activeToplevel?.fullscreen ?? false)
+                && NiriData.currentOutput === modelData.name
 
             property bool reveal: {
                 if (fullscreenOnThisMonitor)
@@ -45,8 +41,8 @@ Scope {
             }
 
             exclusiveZone: (root.pinned && !fullscreenOnThisMonitor)
-                ? implicitHeight - Appearance.sizes.hyprlandGapsOut
-                  - (Appearance.sizes.elevationMargin - Appearance.sizes.hyprlandGapsOut)
+                ? implicitHeight - Appearance.sizes.windowGapsOut
+                  - (Appearance.sizes.elevationMargin - Appearance.sizes.windowGapsOut)
                 : 0
 
             anchors { bottom: true; left: true; right: true }
@@ -56,7 +52,7 @@ Scope {
 
             implicitHeight: (Config.options?.dock.height ?? 70)
                 + Appearance.sizes.elevationMargin
-                + Appearance.sizes.hyprlandGapsOut
+                + Appearance.sizes.windowGapsOut
 
             mask: Region { item: dockMouseArea }
 
@@ -94,7 +90,7 @@ Scope {
                         implicitWidth: dockRow.implicitWidth + 5 * 2
                         height: parent.height
                             - Appearance.sizes.elevationMargin
-                            - Appearance.sizes.hyprlandGapsOut
+                            - Appearance.sizes.windowGapsOut
 
                         StyledRectangularShadow {
                             target: dockVisualBackground
@@ -106,7 +102,7 @@ Scope {
                             property real margin: Appearance.sizes.elevationMargin
                             anchors.fill: parent
                             anchors.topMargin:    Appearance.sizes.elevationMargin
-                            anchors.bottomMargin: Appearance.sizes.hyprlandGapsOut
+                            anchors.bottomMargin: Appearance.sizes.windowGapsOut
                             color: Config.options.dock.showBackground
                                    ? Appearance.colors.colLayer0 : "transparent"
                             border.width: Config.options.dock.showBackground ? 1 : 0
@@ -126,11 +122,11 @@ Scope {
                             VerticalButtonGroup {
                                 Layout.topMargin: 3
                                 Layout.leftMargin:  root.pinned
-                                    ? Appearance.sizes.hyprlandGapsOut + 4
-                                    : Appearance.sizes.hyprlandGapsOut
+                                    ? Appearance.sizes.windowGapsOut + 4
+                                    : Appearance.sizes.windowGapsOut
                                 Layout.rightMargin: root.pinned
-                                    ? Appearance.sizes.hyprlandGapsOut + 4
-                                    : Appearance.sizes.hyprlandGapsOut
+                                    ? Appearance.sizes.windowGapsOut + 4
+                                    : Appearance.sizes.windowGapsOut
 
                                 GroupButton {
                                     baseWidth: 35; baseHeight: 35

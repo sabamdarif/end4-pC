@@ -8,7 +8,6 @@ import QtQuick.Layouts
 import Quickshell.Io
 import Quickshell
 import Quickshell.Wayland
-import Quickshell.Hyprland
 
 Scope { // Scope
     id: root
@@ -44,25 +43,17 @@ Scope { // Scope
             function hide() {
                 GlobalStates.oskOpen = false
             }
-            exclusiveZone: root.pinned ? implicitHeight - Appearance.sizes.hyprlandGapsOut : 0
+            exclusiveZone: root.pinned ? implicitHeight - Appearance.sizes.windowGapsOut : 0
             implicitWidth: oskBackground.width + Appearance.sizes.elevationMargin * 2
             implicitHeight: oskBackground.height + Appearance.sizes.elevationMargin * 2
             WlrLayershell.namespace: "quickshell:osk"
             WlrLayershell.layer: WlrLayer.Overlay
-            // Hyprland 0.49: Focus is always exclusive and setting this breaks mouse focus grab
+            // Left off on purpose: the keyboard must never take keyboard focus itself
             // WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
             color: "transparent"
 
             mask: Region {
                 item: oskBackground
-            }
-
-            // Make it usable with other panels
-            Component.onCompleted: {
-                GlobalFocusGrab.addPersistent(oskRoot);
-            }
-            Component.onDestruction: {
-                GlobalFocusGrab.removePersistent(oskRoot);
             }
 
             // Background
@@ -142,32 +133,4 @@ Scope { // Scope
             GlobalStates.oskOpen = true
         }
     }
-
-    NiriSafeShortcut {
-        name: "oskToggle"
-        description: "Toggles on screen keyboard on press"
-
-        onPressed: {
-            GlobalStates.oskOpen = !GlobalStates.oskOpen;
-        }
-    }
-
-    NiriSafeShortcut {
-        name: "oskOpen"
-        description: "Opens on screen keyboard on press"
-
-        onPressed: {
-            GlobalStates.oskOpen = true
-        }
-    }
-
-    NiriSafeShortcut {
-        name: "oskClose"
-        description: "Closes on screen keyboard on press"
-
-        onPressed: {
-            GlobalStates.oskOpen = false
-        }
-    }
-
 }

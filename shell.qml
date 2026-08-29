@@ -11,34 +11,15 @@ import "panelFamilies"
 import QtQuick
 import QtQuick.Window
 import Quickshell
-import Quickshell.Io
-import Quickshell.Hyprland
 
 ShellRoot {
     id: root
 
     ReloadPopup {}
 
-    Process {
-        id: autostartProc
-        command: ["python3", `${Directories.scriptPath}/hyprland/autostart.py`]
-    }
-
-    Connections {
-        target: Config
-        function onReadyChanged() {
-            if (!Config.ready) return
-            if (!NiriData.isNiri &&
-                Config.options.hyprland.autostartApps.enable &&
-                Config.options.hyprland.autostartApps.apps.length > 0) {
-                autostartProc.running = true
-            }
-        }
-    }
-
     Component.onCompleted: {
         MaterialThemeLoader.reapplyTheme()
-        Hyprsunset.load()
+        Wlsunset.load()
         FirstRunExperience.load()
         ConflictKiller.load()
         Cliphist.refresh()

@@ -33,7 +33,7 @@ Customized and maintained by **pctrade**
 | 🎵 Lyrics | 🖼️ Online Wallpapers |
 |:---:|:---:|
 | ![Screenshot 1](screenshots/1.png) | ![Screenshot 2](screenshots/2.png) |
-| 🪟 Desktop Widgets | 🔧 Hyprland Configs |
+| 🪟 Desktop Widgets | 🔧 Niri Configs |
 | ![Screenshot 5](screenshots/5.png) | ![Screenshot 6](screenshots/6.png) |
 | ⚙️ Configurable Bar | ✨ And More |
 | ![Screenshot 3](screenshots/3.png) | ![Screenshot 4](screenshots/4.png) |
@@ -45,7 +45,7 @@ Customized and maintained by **pctrade**
 ## ⚡ Installation
 
 > [!NOTE]
-> This fork manages its own configuration folder independently — it does **not** overwrite or modify any existing setup. However, it does require [illogical-impulse](https://github.com/end-4/dots-hyprland) to be installed and running.
+> This fork runs on [niri](https://github.com/YaLTeR/niri) only. It manages its own configuration folder independently — it does **not** overwrite or modify any existing setup.
 
 ```bash
 cd ~/.config/quickshell/
@@ -53,40 +53,28 @@ git clone https://github.com/pctrade/end4-pC.git
 killall qs 2>/dev/null; qs -c end4-pC > /dev/null 2>&1 & disown
 ```
 
-### 🔧 Set as your default shell (optional)
+### 🔧 Start it with niri (optional)
 
-If you like it and want it to load by default instead of `ii`, edit:
+To load it on login, add this to `~/.config/niri/config.kdl`:
 
-```bash
-~/.config/hypr/hyprland/variables.lua
-```
-
-And change this line:
-
-```lua
-hl.env("qsConfig", "ii")
-```
-
-to:
-
-```lua
-hl.env("qsConfig", "end4-pC")
+```kdl
+spawn-at-startup "qs" "-c" "end4-pC"
 ```
 
 > [!TIP]
-> After saving, restart Hyprland or run `hyprctl reload` to apply the change.
+> niri picks up config changes as you save them, so only the shell itself needs restarting: `killall qs; qs -c end4-pC & disown`.
 
 ---
 
 ### ⚙️ Settings keybind
 
-To open the settings panel, add this to your Hyprland config:
+The shell has no global shortcuts of its own — niri owns the keymap and the shell is driven over IPC. To open the settings panel, add this to your niri binds:
 
-```lua
-hl.bind("SUPER + escape", hl.dsp.global("quickshell:settingsToggle"), {description = "Toggle settings"})
+```kdl
+Mod+Escape { spawn "qs" "-c" "end4-pC" "ipc" "call" "settings" "toggle"; }
 ```
 
-> **Note:** Settings is an overlay panel, not a regular window — `Super + Q` won't close it. Use the same keybind to toggle it or press `Escape`.
+> **Note:** Settings is an overlay panel, not a regular window — `Mod + Q` won't close it. Use the same keybind to toggle it or press `Escape`.
 
 ## 🙏 Credits
 

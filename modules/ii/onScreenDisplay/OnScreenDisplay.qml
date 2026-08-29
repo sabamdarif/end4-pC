@@ -8,12 +8,11 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
-import Quickshell.Hyprland
 
 Scope {
     id: root
     property string protectionMessage: ""
-    property var focusedScreen: Quickshell.screens.find(s => s.name === (NiriData.isNiri ? NiriData.currentOutput : Hyprland.focusedMonitor?.name)) ?? Quickshell.screens[0]
+    property var focusedScreen: Quickshell.screens.find(s => s.name === NiriData.currentOutput) ?? Quickshell.screens[0]
 
     property string currentIndicator: "volume"
     property var indicators: [
@@ -65,7 +64,7 @@ Scope {
     }
 
     Connections {
-        target: Hyprsunset
+        target: Wlsunset
         function onGammaChangeAttempt() {
             root.protectionMessage = "";
             root.currentIndicator = "gamma";
@@ -258,22 +257,6 @@ Scope {
         function decrement() {
             Audio.decrementVolume();
             root.triggerOsd();
-        }
-    }
-    NiriSafeShortcut {
-        name: "osdVolumeTrigger"
-        description: "Triggers volume OSD on press"
-
-        onPressed: {
-            root.triggerOsd();
-        }
-    }
-    NiriSafeShortcut {
-        name: "osdVolumeHide"
-        description: "Hides volume OSD on press"
-
-        onPressed: {
-            GlobalStates.osdVolumeOpen = false;
         }
     }
 }

@@ -19,8 +19,6 @@ import qs.modules.common
 Singleton {
     id: root
 
-    readonly property bool niri: NiriData.isNiri
-
     function page(path) {
         return Qt.resolvedUrl("pages/" + path)
     }
@@ -39,8 +37,7 @@ Singleton {
         {
             key: "displays", name: Translation.tr("Displays"), icon: "desktop_windows",
             children: [
-                { key: "monitors",       name: Translation.tr("Monitors"),          icon: "monitor",
-                  component: root.page(root.niri ? "displays/NiriMonitorsConfig.qml" : "displays/HyprlandMonitorsConfig.qml") },
+                { key: "monitors",       name: Translation.tr("Monitors"),          icon: "monitor",       component: root.page("displays/NiriMonitorsConfig.qml") },
                 { key: "lock-screen",    name: Translation.tr("Lock Screen"),       icon: "lock",            component: root.page("displays/LockScreenConfig.qml") },
                 { key: "screen-corners", name: Translation.tr("Screen Corners"),    icon: "rounded_corner",  component: root.page("displays/ScreenCornersConfig.qml") },
                 { key: "osd",            name: Translation.tr("On-screen Display"), icon: "brightness_medium", component: root.page("displays/OsdConfig.qml") },
@@ -49,10 +46,8 @@ Singleton {
         {
             key: "input", name: Translation.tr("Input"), icon: "keyboard",
             children: [
-                { key: "keyboard", name: Translation.tr("Keyboard"), icon: "keyboard",
-                  component: root.page(root.niri ? "input/NiriKeyboardConfig.qml" : "input/HyprlandKeyboardConfig.qml") },
-                { key: "pointer",  name: Translation.tr("Touchpad & Mouse"), icon: "trackpad_input",
-                  component: root.page(root.niri ? "input/NiriPointerConfig.qml" : "input/HyprlandPointerConfig.qml") },
+                { key: "keyboard", name: Translation.tr("Keyboard"),          icon: "keyboard",       component: root.page("input/NiriKeyboardConfig.qml") },
+                { key: "pointer",  name: Translation.tr("Touchpad & Mouse"), icon: "trackpad_input", component: root.page("input/NiriPointerConfig.qml") },
                 { key: "cursor",    name: Translation.tr("Cursor"),             icon: "mouse",    component: root.page("input/CursorConfig.qml") },
                 { key: "shortcuts", name: Translation.tr("Keyboard Shortcuts"), icon: "keyboard_keys", component: root.page("input/ShortcutsConfig.qml") },
             ]
@@ -92,14 +87,11 @@ Singleton {
             ]
         },
         {
-            key: "compositor", name: root.niri ? Translation.tr("Niri") : Translation.tr("Hyprland"), icon: "select_window_2",
+            key: "compositor", name: Translation.tr("Niri"), icon: "select_window_2",
             children: [
-                { key: "tiling", name: Translation.tr("Tiling & Layout"), icon: "auto_awesome_mosaic",
-                  component: root.page(root.niri ? "compositor/NiriLayoutConfig.qml" : "compositor/HyprlandLayoutConfig.qml") },
-                { key: "window-appearance", name: Translation.tr("Appearance & Effects"), icon: "deblur",
-                  component: root.page(root.niri ? "compositor/NiriAppearanceConfig.qml" : "compositor/HyprlandAppearanceConfig.qml") },
-                { key: "animations", name: Translation.tr("Animations"), icon: "animation",
-                  component: root.page(root.niri ? "compositor/NiriAnimationsConfig.qml" : "compositor/HyprlandAnimationsConfig.qml") },
+                { key: "tiling",            name: Translation.tr("Tiling & Layout"),      icon: "auto_awesome_mosaic", component: root.page("compositor/NiriLayoutConfig.qml") },
+                { key: "window-appearance", name: Translation.tr("Appearance & Effects"), icon: "deblur",              component: root.page("compositor/NiriAppearanceConfig.qml") },
+                { key: "animations",        name: Translation.tr("Animations"),           icon: "animation",           component: root.page("compositor/NiriAnimationsConfig.qml") },
             ]
         },
         {

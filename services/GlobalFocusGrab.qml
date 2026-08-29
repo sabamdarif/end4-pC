@@ -2,19 +2,17 @@ pragma Singleton
 pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
-import Quickshell.Hyprland
 
 /**
- * Manages a HyprlandFocusGrab that's to be shared by all windows.
- * "Persistent" is for windows that should always be included but not closed on dismiss, like bar and onscreen keyboard.
- * "Dismissable" is for stuff like sidebars
+ * Tracks the panels that close when focus moves away, like the sidebars.
+ * niri has no focus-grab protocol, so dismissal is driven by niri's focus and
+ * workspace events instead.
  */ 
 Singleton {
     id: root
 
     signal dismissed()
 
-    property list<var> persistent: []
     property list<var> dismissable: []
 
     function dismiss() {
@@ -24,19 +22,6 @@ Singleton {
 
     Component.onCompleted: {
         console.log("[GlobalFocusGrab] Initialized");
-    }
-
-    function addPersistent(window) {
-        if (root.persistent.indexOf(window) === -1) {
-            root.persistent.push(window);
-        }
-    }
-
-    function removePersistent(window) {
-        var index = root.persistent.indexOf(window);
-        if (index !== -1) {
-            root.persistent.splice(index, 1);
-        }
     }
 
     property int lastWindowIdOnOpen: -1
@@ -55,34 +40,16 @@ Singleton {
         }
     }
 
-    function hasActive(element) {
-        return element?.activeFocus || Array.from(
-            element?.children ?? []
-        ).some(
-            (child) => hasActive(child)
-        );
-    }
-
-    HyprlandFocusGrab {
-        id: grab
-        windows: root.dismissable.every(w => !w?.focusable) || root.dismissable.some(w => hasActive(w?.contentItem)) ? [...root.dismissable, ...root.persistent] : [...root.dismissable]
-        active: root.dismissable.length > 0 && !NiriData.isNiri
-        onCleared: () => {
-            root.dismiss();
-        }
-    }
-
     Connections {
         target: NiriData
         function onFocusedWindowIdChanged() {
-            if (NiriData.isNiri && root.dismissable.length > 0) {
-                if (NiriData.focusedWindowId !== root.lastWindowIdOnOpen && NiriData.focusedWindowId !== -1) {
-                    root.dismiss();
-                }
+            if (root.dismissable.length === 0) return;
+            if (NiriData.focusedWindowId !== root.lastWindowIdOnOpen && NiriData.focusedWindowId !== -1) {
+                root.dismiss();
             }
         }
         function onActiveWorkspaceIdxChanged() {
-            if (NiriData.isNiri && root.dismissable.length > 0) {
+            if (root.dismissable.length > 0) {
                 root.dismiss();
             }
         }

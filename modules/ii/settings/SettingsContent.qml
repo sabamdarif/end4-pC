@@ -506,7 +506,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 color: "transparent"
-                radius: Appearance.rounding.screenRounding - Appearance.sizes.hyprlandGapsOut
+                radius: Appearance.rounding.screenRounding - Appearance.sizes.windowGapsOut
 
                 Item {
                     anchors.fill: parent

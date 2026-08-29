@@ -3,14 +3,13 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import Quickshell.Hyprland
 import qs.modules.common
 
 /**
  * Exposes the active Xkb keyboard layout name and code for indicators.
  *
- * Both compositors report the layout as an xkb *description* ("English (US)"),
- * which is looked up in base.lst to get the short code shown in the bar.
+ * niri reports the layout as an xkb *description* ("English (US)"), which is
+ * looked up in base.lst to get the short code shown in the bar.
  */
 Singleton {
     id: root
@@ -21,9 +20,8 @@ Singleton {
     property string currentLayoutCode: ""
     // For the service
     property var baseLayoutFilePath: "/usr/share/X11/xkb/rules/base.lst"
-    property bool needsLayoutRefresh: false
 
-    // Update the layout code according to the layout name (Hyprland gives the name not the code)
+    // Update the layout code according to the layout name (niri gives the name not the code)
     onCurrentLayoutNameChanged: root.updateLayoutCode()
     function updateLayoutCode() {
         if (cachedLayoutCodes.hasOwnProperty(currentLayoutName)) {
@@ -68,61 +66,14 @@ Singleton {
                     
                     return false;
                 });
-                // console.log("[HyprlandXkb] Found line:", foundLine);
-                // console.log("[HyprlandXkb] Layout:", root.currentLayoutName, "| Code:", root.currentLayoutCode);
-                // console.log("[HyprlandXkb] Cached layout codes:", JSON.stringify(root.cachedLayoutCodes, null, 2));
+                // console.log("[NiriXkb] Found line:", foundLine);
+                // console.log("[NiriXkb] Layout:", root.currentLayoutName, "| Code:", root.currentLayoutCode);
+                // console.log("[NiriXkb] Cached layout codes:", JSON.stringify(root.cachedLayoutCodes, null, 2));
             }
         }
     }
 
-    // Find out available layouts and current active layout. Should only be necessary on init
-    Process {
-        id: fetchLayoutsProc
-        running: !NiriData.isNiri
-        command: ["hyprctl", "-j", "devices"]
-
-        stdout: StdioCollector {
-            id: devicesCollector
-            onStreamFinished: {
-                const parsedOutput = JSON.parse(devicesCollector.text);
-                const hyprlandKeyboard = parsedOutput["keyboards"].find(kb => kb.main === true);
-                root.layoutCodes = hyprlandKeyboard["layout"].split(",");
-                root.currentLayoutName = hyprlandKeyboard["active_keymap"];
-                // console.log("[HyprlandXkb] Fetched | Layouts (multiple: " + (root.layoutCodes.length > 1) + "): "
-                //     + root.layoutCodes.join(", ") + " | Active: " + root.currentLayoutName);
-            }
-        }
-    }
-
-    // Update the layout name when it changes
-    Connections {
-        target: Hyprland
-        enabled: !NiriData.isNiri
-        function onRawEvent(event) {
-            if (event.name === "activelayout") {
-                if (root.needsLayoutRefresh) {
-                    root.needsLayoutRefresh = false;
-                    fetchLayoutsProc.running = true;
-                }
-
-                // If there's only one layout, the updated layout is always the same
-                if (root.layoutCodes.length <= 1) return;
-
-                // Update when layout might have changed
-                const dataString = event.data;
-                root.currentLayoutName = dataString.substring(dataString.indexOf(",") + 1);
-
-                // Update layout for on-screen keyboard (osk)
-                Config.options.osk.layout = root.currentLayoutName.split(" (")[0];
-            } else if (event.name == "configreloaded") {
-                // Mark layout code list to be updated when config is reloaded
-                root.needsLayoutRefresh = true;
-            }
-        }
-    }
-
-    // niri reports layouts as the same xkb descriptions Hyprland does, so the
-    // base.lst lookup above works for both without a separate code path.
+    // Available layouts and the active one. Refreshed on every niri layout switch.
     Process {
         id: fetchNiriLayoutsProc
         running: NiriData.isNiri
@@ -139,7 +90,7 @@ Singleton {
                     root.currentLayoutName = names[parsed["current_idx"] ?? 0];
                     Config.options.osk.layout = root.currentLayoutName.split(" (")[0];
                 } catch (e) {
-                    console.log("[HyprlandXkb] Could not parse niri keyboard-layouts:", e);
+                    console.log("[NiriXkb] Could not parse niri keyboard-layouts:", e);
                 }
             }
         }
@@ -147,7 +98,6 @@ Singleton {
 
     Connections {
         target: NiriData
-        enabled: NiriData.isNiri
         function onRawEvent(line) {
             if (line.includes("KeyboardLayout")) fetchNiriLayoutsProc.running = true;
         }

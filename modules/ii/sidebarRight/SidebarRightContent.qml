@@ -11,7 +11,6 @@ import QtQuick.Layouts
 import Quickshell.Io
 import Quickshell
 import Quickshell.Bluetooth
-import Quickshell.Hyprland
 
 import qs.modules.ii.sidebarRight.quickToggles
 import qs.modules.ii.sidebarRight.quickToggles.classicStyle
@@ -25,9 +24,7 @@ Item {
     id: root
     property int sidebarWidth: Appearance.sizes.sidebarWidth
     property int sidebarPadding: 10
-    readonly property real compositorRounding: NiriData.isNiri
-        ? NiriConfig.options.decoration.rounding
-        : Config.options.hyprland.decoration.rounding
+    readonly property real compositorRounding: NiriConfig.options.decoration.rounding
     property string settingsQmlPath: Quickshell.shellPath("settings.qml")
     property bool showAudioOutputDialog: false
     property bool showAudioInputDialog: false
@@ -137,12 +134,12 @@ Item {
         id: sidebarRightBackground
 
         anchors.fill: parent
-        implicitHeight: parent.height - Appearance.sizes.hyprlandGapsOut * 2
-        implicitWidth: sidebarWidth - Appearance.sizes.hyprlandGapsOut * 2
+        implicitHeight: parent.height - Appearance.sizes.windowGapsOut * 2
+        implicitWidth: sidebarWidth - Appearance.sizes.windowGapsOut * 2
         color: Appearance.colors.colLayer0
         border.width: 1
         border.color: Appearance.colors.colLayer0Border
-        radius: Appearance.rounding.screenRounding - Appearance.sizes.hyprlandGapsOut + 5
+        radius: Appearance.rounding.screenRounding - Appearance.sizes.windowGapsOut + 5
 
         ColumnLayout {
             anchors.fill: parent
@@ -297,15 +294,11 @@ Item {
                                     toggled: false
                                     buttonIcon: "restart_alt"
                                     onClicked: {
-                                        if (NiriData.isNiri) {
-                                            Quickshell.execDetached(["niri", "msg", "action", "load-config-file"]);
-                                        } else {
-                                            Quickshell.execDetached(["hyprctl", "reload"]);
-                                        }
+                                        Quickshell.execDetached(["niri", "msg", "action", "load-config-file"]);
                                         Quickshell.reload(true);
                                     }
                                     StyledToolTip {
-                                        text: NiriData.isNiri ? Translation.tr("Reload Niri & Quickshell") : Translation.tr("Reload Hyprland & Quickshell")
+                                        text: Translation.tr("Reload Niri & Quickshell")
                                     }
                                 }
                                 QuickToggleButton {
@@ -559,15 +552,11 @@ Item {
                 toggled: false
                 buttonIcon: "restart_alt"
                 onClicked: {
-                    if (NiriData.isNiri) {
-                        Quickshell.execDetached(["niri", "msg", "action", "load-config-file"]);
-                    } else {
-                        Quickshell.execDetached(["hyprctl", "reload"]);
-                    }
+                    Quickshell.execDetached(["niri", "msg", "action", "load-config-file"]);
                     Quickshell.reload(true);
                 }
                 StyledToolTip {
-                    text: NiriData.isNiri ? Translation.tr("Reload Niri & Quickshell") : Translation.tr("Reload Hyprland & Quickshell")
+                    text: Translation.tr("Reload Niri & Quickshell")
                 }
             }
             QuickToggleButton {

@@ -7,8 +7,8 @@ Singleton {
     id: root
 
     function closeAllWindows() {
-        HyprlandData.windowList.map(w => w.pid).forEach(pid => {
-            Quickshell.execDetached(["kill", pid]);
+        NiriData.windows.map(w => w.pid).filter(pid => pid).forEach(pid => {
+            Quickshell.execDetached(["kill", String(pid)]);
         });
     }
 
@@ -26,7 +26,7 @@ Singleton {
 
     function logout() {
         closeAllWindows();
-        Quickshell.execDetached(["pkill", "-i", "Hyprland"]);
+        Quickshell.execDetached(["niri", "msg", "action", "quit", "--skip-confirmation"]);
     }
 
     function launchTaskManager() {

@@ -12,7 +12,6 @@ import Qt5Compat.GraphicalEffects
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
-import Quickshell.Hyprland
 
 import qs.modules.ii.background.widgets
 import qs.modules.ii.background.widgets.clock
@@ -103,11 +102,11 @@ Variants {
         property string currentShader: "pixelate"
         property string wallpaperAnimation: Config.options.background.wallpaperAnimation ?? "random"
 
-        property list<HyprlandWorkspace> workspacesForMonitor: Hyprland.workspaces.values.filter(workspace => workspace.monitor && workspace.monitor.name == monitor.name)
-        property var activeWorkspaceWithFullscreen: workspacesForMonitor.filter(workspace => ((workspace.toplevels.values.filter(window => window.wayland?.fullscreen)[0] != undefined) && workspace.active))[0]
-        visible: GlobalStates.screenLocked || (!(activeWorkspaceWithFullscreen != undefined)) || !Config?.options.background.hideWhenFullscreen
-
-        property HyprlandMonitor monitor: Hyprland.monitorFor(modelData)
+        // niri's IPC exposes no per-output fullscreen flag, so go by the focused
+        // toplevel and the output niri currently has focus on.
+        readonly property bool fullscreenHere: (ToplevelManager.activeToplevel?.fullscreen ?? false)
+            && NiriData.currentOutput === modelData.name
+        visible: GlobalStates.screenLocked || !fullscreenHere || !Config?.options.background.hideWhenFullscreen
 
         property string effectiveWallpaperPath: {
             if (GlobalStates.screenLocked && Config.options.background.lockWall !== "")

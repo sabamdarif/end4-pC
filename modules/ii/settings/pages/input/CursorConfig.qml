@@ -44,7 +44,6 @@ ContentPage {
             }
 
             ConfigSwitch {
-                visible: NiriData.isNiri
                 buttonIcon: "keyboard_hide"
                 text: Translation.tr("Hide while typing")
                 checked: NiriConfig.options.cursor.hideWhenTyping

@@ -3,7 +3,6 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
-import Quickshell.Hyprland
 import Quickshell.Services.UPower
 import qs
 import qs.services
@@ -14,9 +13,7 @@ import qs.modules.common.functions
 Scope {
     id: bar
     property bool showBarBackground: Config.options.bar.showBackground
-    readonly property real compositorGapsOut: NiriData.isNiri
-        ? NiriConfig.options.layout.gaps
-        : bar.compositorGapsOut
+    readonly property real compositorGapsOut: NiriConfig.options.layout.gaps
 
     Variants {
         model: {
@@ -54,7 +51,7 @@ Scope {
                 property bool mustShow: hoverRegion.containsMouse || superShow
                 exclusionMode: ExclusionMode.Ignore
                 exclusiveZone: (Config?.options.bar.autoHide.enable && (!mustShow || !Config?.options.bar.autoHide.pushWindows)) ? 0 :
-                    Appearance.sizes.baseVerticalBarWidth + (Config.options.bar.cornerStyle === 1 ? Appearance.sizes.hyprlandGapsOut : 0)
+                    Appearance.sizes.baseVerticalBarWidth + (Config.options.bar.cornerStyle === 1 ? Appearance.sizes.windowGapsOut : 0)
                     + (Config.options.bar.cornerStyle === 3 ? bar.compositorGapsOut : 0)
                 WlrLayershell.namespace: "quickshell:verticalBar"
                 implicitWidth: Appearance.sizes.verticalBarWidth + Appearance.rounding.screenRounding
@@ -68,9 +65,6 @@ Scope {
                     top: true
                     bottom: true
                 }
-
-                Component.onCompleted: { GlobalFocusGrab.addPersistent(barRoot); }
-                Component.onDestruction: { GlobalFocusGrab.removePersistent(barRoot); }
 
                 MouseArea {
                     id: hoverRegion
@@ -250,21 +244,5 @@ Scope {
         function toggle(): void { GlobalStates.barOpen = !GlobalStates.barOpen }
         function close(): void { GlobalStates.barOpen = false }
         function open(): void { GlobalStates.barOpen = true }
-    }
-
-    NiriSafeShortcut {
-        name: "barToggle"
-        description: "Toggles bar on press"
-        onPressed: { GlobalStates.barOpen = !GlobalStates.barOpen; }
-    }
-    NiriSafeShortcut {
-        name: "barOpen"
-        description: "Opens bar on press"
-        onPressed: { GlobalStates.barOpen = true; }
-    }
-    NiriSafeShortcut {
-        name: "barClose"
-        description: "Closes bar on press"
-        onPressed: { GlobalStates.barOpen = false; }
     }
 }

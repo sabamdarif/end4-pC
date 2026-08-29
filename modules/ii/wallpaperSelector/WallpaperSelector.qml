@@ -8,7 +8,6 @@ import QtQuick.Controls
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
-import Quickshell.Hyprland
 
 Scope {
     id: root
@@ -19,8 +18,7 @@ Scope {
 
         sourceComponent: PanelWindow {
             id: panelWindow
-            readonly property HyprlandMonitor monitor: Hyprland.monitorFor(panelWindow.screen)
-            property bool monitorIsFocused: (Hyprland.focusedMonitor?.id == monitor?.id)
+            property bool monitorIsFocused: NiriData.currentOutput === panelWindow.screen?.name
 
             exclusionMode: ExclusionMode.Ignore
             WlrLayershell.namespace: "quickshell:wallpaperSelector"
@@ -30,7 +28,7 @@ Scope {
 
             anchors.top: true
             margins {
-                top: Config?.options.bar.vertical ? Appearance.sizes.hyprlandGapsOut : Appearance.sizes.barHeight + Appearance.sizes.hyprlandGapsOut
+                top: Config?.options.bar.vertical ? Appearance.sizes.windowGapsOut : Appearance.sizes.barHeight + Appearance.sizes.windowGapsOut
             }
 
             mask: Region {
@@ -78,22 +76,6 @@ Scope {
         }
 
         function random(): void {
-            Wallpapers.randomFromCurrentFolder();
-        }
-    }
-
-    NiriSafeShortcut {
-        name: "wallpaperSelectorToggle"
-        description: "Toggle wallpaper selector"
-        onPressed: {
-            root.toggleWallpaperSelector();
-        }
-    }
-
-    NiriSafeShortcut {
-        name: "wallpaperSelectorRandom"
-        description: "Select random wallpaper in current folder"
-        onPressed: {
             Wallpapers.randomFromCurrentFolder();
         }
     }

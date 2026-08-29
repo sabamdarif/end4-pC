@@ -9,7 +9,6 @@ import QtQuick
 import Qt.labs.folderlistmodel
 import Quickshell
 import Quickshell.Io
-import Quickshell.Hyprland
 import ".."
 
 Singleton {
@@ -168,7 +167,7 @@ Singleton {
         {
             action: "wallpaper",
             execute: () => {
-                Hyprland.dispatch("global quickshell:wallpaperSelectorToggle")
+                GlobalStates.wallpaperSelectorOpen = !GlobalStates.wallpaperSelectorOpen
             }
         },
         {
@@ -272,31 +271,23 @@ Singleton {
         } else if (root.query.startsWith(Config.options.search.prefix.keybinds ?? "<")) {
             // Keybinds
             const searchString = StringUtils.cleanPrefix(root.query, Config.options.search.prefix.keybinds ?? "<");
-            const flatBinds = (function flatten(node) {
-                let result = [...(node.keybinds ?? [])];
-                for (const child of (node.children ?? [])) {
-                    result = result.concat(flatten(child));
-                }
-                return result;
-            })(HyprlandKeybinds.keybinds);
 
-            return flatBinds.filter(bind => {
-                if (!bind.comment) return false;
+            return NiriKeybinds.binds.filter(bind => {
+                const label = bind.title || bind.action;
+                if (!label) return false;
                 if (searchString.length === 0) return true;
-                return bind.comment.toLowerCase().includes(searchString.toLowerCase())
+                return label.toLowerCase().includes(searchString.toLowerCase())
                     || bind.key.toLowerCase().includes(searchString.toLowerCase());
             }).map(bind => {
-                const modsStr = bind.mods.join(" + ");
-                const keyStr  = modsStr.length > 0 ? `${modsStr} + ${bind.key}` : bind.key;
                 return resultComp.createObject(null, {
-                    name: bind.comment,
+                    name: bind.title || bind.action,
                     iconName: "keyboard",
                     iconType: LauncherSearchResult.IconType.Material,
-                    verb: keyStr,
+                    verb: bind.key,
                     type: Translation.tr("Keybind"),
-                    comment: keyStr,
+                    comment: bind.key,
                     execute: () => {
-                        Quickshell.clipboardText = keyStr;
+                        Quickshell.clipboardText = bind.key;
                     }
                 });
             }).filter(Boolean);

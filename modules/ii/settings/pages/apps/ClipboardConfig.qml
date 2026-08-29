@@ -71,7 +71,6 @@ ContentPage {
                     wrapMode: Text.Wrap
                 }
                 RippleButtonWithIcon {
-                    visible: NiriData.isNiri
                     materialIcon: "sync"
                     mainText: Translation.tr("Update autostart entry")
                     onClicked: page.applyCliphistToAutostart()

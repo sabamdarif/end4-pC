@@ -20,9 +20,8 @@ Scope {
 
         WlrLayershell.namespace: "quickshell:clipboard"
         WlrLayershell.layer: WlrLayer.Overlay
-        // Niri has no focus-grab protocol, so OnDemand never routes keys to the layer
-        // surface. Use Exclusive there; keep OnDemand on Hyprland.
-        WlrLayershell.keyboardFocus: GlobalStates.clipboardOpen ? (NiriData.isNiri ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.OnDemand) : WlrKeyboardFocus.None
+        // niri has no focus-grab protocol, so OnDemand never routes keys to the layer surface.
+        WlrLayershell.keyboardFocus: GlobalStates.clipboardOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
         color: "transparent"
 
         anchors {
@@ -82,15 +81,6 @@ Scope {
 
         function close(): void {
             GlobalStates.clipboardOpen = false;
-        }
-    }
-
-    NiriSafeShortcut {
-        name: "clipboardToggle"
-        description: "Toggle the clipboard manager"
-
-        onPressed: {
-            GlobalStates.clipboardOpen = !GlobalStates.clipboardOpen;
         }
     }
 }
