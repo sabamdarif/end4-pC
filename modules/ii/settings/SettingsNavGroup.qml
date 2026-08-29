@@ -25,13 +25,12 @@ RippleButton {
     padding: 0
     implicitHeight: baseSize
     buttonRadius: Appearance.rounding.full
-    colBackground: root.toggled
-        ? Appearance.colors.colSecondaryContainer
-        : ColorUtils.transparentize(Appearance.colors.colLayer1Hover, 1)
-    colBackgroundHover: root.toggled
-        ? Appearance.colors.colSecondaryContainerHover
-        : Appearance.colors.colLayer1Hover
-    colRipple: root.toggled ? Appearance.colors.colSecondaryContainerActive : Appearance.colors.colLayer1Active
+    colBackground: ColorUtils.transparentize(Appearance.colors.colLayer1Hover, 1)
+    colBackgroundHover: Appearance.colors.colLayer1Hover
+    colBackgroundToggled: Appearance.colors.colSecondaryContainer
+    colBackgroundToggledHover: Appearance.colors.colSecondaryContainerHover
+    colRipple: Appearance.colors.colLayer1Active
+    colRippleToggled: Appearance.colors.colSecondaryContainerActive
 
     contentItem: RowLayout {
         spacing: 6
