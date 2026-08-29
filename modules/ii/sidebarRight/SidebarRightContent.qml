@@ -443,22 +443,24 @@ Item {
         readonly property bool shown: root[shownPropertyString]
         anchors.fill: parent
 
-        onShownChanged: if (shown) toggleDialogLoader.active = true;
-        active: shown
-        onActiveChanged: {
-            if (active) {
-                item.show = true;
+        // The dialog stays loaded past `shown` so it can animate out; onVisibleChanged unloads it after.
+        active: false
+        onShownChanged: {
+            if (shown)
+                toggleDialogLoader.active = true;
+            if (!item)
+                return;
+            item.show = shown;
+            if (shown)
                 item.forceActiveFocus();
-            }
         }
         Connections {
             target: toggleDialogLoader.item
             function onDismiss() {
-                toggleDialogLoader.item.show = false
                 root[toggleDialogLoader.shownPropertyString] = false;
             }
             function onVisibleChanged() {
-                if (toggleDialogLoader.item && !toggleDialogLoader.item.visible && !root[toggleDialogLoader.shownPropertyString])
+                if (!toggleDialogLoader.shown && toggleDialogLoader.item && !toggleDialogLoader.item.visible)
                     toggleDialogLoader.active = false;
             }
         }
