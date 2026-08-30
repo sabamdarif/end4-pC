@@ -11,4 +11,6 @@ QtObject {
     readonly property bool isSecure: security.length > 0
 
     property bool askingPassword: false
+    // Why the password prompt is up: "" while it is a first-time ask
+    property string passwordError: ""
 }

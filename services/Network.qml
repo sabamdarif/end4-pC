@@ -31,6 +31,9 @@ Singleton {
         return b.strength - a.strength;
     })
     property string wifiStatus: "disconnected"
+    // Saved wifi profiles as {name, uuid}. NetworkManager names a profile after
+    // the SSID it was created for, so a name match means the network is known.
+    property list<var> savedWifiProfiles: []
 
     property string networkName: ""
     property int networkStrength
@@ -73,12 +76,57 @@ Singleton {
         rescanProcess.running = true;
     }
 
-    function connectToWifiNetwork(accessPoint: WifiAccessPoint): void {
-        accessPoint.askingPassword = false;
-        root.wifiConnectTarget = accessPoint;
-        // We use this instead of `nmcli connection up SSID` because this also creates a connection profile
-        connectProc.exec(["nmcli", "dev", "wifi", "connect", accessPoint.ssid])
+    function savedWifiProfileFor(ssid) {
+        return root.savedWifiProfiles.find(p => p.name === ssid) ?? null;
+    }
 
+    // nmcli runs without a secret agent, so NetworkManager can never ask anyone
+    // for a missing password: a secured network without a profile has to be
+    // joined with a password we collect ourselves.
+    function connectToWifiNetwork(accessPoint: WifiAccessPoint): void {
+        if (!accessPoint)
+            return;
+        const saved = root.savedWifiProfileFor(accessPoint.ssid);
+        if (accessPoint.isSecure && !saved) {
+            accessPoint.passwordError = "";
+            accessPoint.askingPassword = true;
+            return;
+        }
+        accessPoint.askingPassword = false;
+        accessPoint.passwordError = "";
+        root.runConnect(accessPoint, "", saved
+            ? 'nmcli connection up uuid "$UUID"'
+            // Also creates a connection profile, unlike `nmcli connection up`
+            : 'nmcli device wifi connect "$SSID"');
+    }
+
+    // Joins with `password`, written into the saved profile when there is one so
+    // that nmcli does not add a duplicate ("SSID 1") next to it.
+    function connectWithPassword(accessPoint: WifiAccessPoint, password: string): void {
+        if (!accessPoint || password.length === 0)
+            return;
+        accessPoint.askingPassword = false;
+        accessPoint.passwordError = "";
+        root.runConnect(accessPoint, password, root.savedWifiProfileFor(accessPoint.ssid)
+            ? 'nmcli connection modify uuid "$UUID" wifi-sec.psk "$PASSWORD" && nmcli connection up uuid "$UUID"'
+            : 'nmcli device wifi connect "$SSID" password "$PASSWORD"');
+    }
+
+    // The password travels in the environment, never in argv, where `ps` would
+    // show it to every user on the machine.
+    function runConnect(accessPoint: WifiAccessPoint, password: string, script: string): void {
+        root.wifiConnectTarget = accessPoint;
+        connectProc.lastError = "";
+        connectProc.exec({
+            "environment": {
+                "LANG": "C",
+                "LC_ALL": "C",
+                "SSID": accessPoint.ssid,
+                "UUID": root.savedWifiProfileFor(accessPoint.ssid)?.uuid ?? "",
+                "PASSWORD": password
+            },
+            "command": ["bash", "-c", script]
+        });
     }
 
     function disconnectWifiNetwork(): void {
@@ -93,45 +141,38 @@ Singleton {
         Quickshell.execDetached(["xdg-open", "https://nmcheck.gnome.org/"]) // From some StackExchange thread, seems to work
     }
 
-    function changePassword(network: WifiAccessPoint, password: string, username = ""): void {
-        // TODO: enterprise wifi with username
-        network.askingPassword = false;
-        changePasswordProc.exec({
-            "environment": {
-                "PASSWORD": password,
-                "SSID": network.ssid
-            },
-            "command": ["bash", "-c", 'nmcli connection modify "$SSID" wifi-sec.psk "$PASSWORD"']
-        })
-    }
-
     Process {
         id: enableWifiProc
     }
 
     Process {
         id: connectProc
-        environment: ({
-            LANG: "C",
-            LC_ALL: "C"
-        })
+        property string lastError: ""
         stdout: SplitParser {
-            onRead: line => {
-                // print(line)
-                getNetworks.running = true
-            }
+            onRead: getNetworks.running = true
         }
-        stderr: SplitParser {
-            onRead: line => {
-                // print("err:", line)
-                if (line.includes("Secrets were required")) {
-                    root.wifiConnectTarget.askingPassword = true
-                }
-            }
+        stderr: StdioCollector {
+            onStreamFinished: connectProc.lastError = text.trim()
         }
         onExited: (exitCode, exitStatus) => {
-            root.wifiConnectTarget.askingPassword = (exitCode !== 0)
-            root.wifiConnectTarget = null
+            const target = root.wifiConnectTarget;
+            root.wifiConnectTarget = null;
+            getNetworks.running = true;
+            getSavedNetworks.running = true;
+            if (!target || exitCode === 0) {
+                if (target) {
+                    target.askingPassword = false;
+                    target.passwordError = "";
+                }
+                return;
+            }
+            // Only a secured network has something left to ask the user for
+            if (!target.isSecure)
+                return;
+            target.askingPassword = true;
+            target.passwordError = /secret|password|not provided/i.test(connectProc.lastError)
+                ? Translation.tr("Wrong password")
+                : (connectProc.lastError !== "" ? connectProc.lastError : Translation.tr("Could not connect"));
         }
     }
 
@@ -143,10 +184,30 @@ Singleton {
     }
 
     Process {
-        id: changePasswordProc
-        onExited: { // Re-attempt connection after changing password
-            connectProc.running = false
-            connectProc.running = true
+        id: getSavedNetworks
+        running: true
+        command: ["nmcli", "-t", "-f", "NAME,UUID,TYPE", "connection", "show"]
+        environment: ({
+            LANG: "C",
+            LC_ALL: "C"
+        })
+        stdout: StdioCollector {
+            onStreamFinished: {
+                // Only NAME can hold a ':', which nmcli -t escapes as '\:'
+                const PLACEHOLDER = "STRINGWHICHHOPEFULLYWONTBEUSED";
+                const unescape = new RegExp(PLACEHOLDER, "g");
+                const profiles = [];
+                for (const line of text.trim().split("\n")) {
+                    const parts = line.replace(/\\:/g, PLACEHOLDER).split(":");
+                    if (parts[2] !== "802-11-wireless" || !parts[0])
+                        continue;
+                    profiles.push({
+                        name: parts[0].replace(unescape, ":"),
+                        uuid: parts[1]
+                    });
+                }
+                root.savedWifiProfiles = profiles;
+            }
         }
     }
 
@@ -165,6 +226,7 @@ Singleton {
     function update() {
         updateConnectionType.startCheck();
         wifiStatusProcess.running = true
+        getSavedNetworks.running = true;
         updateNetworkName.running = true;
         updateNetworkStrength.running = true;
         updateNetworkDetails.running = true;

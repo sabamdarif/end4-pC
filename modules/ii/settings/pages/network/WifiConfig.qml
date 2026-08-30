@@ -106,7 +106,7 @@ ContentPage {
                     delegate: ColumnLayout {
                         id: wifiRow
                         required property var modelData
-                        readonly property bool known: NetworkExtras.isKnownWifi(modelData.ssid)
+                        readonly property bool known: Network.savedWifiProfileFor(modelData.ssid) !== null
                         Layout.fillWidth: true
                         spacing: 2
 
@@ -170,31 +170,47 @@ ContentPage {
                         }
 
                         // PSK prompt (appears when connecting to a secured
-                        // network whose secrets nmcli doesn't have yet)
+                        // network whose password NetworkManager doesn't have yet)
                         ColumnLayout {
                             visible: wifiRow.modelData.askingPassword
                             Layout.fillWidth: true
                             Layout.leftMargin: 40
                             Layout.bottomMargin: 6
+                            onVisibleChanged: if (visible) {
+                                pskField.clear()
+                                pskField.forceActiveFocus()
+                            }
 
+                            StyledText {
+                                Layout.fillWidth: true
+                                visible: wifiRow.modelData.passwordError !== ""
+                                text: wifiRow.modelData.passwordError
+                                font.pixelSize: Appearance.font.pixelSize.smaller
+                                color: Appearance.m3colors.m3error
+                                wrapMode: Text.Wrap
+                            }
                             MaterialTextField {
                                 id: pskField
                                 Layout.fillWidth: true
                                 placeholderText: Translation.tr("Password")
                                 echoMode: TextInput.Password
                                 inputMethodHints: Qt.ImhSensitiveData
-                                onAccepted: Network.changePassword(wifiRow.modelData, pskField.text)
+                                onAccepted: Network.connectWithPassword(wifiRow.modelData, pskField.text)
                             }
                             RowLayout {
                                 Layout.fillWidth: true
                                 Item { Layout.fillWidth: true }
                                 DialogButton {
                                     buttonText: Translation.tr("Cancel")
-                                    onClicked: wifiRow.modelData.askingPassword = false
+                                    onClicked: {
+                                        wifiRow.modelData.askingPassword = false
+                                        wifiRow.modelData.passwordError = ""
+                                    }
                                 }
                                 DialogButton {
+                                    enabled: pskField.text.length > 0
                                     buttonText: Translation.tr("Connect")
-                                    onClicked: Network.changePassword(wifiRow.modelData, pskField.text)
+                                    onClicked: Network.connectWithPassword(wifiRow.modelData, pskField.text)
                                 }
                             }
                         }

@@ -54,6 +54,19 @@ DialogListItem {
             id: passwordPrompt
             Layout.topMargin: 8
             visible: root.wifiNetwork?.askingPassword ?? false
+            onVisibleChanged: if (visible) {
+                passwordField.clear();
+                passwordField.forceActiveFocus();
+            }
+
+            StyledText {
+                Layout.fillWidth: true
+                visible: (root.wifiNetwork?.passwordError ?? "") !== ""
+                text: root.wifiNetwork?.passwordError ?? ""
+                font.pixelSize: Appearance.font.pixelSize.smaller
+                color: Appearance.m3colors.m3error
+                wrapMode: Text.Wrap
+            }
 
             MaterialTextField {
                 id: passwordField
@@ -65,7 +78,7 @@ DialogListItem {
                 inputMethodHints: Qt.ImhSensitiveData
 
                 onAccepted: {
-                    Network.changePassword(root.wifiNetwork, passwordField.text);
+                    Network.connectWithPassword(root.wifiNetwork, passwordField.text);
                 }
             }
 
@@ -80,13 +93,15 @@ DialogListItem {
                     buttonText: Translation.tr("Cancel")
                     onClicked: {
                         root.wifiNetwork.askingPassword = false;
+                        root.wifiNetwork.passwordError = "";
                     }
                 }
 
                 DialogButton {
+                    enabled: passwordField.text.length > 0
                     buttonText: Translation.tr("Connect")
                     onClicked: {
-                        Network.changePassword(root.wifiNetwork, passwordField.text);
+                        Network.connectWithPassword(root.wifiNetwork, passwordField.text);
                     }
                 }
             }
