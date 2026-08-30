@@ -15,6 +15,16 @@ Item {
     property bool vertical: Config.options.bar.vertical
     property bool isMaterial: Config.options.bar.cornerStyle === 3
 
+    // Only the Android quick panel has a user-managed tile list. Other styles have a fixed
+    // set of toggles, so a null list here means "do not filter".
+    readonly property var addedToggleTypes: (Config.ready && Config.options.sidebar.quickToggles.style === "android")
+        ? Config.options.sidebar.quickToggles.android.toggles.filter(toggle => toggle).map(toggle => toggle.type)
+        : null
+
+    function hasToggle(type: string): bool {
+        return !root.addedToggleTypes || root.addedToggleTypes.includes(type);
+    }
+
     implicitWidth: root.vertical ? 32 : flow.implicitWidth + 4
     implicitHeight: root.vertical ? flow.implicitHeight + 4 : 32
 
@@ -32,7 +42,7 @@ Item {
         spacing: isMaterial ? 2 : 10
 
         Revealer {
-            reveal: true
+            reveal: root.hasToggle("audio")
             MaterialSymbol {
                 text: Audio.sink?.audio?.muted ? "volume_off" : "volume_up"
                 iconSize: Appearance.font.pixelSize.larger
@@ -40,7 +50,7 @@ Item {
             }
         }
         Revealer {
-            reveal: Audio.source?.audio?.muted ?? false
+            reveal: (Audio.source?.audio?.muted ?? false) && root.hasToggle("mic")
             MaterialSymbol {
                 text: "mic_off"
                 iconSize: Appearance.font.pixelSize.larger
@@ -48,7 +58,7 @@ Item {
             }
         }
         Revealer {
-            reveal: Wlsunset.temperatureActive
+            reveal: Wlsunset.temperatureActive && root.hasToggle("nightLight")
             MaterialSymbol {
                 text: Config.options.light.night.automatic ? "night_sight_auto" : "bedtime"
                 iconSize: Appearance.font.pixelSize.larger
@@ -56,7 +66,7 @@ Item {
             }
         }
         Revealer {
-            reveal: Idle.inhibit
+            reveal: Idle.inhibit && root.hasToggle("idleInhibitor")
             MaterialSymbol {
                 text: "coffee"
                 iconSize: Appearance.font.pixelSize.larger
@@ -64,7 +74,7 @@ Item {
             }
         }
         Revealer {
-            reveal: EasyEffects.active
+            reveal: EasyEffects.active && root.hasToggle("easyEffects")
             MaterialSymbol {
                 text: "graphic_eq"
                 iconSize: Appearance.font.pixelSize.larger
@@ -76,12 +86,13 @@ Item {
             onLoaded: item.color = root.isMaterial ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer1
         }
         MaterialSymbol {
+            visible: root.hasToggle("network")
             text: Network.materialSymbol
             iconSize: Appearance.font.pixelSize.larger
             color: root.isMaterial ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer1
         }
         MaterialSymbol {
-            visible: BluetoothStatus.available
+            visible: BluetoothStatus.available && root.hasToggle("bluetooth")
             text: BluetoothStatus.connected ? "bluetooth_connected" : BluetoothStatus.enabled ? "bluetooth" : "bluetooth_disabled"
             iconSize: Appearance.font.pixelSize.larger
             color: root.isMaterial ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer1
