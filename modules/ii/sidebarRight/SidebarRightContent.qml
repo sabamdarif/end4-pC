@@ -19,6 +19,7 @@ import qs.modules.ii.sidebarRight.nightLight
 import qs.modules.ii.sidebarRight.volumeMixer
 import qs.modules.ii.sidebarRight.wifiNetworks
 import qs.modules.ii.sidebarRight.iconPicker
+import qs.modules.ii.sidebarRight.keepAwake
 
 Item {
     id: root
@@ -29,6 +30,7 @@ Item {
     property bool showAudioOutputDialog: false
     property bool showAudioInputDialog: false
     property bool showBluetoothDialog: false
+    property bool showKeepAwakeDialog: false
     property bool showNightLightDialog: false
     property bool showWifiDialog: false
     property bool editMode: false
@@ -38,6 +40,7 @@ Item {
         showAudioOutputDialog = false;
         showAudioInputDialog = false;
         showBluetoothDialog = false;
+        showKeepAwakeDialog = false;
         showNightLightDialog = false;
         showWifiDialog = false;
         showIconPickerDialog = false;
@@ -419,6 +422,11 @@ Item {
     }
 
     ToggleDialog {
+        shownPropertyString: "showKeepAwakeDialog"
+        dialog: KeepAwakeDialog {}
+    }
+
+    ToggleDialog {
         shownPropertyString: "showNightLightDialog"
         dialog: NightLightDialog {}
     }
@@ -480,6 +488,7 @@ Item {
             function onOpenAudioOutputDialog() { root.openDialog("showAudioOutputDialog"); }
             function onOpenAudioInputDialog() { root.openDialog("showAudioInputDialog"); }
             function onOpenBluetoothDialog() { root.openDialog("showBluetoothDialog"); }
+            function onOpenKeepAwakeDialog() { root.openDialog("showKeepAwakeDialog"); }
             function onOpenNightLightDialog() { root.openDialog("showNightLightDialog"); }
             function onOpenWifiDialog() { root.openDialog("showWifiDialog"); }
         }

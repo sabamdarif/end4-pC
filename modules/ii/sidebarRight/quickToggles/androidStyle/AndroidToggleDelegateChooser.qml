@@ -20,6 +20,7 @@ DelegateChooser {
     signal openAudioOutputDialog()
     signal openAudioInputDialog()
     signal openBluetoothDialog()
+    signal openKeepAwakeDialog()
     signal openNightLightDialog()
     signal openWifiDialog()
 
@@ -138,6 +139,7 @@ DelegateChooser {
         cellSize: modelData.size
         dropIndicatorRef: root.dropIndicatorRef
         isUnused: root.isUnused
+        onOpenMenu: root.openKeepAwakeDialog()
     } }
 
     DelegateChoice { roleValue: "mic"; AndroidMicToggle {

@@ -31,7 +31,11 @@ AbstractQuickPanel {
             }
         }
         NightLight {}
-        IdleInhibitor {}
+        IdleInhibitor {
+            altAction: () => {
+                root.openKeepAwakeDialog();
+            }
+        }
         EasyEffectsToggle {}
         CloudflareWarp {}
     }
