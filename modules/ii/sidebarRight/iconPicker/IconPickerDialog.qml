@@ -8,25 +8,32 @@ import QtQuick.Layouts
 import Quickshell
 import Qt.labs.folderlistmodel
 
-WindowDialog {
+DialogSheet {
     id: root
-    backgroundHeight: 400
+    title: Translation.tr("Select icon")
+
+    leadingActions: ConfigSwitch {
+        buttonIcon: "colors"
+        text: Translation.tr("Colorize")
+        checked: Config.options.custom.colorizeIcon
+        onCheckedChanged: {
+            Config.options.custom.colorizeIcon = checked
+        }
+    }
+
+    trailingActions: DialogButton {
+        buttonText: Translation.tr("Reset")
+        onClicked: {
+            Config.setNestedValue("custom.distroIcon", "")
+            root.dismiss()
+        }
+    }
 
     FolderListModel {
         id: folderModel
         folder: "file://" + Quickshell.shellPath("assets/icons")
         nameFilters: ["*.svg"]
         showDirs: false
-    }
-
-    WindowDialogTitle {
-        text: "Select icon"
-    }
-
-    WindowDialogSeparator {
-        Layout.topMargin: -22
-        Layout.leftMargin: 0
-        Layout.rightMargin: 0
     }
 
     GridView {
@@ -72,31 +79,4 @@ WindowDialog {
         }
     }
 
-    WindowDialogButtonRow {
-        ConfigSwitch {
-            buttonIcon: "colors"
-            text: Translation.tr("Colorize")
-            checked: Config.options.custom.colorizeIcon
-            onCheckedChanged: {
-                Config.options.custom.colorizeIcon = checked
-            }
-        }
-
-        Item {
-            Layout.fillWidth: true
-        }
-
-        DialogButton {
-            buttonText: "Reset"
-            onClicked: {
-                Config.setNestedValue("custom.distroIcon", "")
-                root.dismiss()
-            }
-        }
-
-        DialogButton {
-            buttonText: "Done"
-            onClicked: root.dismiss()
-        }
-    }
 }

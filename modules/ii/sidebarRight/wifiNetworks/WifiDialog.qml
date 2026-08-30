@@ -1,4 +1,3 @@
-import qs
 import qs.services
 import qs.services.network
 import qs.modules.common
@@ -7,31 +6,16 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 
-WindowDialog {
+DialogSheet {
     id: root
-    backgroundHeight: 600
+    title: Translation.tr("Connect to Wi-Fi")
+    busy: Network.wifiScanning
+    edgeToEdge: true
+    settingsPage: "wifi"
 
-    WindowDialogTitle {
-        text: Translation.tr("Connect to Wi-Fi")
-    }
-    WindowDialogSeparator {
-        visible: !Network.wifiScanning
-    }
-    StyledIndeterminateProgressBar {
-        visible: Network.wifiScanning
-        Layout.fillWidth: true
-        Layout.topMargin: -8
-        Layout.bottomMargin: -8
-        Layout.leftMargin: -Appearance.rounding.large
-        Layout.rightMargin: -Appearance.rounding.large
-    }
     ListView {
         Layout.fillHeight: true
         Layout.fillWidth: true
-        Layout.topMargin: -15
-        Layout.bottomMargin: -16
-        Layout.leftMargin: -Appearance.rounding.large
-        Layout.rightMargin: -Appearance.rounding.large
 
         clip: true
         spacing: 0
@@ -43,27 +27,6 @@ WindowDialog {
             required property WifiAccessPoint modelData
             wifiNetwork: modelData
             width: ListView.view.width
-        }
-    }
-    WindowDialogSeparator {}
-    WindowDialogButtonRow {
-        DialogButton {
-            buttonText: Translation.tr("Details")
-            onClicked: {
-                root.dismiss();
-                GlobalStates.sidebarRightOpen = false;
-                GlobalStates.settingsOpen = true;
-                Qt.callLater(() => GlobalStates.settingsPage = "wifi");
-            }
-        }
-
-        Item {
-            Layout.fillWidth: true
-        }
-
-        DialogButton {
-            buttonText: Translation.tr("Done")
-            onClicked: root.dismiss()
         }
     }
 }

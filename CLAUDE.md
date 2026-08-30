@@ -114,3 +114,24 @@ reuses it for the launcher's `settings:` search, so neither keeps its own page l
 6. Ensure translated section titles work with `ContentPage.goTo(term)` settings search.
 
 Dynamic lists commonly use `Rectangle`, `ColumnLayout`, and `Repeater`. `GroupedList` is mainly for static children.
+
+### Sidebar dialogs
+
+Every sheet the right sidebar opens is a `DialogSheet` (`modules/common/widgets/`), so
+they all share one height, position, title rule and footer. Declare only the body:
+
+```qml
+DialogSheet {
+    title: Translation.tr("Connect to Wi-Fi")
+    busy: Network.wifiScanning     // swaps the title rule for a progress bar
+    edgeToEdge: true               // lists and rows reach the sheet edges
+    settingsPage: "wifi"           // adds a Details button that deep links there
+    leadingActions: DialogButton {} // footer left; trailingActions sits before Done
+    ListView {}
+}
+```
+
+`WindowDialog` freezes its height when it opens, so a sheet cannot grow past
+`backgroundHeight`; keep the body within it rather than raising the shared value.
+Register a new sheet as a `ToggleDialog` in `SidebarRightContent.qml`, and reach it from
+a quick toggle through `AbstractQuickPanel`'s `open<Name>Dialog` signal.

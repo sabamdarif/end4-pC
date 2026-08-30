@@ -10,16 +10,12 @@ import Quickshell.Io
 import Quickshell
 import Quickshell.Wayland
 
-WindowDialog {
+DialogSheet {
     id: root
     property var screen: root.QsWindow.window?.screen
     property var brightnessMonitor: Brightness.getMonitorForScreen(screen)
-    backgroundHeight: 700
+    title: Translation.tr("Eye protection")
 
-    WindowDialogTitle {
-        text: Translation.tr("Eye protection")
-    }
-    
     WindowDialogSectionHeader {
         text: Translation.tr("Night Light")
     }
@@ -134,19 +130,6 @@ WindowDialog {
             value: Wlsunset.gamma / 100
             onMoved: Wlsunset.setGamma(value * 100)
             tooltipContent: `${Math.round(value * 100)}%`
-        }
-    }
-    
-    WindowDialogButtonRow {
-        Layout.fillWidth: true
-
-        Item {
-            Layout.fillWidth: true
-        }
-
-        DialogButton {
-            buttonText: Translation.tr("Done")
-            onClicked: root.dismiss()
         }
     }
 }
