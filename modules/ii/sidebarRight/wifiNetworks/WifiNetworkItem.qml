@@ -9,10 +9,12 @@ import QtQuick.Layouts
 DialogListItem {
     id: root
     required property WifiAccessPoint wifiNetwork
-    enabled: !(Network.wifiConnectTarget === root.wifiNetwork && !wifiNetwork?.active)
+    readonly property bool connecting: Network.wifiConnectTarget === root.wifiNetwork
+        && !(root.wifiNetwork?.active ?? false)
 
     active: (wifiNetwork?.askingPassword || wifiNetwork?.active) ?? false
     onClicked: {
+        if (root.connecting) return;
         Network.connectToWifiNetwork(wifiNetwork);
     }
 
@@ -35,12 +37,24 @@ DialogListItem {
                 text: strength > 80 ? "signal_wifi_4_bar" : strength > 60 ? "network_wifi_3_bar" : strength > 40 ? "network_wifi_2_bar" : strength > 20 ? "network_wifi_1_bar" : "signal_wifi_0_bar"
                 color: Appearance.colors.colOnSurfaceVariant
             }
-            StyledText {
+            ColumnLayout {
                 Layout.fillWidth: true
-                color: Appearance.colors.colOnSurfaceVariant
-                elide: Text.ElideRight
-                text: root.wifiNetwork?.ssid ?? Translation.tr("Unknown")
-                textFormat: Text.PlainText
+                spacing: 2
+                StyledText {
+                    Layout.fillWidth: true
+                    color: Appearance.colors.colOnSurfaceVariant
+                    elide: Text.ElideRight
+                    text: root.wifiNetwork?.ssid ?? Translation.tr("Unknown")
+                    textFormat: Text.PlainText
+                }
+                StyledText {
+                    visible: root.connecting
+                    Layout.fillWidth: true
+                    font.pixelSize: Appearance.font.pixelSize.smaller
+                    color: Appearance.colors.colSubtext
+                    elide: Text.ElideRight
+                    text: Translation.tr("Connecting…")
+                }
             }
             MaterialSymbol {
                 visible: (root.wifiNetwork?.isSecure || root.wifiNetwork?.active) ?? false
@@ -48,6 +62,12 @@ DialogListItem {
                 iconSize: Appearance.font.pixelSize.larger
                 color: Appearance.colors.colOnSurfaceVariant
             }
+        }
+
+        ConnectingWave {
+            Layout.fillWidth: true
+            Layout.topMargin: 4
+            running: root.connecting
         }
 
         ColumnLayout { // Password

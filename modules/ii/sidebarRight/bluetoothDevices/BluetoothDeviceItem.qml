@@ -4,10 +4,13 @@ import qs.modules.common.widgets
 import qs.services
 import QtQuick
 import QtQuick.Layouts
+import Quickshell.Bluetooth
 
 DialogListItem {
     id: root
     required property var device
+    readonly property bool connecting: (root.device?.pairing ?? false)
+        || root.device?.state === BluetoothDeviceState.Connecting
     property bool expanded: false
     pointingHandCursor: !expanded
 
@@ -51,16 +54,21 @@ DialogListItem {
                     textFormat: Text.PlainText
                 }
                 StyledText {
-                    visible: (root.device?.connected || root.device?.paired) ?? false
+                    visible: text !== ""
                     Layout.fillWidth: true
                     font.pixelSize: Appearance.font.pixelSize.smaller
                     color: Appearance.colors.colSubtext
                     elide: Text.ElideRight
                     text: {
-                        if (!root.device?.paired) return "";
-                        let statusText = root.device?.connected ? Translation.tr("Connected") : Translation.tr("Paired");
-                        if (!root.device?.batteryAvailable) return statusText;
-                        statusText += ` • ${Math.round(root.device?.battery * 100)}%`;
+                        const device = root.device;
+                        if (!device) return "";
+                        if (device.pairing) return Translation.tr("Pairing…");
+                        if (device.state === BluetoothDeviceState.Connecting) return Translation.tr("Connecting…");
+                        if (device.state === BluetoothDeviceState.Disconnecting) return Translation.tr("Disconnecting…");
+                        if (!device.paired) return "";
+                        let statusText = device.connected ? Translation.tr("Connected") : Translation.tr("Paired");
+                        if (!device.batteryAvailable) return statusText;
+                        statusText += ` • ${Math.round(device.battery * 100)}%`;
                         return statusText;
                     }
                 }
@@ -75,6 +83,12 @@ DialogListItem {
                     animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
                 }
             }
+        }
+
+        ConnectingWave {
+            Layout.fillWidth: true
+            Layout.topMargin: 4
+            running: root.connecting
         }
 
         RowLayout {

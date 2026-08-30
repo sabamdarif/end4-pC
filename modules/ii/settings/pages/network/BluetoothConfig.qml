@@ -112,55 +112,68 @@ ContentPage {
 
                 Repeater {
                     model: BluetoothStatus.unpairedDevices
-                    delegate: RippleButton {
+                    delegate: ColumnLayout {
                         id: availableRow
                         required property var modelData
                         Layout.fillWidth: true
-                        implicitHeight: 48
-                        buttonRadius: Appearance.rounding.small
-                        colBackground: "transparent"
-                        onClicked: {
-                            const device = availableRow.modelData
-                            if (!device) return
-                            if (device.pairing)
-                                device.cancelPair()
-                            else
-                                device.pair()
-                        }
-                        StyledToolTip {
-                            text: availableRow.modelData.pairing ? Translation.tr("Click to cancel pairing") : Translation.tr("Click to pair")
-                        }
-                        contentItem: RowLayout {
-                            spacing: 10
-                            MaterialSymbol {
-                                text: Icons.getBluetoothDeviceMaterialSymbol(availableRow.modelData.icon || "")
-                                iconSize: Appearance.font.pixelSize.huge
-                                color: Appearance.colors.colOnSecondaryContainer
+                        spacing: 0
+
+                        RippleButton {
+                            Layout.fillWidth: true
+                            implicitHeight: 48
+                            buttonRadius: Appearance.rounding.small
+                            colBackground: "transparent"
+                            onClicked: {
+                                const device = availableRow.modelData
+                                if (!device) return
+                                if (device.pairing)
+                                    device.cancelPair()
+                                else
+                                    device.pair()
                             }
-                            ColumnLayout {
-                                Layout.fillWidth: true
-                                spacing: 0
-                                StyledText {
-                                    Layout.fillWidth: true
-                                    text: page.deviceName(availableRow.modelData)
-                                    elide: Text.ElideRight
+                            StyledToolTip {
+                                text: availableRow.modelData.pairing ? Translation.tr("Click to cancel pairing") : Translation.tr("Click to pair")
+                            }
+                            contentItem: RowLayout {
+                                spacing: 10
+                                MaterialSymbol {
+                                    text: Icons.getBluetoothDeviceMaterialSymbol(availableRow.modelData.icon || "")
+                                    iconSize: Appearance.font.pixelSize.huge
                                     color: Appearance.colors.colOnSecondaryContainer
                                 }
-                                StyledText {
+                                ColumnLayout {
                                     Layout.fillWidth: true
-                                    font.pixelSize: Appearance.font.pixelSize.smaller
+                                    spacing: 0
+                                    StyledText {
+                                        Layout.fillWidth: true
+                                        text: page.deviceName(availableRow.modelData)
+                                        elide: Text.ElideRight
+                                        color: Appearance.colors.colOnSecondaryContainer
+                                    }
+                                    StyledText {
+                                        Layout.fillWidth: true
+                                        font.pixelSize: Appearance.font.pixelSize.smaller
+                                        color: Appearance.colors.colSubtext
+                                        elide: Text.ElideRight
+                                        text: availableRow.modelData.pairing
+                                            ? Translation.tr("Pairing…")
+                                            : availableRow.modelData.address
+                                    }
+                                }
+                                MaterialSymbol {
+                                    text: "add_link"
+                                    iconSize: Appearance.font.pixelSize.larger
                                     color: Appearance.colors.colSubtext
-                                    elide: Text.ElideRight
-                                    text: availableRow.modelData.pairing
-                                        ? Translation.tr("Pairing…")
-                                        : availableRow.modelData.address
                                 }
                             }
-                            MaterialSymbol {
-                                text: "add_link"
-                                iconSize: Appearance.font.pixelSize.larger
-                                color: Appearance.colors.colSubtext
-                            }
+                        }
+
+                        ConnectingWave {
+                            Layout.fillWidth: true
+                            Layout.leftMargin: 8
+                            Layout.rightMargin: 8
+                            Layout.bottomMargin: 4
+                            running: availableRow.modelData?.pairing ?? false
                         }
                     }
                 }
@@ -193,92 +206,106 @@ ContentPage {
 
                 Repeater {
                     model: page.savedDevices
-                    delegate: RowLayout {
+                    delegate: ColumnLayout {
                         id: savedRow
                         required property var modelData
+                        readonly property bool connecting: savedRow.modelData?.state === BluetoothDeviceState.Connecting
                         property bool confirmingForget: false
                         Layout.fillWidth: true
-                        spacing: 6
+                        spacing: 0
 
-                        RippleButton {
+                        RowLayout {
                             Layout.fillWidth: true
-                            implicitHeight: 48
-                            buttonRadius: Appearance.rounding.small
-                            colBackground: "transparent"
-                            onClicked: {
-                                const device = savedRow.modelData
-                                if (!device) return
-                                if (device.connected)
-                                    device.disconnect()
-                                else
-                                    device.connect()
-                            }
-                            StyledToolTip {
-                                text: savedRow.modelData.connected ? Translation.tr("Click to disconnect") : Translation.tr("Click to connect")
-                            }
-                            contentItem: RowLayout {
-                                spacing: 10
-                                MaterialSymbol {
-                                    text: Icons.getBluetoothDeviceMaterialSymbol(savedRow.modelData.icon || "")
-                                    iconSize: Appearance.font.pixelSize.huge
-                                    color: savedRow.modelData.connected ? Appearance.colors.colPrimary : Appearance.colors.colOnSecondaryContainer
+                            spacing: 6
+
+                            RippleButton {
+                                Layout.fillWidth: true
+                                implicitHeight: 48
+                                buttonRadius: Appearance.rounding.small
+                                colBackground: "transparent"
+                                onClicked: {
+                                    const device = savedRow.modelData
+                                    if (!device) return
+                                    if (device.connected)
+                                        device.disconnect()
+                                    else
+                                        device.connect()
                                 }
-                                ColumnLayout {
-                                    Layout.fillWidth: true
-                                    spacing: 0
-                                    StyledText {
-                                        Layout.fillWidth: true
-                                        text: page.deviceName(savedRow.modelData)
-                                        elide: Text.ElideRight
-                                        color: Appearance.colors.colOnSecondaryContainer
+                                StyledToolTip {
+                                    text: savedRow.modelData.connected ? Translation.tr("Click to disconnect") : Translation.tr("Click to connect")
+                                }
+                                contentItem: RowLayout {
+                                    spacing: 10
+                                    MaterialSymbol {
+                                        text: Icons.getBluetoothDeviceMaterialSymbol(savedRow.modelData.icon || "")
+                                        iconSize: Appearance.font.pixelSize.huge
+                                        color: savedRow.modelData.connected ? Appearance.colors.colPrimary : Appearance.colors.colOnSecondaryContainer
                                     }
-                                    StyledText {
+                                    ColumnLayout {
                                         Layout.fillWidth: true
-                                        font.pixelSize: Appearance.font.pixelSize.smaller
-                                        color: Appearance.colors.colSubtext
-                                        elide: Text.ElideRight
-                                        text: {
-                                            let parts = []
-                                            if (savedRow.modelData.state === BluetoothDeviceState.Connecting) parts.push(Translation.tr("Connecting…"))
-                                            else if (savedRow.modelData.state === BluetoothDeviceState.Disconnecting) parts.push(Translation.tr("Disconnecting…"))
-                                            else parts.push(savedRow.modelData.connected ? Translation.tr("Connected") : Translation.tr("Paired"))
-                                            if (BluetoothStatus.hasBattery(savedRow.modelData))
-                                                parts.push(Math.round(savedRow.modelData.battery * 100) + "%")
-                                            return parts.join(" • ")
+                                        spacing: 0
+                                        StyledText {
+                                            Layout.fillWidth: true
+                                            text: page.deviceName(savedRow.modelData)
+                                            elide: Text.ElideRight
+                                            color: Appearance.colors.colOnSecondaryContainer
+                                        }
+                                        StyledText {
+                                            Layout.fillWidth: true
+                                            font.pixelSize: Appearance.font.pixelSize.smaller
+                                            color: Appearance.colors.colSubtext
+                                            elide: Text.ElideRight
+                                            text: {
+                                                let parts = []
+                                                if (savedRow.connecting) parts.push(Translation.tr("Connecting…"))
+                                                else if (savedRow.modelData.state === BluetoothDeviceState.Disconnecting) parts.push(Translation.tr("Disconnecting…"))
+                                                else parts.push(savedRow.modelData.connected ? Translation.tr("Connected") : Translation.tr("Paired"))
+                                                if (BluetoothStatus.hasBattery(savedRow.modelData))
+                                                    parts.push(Math.round(savedRow.modelData.battery * 100) + "%")
+                                                return parts.join(" • ")
+                                            }
                                         }
                                     }
+                                    MaterialSymbol {
+                                        visible: savedRow.modelData.connected
+                                        text: "check_circle"
+                                        iconSize: Appearance.font.pixelSize.larger
+                                        color: Appearance.colors.colPrimary
+                                    }
                                 }
-                                MaterialSymbol {
-                                    visible: savedRow.modelData.connected
-                                    text: "check_circle"
-                                    iconSize: Appearance.font.pixelSize.larger
-                                    color: Appearance.colors.colPrimary
+                            }
+
+                            RippleButtonWithIcon {
+                                visible: !savedRow.confirmingForget
+                                materialIcon: "delete"
+                                mainText: ""
+                                onClicked: savedRow.confirmingForget = true
+                                StyledToolTip {
+                                    text: Translation.tr("Forget this device")
                                 }
+                            }
+                            DialogButton {
+                                visible: savedRow.confirmingForget
+                                buttonText: Translation.tr("Forget?")
+                                colText: Appearance.m3colors.m3error
+                                onClicked: {
+                                    savedRow.confirmingForget = false
+                                    savedRow.modelData?.forget()
+                                }
+                            }
+                            DialogButton {
+                                visible: savedRow.confirmingForget
+                                buttonText: Translation.tr("Cancel")
+                                onClicked: savedRow.confirmingForget = false
                             }
                         }
 
-                        RippleButtonWithIcon {
-                            visible: !savedRow.confirmingForget
-                            materialIcon: "delete"
-                            mainText: ""
-                            onClicked: savedRow.confirmingForget = true
-                            StyledToolTip {
-                                text: Translation.tr("Forget this device")
-                            }
-                        }
-                        DialogButton {
-                            visible: savedRow.confirmingForget
-                            buttonText: Translation.tr("Forget?")
-                            colText: Appearance.m3colors.m3error
-                            onClicked: {
-                                savedRow.confirmingForget = false
-                                savedRow.modelData?.forget()
-                            }
-                        }
-                        DialogButton {
-                            visible: savedRow.confirmingForget
-                            buttonText: Translation.tr("Cancel")
-                            onClicked: savedRow.confirmingForget = false
+                        ConnectingWave {
+                            Layout.fillWidth: true
+                            Layout.leftMargin: 8
+                            Layout.rightMargin: 8
+                            Layout.bottomMargin: 4
+                            running: savedRow.connecting
                         }
                     }
                 }

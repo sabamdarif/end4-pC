@@ -8,6 +8,8 @@ Canvas {
     property color color: Appearance?.colors.colPrimary ?? "#685496"
     property real lineWidth: 4
     property real fullLength: width
+    // Radians per second the wave travels; negative moves it rightward
+    property real phaseSpeed: 2.5
 
     onPaint: {
         var ctx = getContext("2d");
@@ -15,7 +17,7 @@ Canvas {
 
         var amplitude = root.lineWidth * root.amplitudeMultiplier;
         var frequency = root.frequency;
-        var phase = Date.now() / 400.0;
+        var phase = Date.now() / 1000.0 * root.phaseSpeed;
         var centerY = height / 2;
 
         ctx.strokeStyle = root.color;

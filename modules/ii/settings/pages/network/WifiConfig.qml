@@ -107,6 +107,8 @@ ContentPage {
                         id: wifiRow
                         required property var modelData
                         readonly property bool known: Network.savedWifiProfileFor(modelData.ssid) !== null
+                        readonly property bool connecting: Network.wifiConnectTarget === wifiRow.modelData
+                            && !wifiRow.modelData.active
                         Layout.fillWidth: true
                         spacing: 2
 
@@ -167,6 +169,13 @@ ContentPage {
                                     color: Appearance.colors.colSubtext
                                 }
                             }
+                        }
+
+                        ConnectingWave {
+                            Layout.fillWidth: true
+                            Layout.leftMargin: 8
+                            Layout.rightMargin: 8
+                            running: wifiRow.connecting
                         }
 
                         // PSK prompt (appears when connecting to a secured
