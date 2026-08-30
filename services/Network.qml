@@ -31,8 +31,7 @@ Singleton {
         return b.strength - a.strength;
     })
     property string wifiStatus: "disconnected"
-    // Saved wifi profiles as {name, uuid}. NetworkManager names a profile after
-    // the SSID it was created for, so a name match means the network is known.
+    // Saved wifi profiles as {name, uuid, timestamp}
     property list<var> savedWifiProfiles: []
 
     property string networkName: ""
@@ -76,8 +75,26 @@ Singleton {
         rescanProcess.running = true;
     }
 
+    // NetworkManager names a profile after the SSID it was created for and
+    // suffixes duplicates ("MyWifi 1"), so several profiles can belong to one
+    // network.
+    function profileNameMatchesSsid(name, ssid): bool {
+        if (name === ssid)
+            return true;
+        if (!name.startsWith(`${ssid} `))
+            return false;
+        return /^[0-9]+$/.test(name.slice(ssid.length + 1));
+    }
+
+    // Of those, take the one activated most recently: an older duplicate can
+    // describe the network as it no longer is (open while the AP now wants a
+    // password), and bringing that one up only fails with "network could not be
+    // found" once NetworkManager's 90s activation timeout runs out.
     function savedWifiProfileFor(ssid) {
-        return root.savedWifiProfiles.find(p => p.name === ssid) ?? null;
+        const candidates = root.savedWifiProfiles.filter(p => root.profileNameMatchesSsid(p.name, ssid));
+        if (candidates.length === 0)
+            return null;
+        return candidates.reduce((best, p) => p.timestamp > best.timestamp ? p : best);
     }
 
     // nmcli runs without a secret agent, so NetworkManager can never ask anyone
@@ -186,7 +203,7 @@ Singleton {
     Process {
         id: getSavedNetworks
         running: true
-        command: ["nmcli", "-t", "-f", "NAME,UUID,TYPE", "connection", "show"]
+        command: ["nmcli", "-t", "-f", "NAME,UUID,TYPE,TIMESTAMP", "connection", "show"]
         environment: ({
             LANG: "C",
             LC_ALL: "C"
@@ -203,7 +220,9 @@ Singleton {
                         continue;
                     profiles.push({
                         name: parts[0].replace(unescape, ":"),
-                        uuid: parts[1]
+                        uuid: parts[1],
+                        // Seconds since the epoch of the last successful activation, 0 if never
+                        timestamp: parseInt(parts[3]) || 0
                     });
                 }
                 root.savedWifiProfiles = profiles;
