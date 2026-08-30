@@ -144,8 +144,6 @@ Singleton {
             "dialog-warning": Config.options.sounds.batteryOverride,
             "suspend-error": Config.options.sounds.batteryOverride,
             "alarm-clock-elapsed": Config.options.sounds.pomodoroOverride,
-            "device-added": Config.options.sounds.bluetoothOverride,
-            "device-removed": Config.options.sounds.bluetoothOverride,
             "message-new-instant": Config.options.sounds.notificationOverride,
             "audio-volume-change": Config.options.sounds.volumeChangedOverride
         };

@@ -89,13 +89,6 @@ ContentPage {
                 label: Translation.tr("Pomodoro")
             }
             SoundOverrideRow {
-                eventName: "device-added"
-                configKey: "bluetoothOverride"
-                enabledKey: "bluetooth"
-                rowIcon: "bluetooth"
-                label: Translation.tr("Bluetooth")
-            }
-            SoundOverrideRow {
                 eventName: "message-new-instant"
                 configKey: "notificationOverride"
                 enabledKey: "notification"
