@@ -14,15 +14,11 @@ MouseArea {
     property bool snapEnabled: true
     readonly property bool dragging: drag.active
 
-    acceptedButtons: Qt.LeftButton | Qt.RightButton
+    // Right clicks stay unaccepted so they fall through to the surface below,
+    // which owns the context menu.
+    acceptedButtons: Qt.LeftButton
     drag.target: draggable ? dragProxy : undefined
     cursorShape: (draggable && containsPress) ? Qt.ClosedHandCursor : draggable ? Qt.OpenHandCursor : Qt.ArrowCursor
-
-    onClicked: (mouse) => {
-        if (mouse.button === Qt.RightButton) {
-            Config.options.background.widgetsLocked = !Config.options.background.widgetsLocked
-        }
-    }
 
     function center() {
         root.x = (root.parent.width - root.width) / 2

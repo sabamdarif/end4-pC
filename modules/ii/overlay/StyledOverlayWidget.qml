@@ -47,6 +47,8 @@ AbstractOverlayWidget {
         return (y < root.resizeMargin) ? -1 : (y > root.height - root.resizeMargin) ? 1 : 0
     }
     hoverEnabled: true
+    // Overlay widgets can be dragged and resized with either button
+    acceptedButtons: Qt.LeftButton | Qt.RightButton
     property bool resizable: true
     property bool resizing: false
     property int resizeXDirection: getXResizeDirection(mouseX)
