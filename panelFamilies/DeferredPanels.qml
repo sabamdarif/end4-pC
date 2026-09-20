@@ -5,6 +5,7 @@ import qs.modules.common
 import qs.modules.ii.clipboard
 import qs.modules.ii.desktopMenu
 import qs.modules.ii.dropover
+import qs.modules.ii.equalizer
 import qs.modules.ii.lock
 import qs.modules.ii.mediaControls
 import qs.modules.ii.notificationPopup
@@ -28,6 +29,7 @@ Scope {
     PanelLoader { component: ClipboardPanel {} }
     PanelLoader { component: DesktopMenu {} }
     PanelLoader { component: DropShelfPanel {} }
+    PanelLoader { component: EqualizerPopup {} }
     PanelLoader { component: Lock {} }
     PanelLoader { component: MediaControls {} }
     PanelLoader { component: NotificationPopup {} }

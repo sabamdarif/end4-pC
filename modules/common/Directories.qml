@@ -58,6 +58,8 @@ Singleton {
     property string userPresetsPath: FileUtils.trimFileProtocol(`${Directories.shellConfig}/presets`)
     property string presetsScriptPath: FileUtils.trimFileProtocol(`${Directories.scriptPath}/presets.sh`)
     property string generatedLockMaterialThemePath: FileUtils.trimFileProtocol(`${Directories.state}/user/generated/colors-lock.json`)
+    property string eqScriptPath: FileUtils.trimFileProtocol(`${Directories.scriptPath}/eq/equalizer.sh`)
+    property string eqStateDir: FileUtils.trimFileProtocol(`${Directories.state}/user/eq`)
     // Cleanup on init
     Component.onCompleted: {
         Quickshell.execDetached(["mkdir", "-p", `${userPresetsPath}`])
@@ -69,6 +71,7 @@ Singleton {
         Quickshell.execDetached(["bash", "-c", `rm -rf '${cliphistDecode}'; mkdir -p '${cliphistDecode}'`])
         Quickshell.execDetached(["mkdir", "-p", `${aiChats}`])
         Quickshell.execDetached(["mkdir", "-p", `${userActions}`])
+        Quickshell.execDetached(["mkdir", "-p", `${eqStateDir}`])
         Quickshell.execDetached(["mkdir", "-p", `${systemSounds}`])
         Quickshell.execDetached(["rm", "-rf", `${tempImages}`])
     }
