@@ -26,6 +26,7 @@ ContentPage {
         { id: "activeWindow",      name: Translation.tr("Active Window"),        icon: "subtitles" },
         { id: "powerButton",       name: Translation.tr("Power Button"),         icon: "power_settings_new" },
         { id: "updatesCount",      name: Translation.tr("Updates"),              icon: "deployed_code_update" },
+        { id: "privacyIndicator",  name: Translation.tr("Privacy"),              icon: "shield_lock" },
         { id: "docktoPanel",       name: Translation.tr("Dock to Panel"),        icon: "apps" },
         { id: "visualizer",        name: Translation.tr("Visualizer"),           icon: "graphic_eq" },
         { id: "xkbIndicator",   name: Translation.tr("Keyboard Layout"), icon: "keyboard" },

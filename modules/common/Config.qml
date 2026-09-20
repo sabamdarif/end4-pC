@@ -416,6 +416,11 @@ Singleton {
                         property bool showUnreadCount: false
                     }
                 }
+                property JsonObject privacy: JsonObject {
+                    property bool showCamera: true
+                    property bool showMicrophone: true
+                    property bool showScreenShare: true
+                }
                 property JsonObject tooltips: JsonObject {
                     property bool clickToShow: false
                 }

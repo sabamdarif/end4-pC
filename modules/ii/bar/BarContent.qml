@@ -22,8 +22,10 @@ Item {
     readonly property bool trayHasItems: SystemTray.items.values.length > 0
 
     function filterLayout(layout) {
-        if (trayHasItems) return layout
-        return layout.filter(name => name !== "sysTray")
+        let result = layout
+        if (!trayHasItems) result = result.filter(name => name !== "sysTray")
+        if (!Privacy.active) result = result.filter(name => name !== "privacyIndicator")
+        return result
     }
 
     readonly property var effectiveLeftLayout:   filterLayout(Config.options.bar.layouts.leftLayout)
@@ -58,6 +60,8 @@ Item {
                 return Appearance.colors.colSecondaryContainer;
             case "resources":
                 return Appearance.colors.colTertiaryContainer;
+            case "privacyIndicator":
+                return Appearance.colors.colErrorContainer;
             case "systemIcons":
                 return Appearance.colors.colPrimary; 
             default:

@@ -105,6 +105,7 @@ Singleton {
                 { key: "bar-media",        name: Translation.tr("Media"),             icon: "music_note",          component: root.page("bar/MediaConfig.qml") },
                 { key: "bar-tray",         name: Translation.tr("Tray"),              icon: "inbox",               component: root.page("bar/TrayConfig.qml") },
                 { key: "bar-util-buttons", name: Translation.tr("Utility Buttons"),   icon: "toggle_on",           component: root.page("bar/UtilButtonsConfig.qml") },
+                { key: "bar-privacy",      name: Translation.tr("Privacy"),           icon: "shield_lock",         component: root.page("bar/PrivacyConfig.qml") },
                 { key: "bar-divider",      name: Translation.tr("Divider & Tooltips"), icon: "horizontal_distribute", component: root.page("bar/DividerTooltipsConfig.qml") },
                 { key: "bar-screens",      name: Translation.tr("Screens"),           icon: "monitor",             component: root.page("bar/ScreensConfig.qml") },
             ]
