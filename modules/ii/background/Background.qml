@@ -159,6 +159,11 @@ Variants {
             animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
         }
 
+        // Decode wallpapers at screen resolution. Uploading a 5K+ image and its mipmaps to the GPU
+        // stalls the render thread, and the GUI thread with it while an animation is running.
+        readonly property size wallpaperSourceSize: Qt.size(Math.ceil(modelData.width * modelData.devicePixelRatio),
+            Math.ceil(modelData.height * modelData.devicePixelRatio))
+
         Component.onCompleted: {
             previousWallpaper.source = ""
             wallpaper.source = bgRoot.wallpaperSafetyTriggered ? "" : bgRoot.wallpaperPath
@@ -244,6 +249,8 @@ Variants {
                 id: previousWallpaper
                 anchors.fill: parent
                 fillMode: Image.PreserveAspectCrop
+                // Same size as `wallpaper` so this Image reuses its cached pixmap
+                sourceSize: bgRoot.wallpaperSourceSize
                 cache: true
                 smooth: true
                 asynchronous: true
@@ -255,6 +262,7 @@ Variants {
                 id: wallpaper
                 anchors.fill: parent
                 fillMode: Image.PreserveAspectCrop
+                sourceSize: bgRoot.wallpaperSourceSize
                 cache: true
                 smooth: true
                 asynchronous: true
