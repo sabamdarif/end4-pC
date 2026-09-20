@@ -72,11 +72,6 @@ Singleton {
                 }
             }
 
-            property JsonObject booru: JsonObject {
-                property bool allowNsfw: false
-                property string provider: "yandere"
-            }
-
             property JsonObject idle: JsonObject {
                 property bool inhibit: false
                 // Minutes the keep-awake toggle runs for, and the epoch second the running one

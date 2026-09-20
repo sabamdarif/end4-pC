@@ -12,12 +12,8 @@ Scope {
     id: screenCorners
     readonly property Toplevel activeWindow: ToplevelManager.activeToplevel
     property var actionForCorner: ({
-        [RoundCorner.CornerEnum.TopLeft]: () => {
-            if (Config.options.sidebar.leftEnabled) GlobalStates.sidebarLeftOpen = !GlobalStates.sidebarLeftOpen;
-        },
-        [RoundCorner.CornerEnum.BottomLeft]: () => {
-            if (Config.options.sidebar.leftEnabled) GlobalStates.sidebarLeftOpen = !GlobalStates.sidebarLeftOpen;
-        },
+        [RoundCorner.CornerEnum.TopLeft]: () => {},
+        [RoundCorner.CornerEnum.BottomLeft]: () => {},
         [RoundCorner.CornerEnum.TopRight]: () => GlobalStates.sidebarRightOpen = !GlobalStates.sidebarRightOpen,
         [RoundCorner.CornerEnum.BottomRight]: () => GlobalStates.sidebarRightOpen = !GlobalStates.sidebarRightOpen
     })
@@ -67,7 +63,6 @@ Scope {
                 active: {
                     if (!Config.options.sidebar.cornerOpen.enable) return false;
                     if (cornerPanelWindow.fullscreen) return false;
-                    if (cornerWidget.isLeft && !Config.options.sidebar.leftEnabled) return false;
                     return (Config.options.sidebar.cornerOpen.bottom == cornerWidget.isBottom);
                 }
                 anchors {
@@ -83,7 +78,6 @@ Scope {
                     implicitHeight: Config.options.sidebar.cornerOpen.cornerRegionHeight
                     hoverEnabled: true
                     onPositionChanged: {
-                        if (cornerWidget.isLeft && !Config.options.sidebar.leftEnabled) return;
                         if (!Config.options.sidebar.cornerOpen.clicklessCornerEnd) return;
                         const verticalOffset = Config.options.sidebar.cornerOpen.clicklessCornerVerticalOffset;
                         const correctX = (cornerWidget.isRight && mouseArea.mouseX >= mouseArea.width - 2) || (cornerWidget.isLeft && mouseArea.mouseX <= 2);
@@ -92,12 +86,10 @@ Scope {
                             screenCorners.actionForCorner[cornerPanelWindow.corner]();
                     }
                     onEntered: {
-                        if (cornerWidget.isLeft && !Config.options.sidebar.leftEnabled) return;
                         if (Config.options.sidebar.cornerOpen.clickless)
                             screenCorners.actionForCorner[cornerPanelWindow.corner]();
                     }
                     onPressed: {
-                        if (cornerWidget.isLeft && !Config.options.sidebar.leftEnabled) return;
                         screenCorners.actionForCorner[cornerPanelWindow.corner]();
                     }
                     onScrollDown: {

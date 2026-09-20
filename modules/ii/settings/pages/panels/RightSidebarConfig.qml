@@ -12,7 +12,7 @@ ContentPage {
     ContentSection {
         icon: "splitscreen_right"
         shape: MaterialShape.Shape.Slanted
-        title: Translation.tr("Right Sidebar")
+        title: Translation.tr("Notification Panel")
 
         GroupedList {
             ConfigSwitch {
@@ -44,7 +44,7 @@ ContentPage {
 
             ConfigSwitch {
                 buttonIcon: "memory"
-                text: Translation.tr('Keep right sidebar loaded')
+                text: Translation.tr('Keep notification panel loaded')
                 checked: Config.options.sidebar.keepRightSidebarLoaded
                 onCheckedChanged: {
                     Config.options.sidebar.keepRightSidebarLoaded = checked;

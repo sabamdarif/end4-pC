@@ -1,13 +1,5 @@
 #!/usr/bin/env bash
-CONFIG_FILE="$HOME/.config/illogical-impulse/config.json"
-JSON_PATH=".screenRecord.savePath"
-CUSTOM_PATH=$(jq -r "$JSON_PATH" "$CONFIG_FILE" 2>/dev/null)
-RECORDING_DIR=""
-if [[ -n "$CUSTOM_PATH" ]]; then
-    RECORDING_DIR="$CUSTOM_PATH"
-else
-    RECORDING_DIR="$HOME/Videos"
-fi
+RECORDING_DIR="$HOME/Videos"
 
 set_recording_state() {
     local state=$1

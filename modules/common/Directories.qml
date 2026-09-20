@@ -26,9 +26,6 @@ Singleton {
     property string favicons: FileUtils.trimFileProtocol(`${Directories.cache}/media/favicons`)
     property string coverArt: FileUtils.trimFileProtocol(`${Directories.cache}/media/coverart`)
     property string tempImages: "/tmp/quickshell/media/images"
-    property string booruPreviews: FileUtils.trimFileProtocol(`${Directories.cache}/media/boorus`)
-    property string booruDownloads: FileUtils.trimFileProtocol(Directories.pictures  + "/homework")
-    property string booruDownloadsNsfw: FileUtils.trimFileProtocol(Directories.pictures + "/homework/🌶️")
     property string latexOutput: FileUtils.trimFileProtocol(`${Directories.cache}/media/latex`)
     property string shellConfig: FileUtils.trimFileProtocol(`${Directories.config}/illogical-impulse`)
     property string shellConfigName: "config.json"
@@ -41,6 +38,7 @@ Singleton {
     property string generatedMaterialThemePath: FileUtils.trimFileProtocol(`${Directories.state}/user/generated/colors.json`)
     property string videoWallpaperThumbnails: FileUtils.trimFileProtocol(`${Directories.state}/user/generated/wallpaper/mpvpaper_thumbnails`)
     property string cliphistDecode: FileUtils.trimFileProtocol(`/tmp/quickshell/media/cliphist`)
+    property string screenshots: FileUtils.trimFileProtocol(`${Directories.pictures}/Screenshots`)
     property string screenshotTemp: "/tmp/quickshell/media/screenshot"
     property string wallpaperSwitchScriptPath: FileUtils.trimFileProtocol(`${Directories.scriptPath}/colors/switchwall.sh`)
     property string userActions: FileUtils.trimFileProtocol(`${Directories.shellConfig}/actions`)
@@ -61,7 +59,6 @@ Singleton {
         Quickshell.execDetached(["mkdir", "-p", `${shellConfig}`])
         Quickshell.execDetached(["mkdir", "-p", `${favicons}`])
         Quickshell.execDetached(["bash", "-c", `rm -rf '${coverArt}'; mkdir -p '${coverArt}'`])
-        Quickshell.execDetached(["bash", "-c", `rm -rf '${booruPreviews}'; mkdir -p '${booruPreviews}'`])
         Quickshell.execDetached(["bash", "-c", `rm -rf '${latexOutput}'; mkdir -p '${latexOutput}'`])
         Quickshell.execDetached(["bash", "-c", `rm -rf '${cliphistDecode}'; mkdir -p '${cliphistDecode}'`])
         Quickshell.execDetached(["mkdir", "-p", `${userActions}`])

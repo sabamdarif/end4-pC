@@ -18,7 +18,6 @@ import qs.modules.ii.regionSelector
 import qs.modules.ii.screenTranslator
 import qs.modules.ii.sessionScreen
 import qs.modules.ii.settings
-import qs.modules.ii.sidebarLeft
 import qs.modules.ii.sidebarRight
 import qs.modules.ii.wallpaperSelector
 
@@ -42,7 +41,6 @@ Scope {
     PanelLoader { component: ScreenTranslator {} }
     PanelLoader { component: SessionScreen {} }
     PanelLoader { component: Settings {} }
-    PanelLoader { extraCondition: Config.options.sidebar.leftEnabled; component: SidebarLeft {} }
     PanelLoader { component: SidebarRight {} }
     PanelLoader { component: WallpaperSelector {} }
 }

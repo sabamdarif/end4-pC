@@ -210,8 +210,7 @@ PanelWindow {
             root.action = RegionSelection.SnipAction.Edit;
         }
         
-        const screenshotDir = Config.options.screenSnip.savePath !== "" ? //
-            Config.options.screenSnip.savePath : "";
+        const screenshotDir = Directories.screenshots;
         var screenshotAction = root.getScreenshotAction();
         const command = ScreenshotAction.getCommand(
             root.regionX * root.monitorScale, //

@@ -621,28 +621,11 @@ Singleton {
             }
 
             property JsonObject sidebar: JsonObject {
-                property bool leftEnabled: true
                 property bool banner: false
                 property bool mediaPlayer: false
                 property bool calendar: true
                 property string bannerImage: ""
                 property bool keepRightSidebarLoaded: true
-                property JsonObject translator: JsonObject {
-                    property bool enable: false
-                    property int delay: 300 // Delay before sending request. Reduces (potential) rate limits and lag.
-                }
-                property JsonObject media: JsonObject {
-                    property bool enable: true
-                    property bool artColors: false
-                }
-                property JsonObject booru: JsonObject {
-                    property bool allowNsfw: false
-                    property string defaultProvider: "yandere"
-                    property int limit: 20
-                    property JsonObject zerochan: JsonObject {
-                        property string username: "[unset]"
-                    }
-                }
                 property JsonObject cornerOpen: JsonObject {
                     property bool enable: true
                     property bool bottom: false
@@ -681,14 +664,6 @@ Singleton {
             property JsonObject custom: JsonObject {
                 property string distroIcon: ""
                 property bool colorizeIcon: true
-            }
-
-            property JsonObject screenRecord: JsonObject {
-                property string savePath: Directories.videos.replace("file://","") // strip "file://"
-            }
-
-            property JsonObject screenSnip: JsonObject {
-                property string savePath: FileUtils.trimFileProtocol(`${Directories.pictures}/Screenshots`)
             }
 
             property JsonObject sounds: JsonObject {

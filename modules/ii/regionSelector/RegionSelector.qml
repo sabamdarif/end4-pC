@@ -34,8 +34,7 @@ Scope {
     }
 
     function captureCommand(area = false) {
-        const saveDir = StringUtils.shellSingleQuoteEscape(Config.options.screenSnip.savePath || Directories.screenshotTemp)
-        const keepFile = Config.options.screenSnip.savePath !== ""
+        const saveDir = StringUtils.shellSingleQuoteEscape(Directories.screenshots)
         const grimArgs = area ? `-g "$(slurp)"` : ""
         return `set -o pipefail && mkdir -p '${saveDir}' && filePath='${saveDir}/screenshot-'$(date '+%Y-%m-%d_%H.%M.%S').png && \
             grim -t png ${grimArgs} "$filePath" && \
@@ -43,8 +42,7 @@ Scope {
             elif command -v swappy >/dev/null 2>&1; then swappy -f "$filePath" -o "$filePath"; \
             else notify-send "Screenshot editor unavailable" "Install satty or swappy to annotate screenshots" -a "Screenshot" -i "dialog-warning"; fi && \
             wl-copy < "$filePath" && \
-            notify-send "Screenshot ${keepFile ? "Saved" : "Copied"}" "${keepFile ? "Saved to $filePath" : "Copied to clipboard"}" -a "Screenshot" -i "image-x-generic" \
-            ${keepFile ? "" : "&& rm -f \"$filePath\""}`
+            notify-send "Screenshot Saved" "Saved to $filePath" -a "Screenshot" -i "image-x-generic"`
     }
 
     function screenshot() {

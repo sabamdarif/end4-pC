@@ -40,7 +40,6 @@ Singleton {
             children: [
                 { key: "monitors",       name: Translation.tr("Monitors"),          icon: "monitor",       component: root.page("displays/NiriMonitorsConfig.qml") },
                 { key: "lock-screen",    name: Translation.tr("Lock Screen"),       icon: "lock",            component: root.page("displays/LockScreenConfig.qml") },
-                { key: "screen-corners", name: Translation.tr("Screen Corners"),    icon: "rounded_corner",  component: root.page("displays/ScreenCornersConfig.qml") },
                 { key: "osd",            name: Translation.tr("On-screen Display"), icon: "brightness_medium", component: root.page("displays/OsdConfig.qml") },
             ]
         },
@@ -59,7 +58,6 @@ Singleton {
                 { key: "default-apps", name: Translation.tr("Default Applications"),  icon: "apps",          component: root.page("apps/DefaultAppsConfig.qml") },
                 { key: "autostart",    name: Translation.tr("Autostart"),             icon: "rocket_launch", component: root.page("apps/AutostartConfig.qml") },
                 { key: "clipboard",    name: Translation.tr("Clipboard"),             icon: "content_paste", component: root.page("apps/ClipboardConfig.qml") },
-                { key: "app-ids",      name: Translation.tr("App ID Substitutions"),  icon: "swap_horiz",    component: root.page("apps/AppIdsConfig.qml") },
                 { key: "all-apps",     name: Translation.tr("All Apps"),               icon: "app_badging",   component: root.page("apps/AllAppsConfig.qml") },
             ]
         },
@@ -106,8 +104,6 @@ Singleton {
                 { key: "bar-tray",         name: Translation.tr("Tray"),              icon: "inbox",               component: root.page("bar/TrayConfig.qml") },
                 { key: "bar-util-buttons", name: Translation.tr("Utility Buttons"),   icon: "toggle_on",           component: root.page("bar/UtilButtonsConfig.qml") },
                 { key: "bar-privacy",      name: Translation.tr("Privacy"),           icon: "shield_lock",         component: root.page("bar/PrivacyConfig.qml") },
-                { key: "bar-divider",      name: Translation.tr("Divider & Tooltips"), icon: "horizontal_distribute", component: root.page("bar/DividerTooltipsConfig.qml") },
-                { key: "bar-screens",      name: Translation.tr("Screens"),           icon: "monitor",             component: root.page("bar/ScreensConfig.qml") },
             ]
         },
         {
@@ -123,9 +119,8 @@ Singleton {
         {
             key: "panels", name: Translation.tr("Panels"), icon: "dock_to_bottom",
             children: [
-                { key: "dock",          name: Translation.tr("Dock"),          icon: "call_to_action",   component: root.page("panels/DockConfig.qml") },
-                { key: "left-sidebar",  name: Translation.tr("Left Sidebar"),  icon: "splitscreen_left", component: root.page("panels/LeftSidebarConfig.qml") },
-                { key: "right-sidebar", name: Translation.tr("Right Sidebar"), icon: "splitscreen_right", component: root.page("panels/RightSidebarConfig.qml") },
+                { key: "dock",          name: Translation.tr("Dock"),                icon: "call_to_action",    component: root.page("panels/DockConfig.qml") },
+                { key: "right-sidebar", name: Translation.tr("Notification Panel"),  icon: "splitscreen_right", component: root.page("panels/RightSidebarConfig.qml") },
             ]
         },
         {
@@ -137,10 +132,7 @@ Singleton {
                 { key: "updates",           name: Translation.tr("Updates"),            icon: "deployed_code_update", component: root.page("system/UpdatesConfig.qml") },
                 { key: "weather",           name: Translation.tr("Weather"),            icon: "flare",           component: root.page("system/WeatherConfig.qml") },
                 { key: "search",            name: Translation.tr("Search"),             icon: "search",          component: root.page("system/SearchConfig.qml") },
-                { key: "save-paths",        name: Translation.tr("Save Paths"),         icon: "folder",          component: root.page("system/SavePathsConfig.qml") },
-                { key: "network-requests",  name: Translation.tr("Network Requests"),   icon: "cloud",           component: root.page("system/NetworkRequestsConfig.qml") },
                 { key: "music-recognition", name: Translation.tr("Music Recognition"),  icon: "music_cast",      component: root.page("system/MusicRecognitionConfig.qml") },
-                { key: "content-filter",    name: Translation.tr("Content Filter"),     icon: "shield_person",   component: root.page("system/ContentFilterConfig.qml") },
             ]
         },
         {
