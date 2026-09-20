@@ -2,6 +2,7 @@ pragma Singleton
 
 import qs.modules.common
 import qs.modules.common.functions
+import qs.services
 import QtQuick
 import Quickshell
 import Quickshell.Io
@@ -25,6 +26,8 @@ Singleton {
 
     signal fetched()
     signal fetchError(string message)
+
+    readonly property string userAgent: "Mozilla/5.0 (X11; Linux x86_64; rv:130.0) Gecko/20100101 Firefox/130.0"
 
     // ─── APIs ───
     readonly property string unsplashClientId: KeyringStorage.keyringData?.apiKeys?.unsplash  ?? ""
@@ -120,7 +123,7 @@ Singleton {
         const url = `https://wallhaven.cc/api/v1/search?sorting=random&purity=${purity}&categories=100&ratios=16x9&atleast=${res}&page=${root.page}${seedParam}${q}${apikey}`;
 
         fetchProc.provider = "wallhaven";
-        fetchProc.command = ["curl", "-s", url];
+        fetchProc.command = ["curl", "-s", "-A", root.userAgent, "-H", "Accept: application/json", url];
         fetchProc.running = true;
     }
 
@@ -145,7 +148,17 @@ Singleton {
         fetchProc.running  = true;
     }
 
+    // A challenge/error page (Cloudflare 503, 5xx, rate-limit) arrives as HTML, so
+    // JSON.parse would throw a cryptic SyntaxError. Detect it and report plainly.
+    function _looksLikeHtml(body) {
+        return body.trimStart().startsWith("<");
+    }
+
     function _parseWallhaven(jsonStr) {
+        if (root._looksLikeHtml(jsonStr)) {
+            root.fetchError(Translation.tr("Wallhaven is temporarily unavailable (server busy or blocked). Try again shortly, or add an API key in settings."));
+            return;
+        }
         try {
             const data = JSON.parse(jsonStr);
             if (data.meta?.seed && root.seed.length === 0) {
