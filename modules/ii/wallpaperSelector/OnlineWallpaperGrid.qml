@@ -17,6 +17,7 @@ Item {
     property int columns: Config.options.wallpaperSelector.columns || 4
     property real previewCellAspectRatio: 4 / 3
     property var hoveredItem: null
+    property string lastError: ""
 
     signal wallpaperSelected(string path)
     signal updateThumbnailsRequested()
@@ -81,6 +82,7 @@ Item {
     Connections {
         target: OnlineWallpapers
         function onFetched() {
+            root.lastError = ""
             if (!OnlineWallpapers.appending) {
                 wallpaperModel.clear()
                 root.hoveredItem = null
@@ -92,6 +94,7 @@ Item {
         }
         function onFetchError(message) {
             console.log("[OnlineWallpaperGrid] Error:", message)
+            root.lastError = message
         }
     }
 
@@ -336,8 +339,12 @@ Item {
 
             StyledText {
                 Layout.alignment: Qt.AlignHCenter
+                Layout.maximumWidth: 320
                 horizontalAlignment: Text.AlignHCenter
-                text: Translation.tr("No results — try fetching again")
+                wrapMode: Text.WordWrap
+                text: root.lastError.length > 0
+                    ? root.lastError
+                    : Translation.tr("No results — try fetching again")
                 color: Appearance.colors.colSubtext
             }
 
