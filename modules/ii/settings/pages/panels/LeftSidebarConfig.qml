@@ -78,44 +78,6 @@ ContentPage {
 
                 Rectangle {
                     Layout.fillWidth: true
-                    implicitHeight: aiCol.implicitHeight + 24
-                    radius: Appearance.rounding.normal
-                    color: Appearance.colors.colLayer1
-                    border.width: 1
-                    border.color: "transparent"
-
-                    ColumnLayout {
-                        id: aiCol
-                        anchors { fill: parent; margins: 12 }
-                        spacing: 8
-
-                        MaterialSymbol {
-                            text: "smart_toy"
-                            iconSize: Appearance.font.pixelSize.huge
-                            color: Appearance.colors.colPrimary
-                        }
-                        StyledText {
-                            text: Translation.tr("AI")
-                            font.pixelSize: Appearance.font.pixelSize.normal
-                            font.weight: Font.Medium
-                            color: Appearance.colors.colOnLayer1
-                        }
-                        ConfigSelectionArray {
-                            Layout.fillWidth: false
-                            Layout.alignment: Qt.AlignRight
-                            currentValue: Config.options.policies.ai
-                            onSelected: newValue => { Config.options.policies.ai = newValue }
-                            options: [
-                                { displayName: Translation.tr("No"), icon: "close", value: 0 },
-                                { displayName: Translation.tr("Yes"), icon: "check", value: 1 },
-                                { displayName: Translation.tr("Local"), icon: "sync_saved_locally", value: 2 }
-                            ]
-                        }
-                    }
-                }
-
-                Rectangle {
-                    Layout.fillWidth: true
                     implicitHeight: weebCol.implicitHeight + 24
                     radius: Appearance.rounding.normal
                     color: Appearance.colors.colLayer1

@@ -265,16 +265,7 @@ ContentPage {
         ContentSubsection {
             visible: settingsClock.cookiePresent
             title: Translation.tr("Cookie clock settings")
-            GroupedList {   
-                ConfigSwitch {  
-                    buttonIcon: "wand_stars"
-                    text: Translation.tr("Auto styling with Gemini")
-                    checked: Config.options.background.widgets.clock.cookie.aiStyling
-                    onCheckedChanged: {
-                        Config.options.background.widgets.clock.cookie.aiStyling = checked;
-                    }
-                }
-
+            GroupedList {
                 ConfigSwitch {
                     buttonIcon: "airwave"
                     text: Translation.tr("Use old sine wave cookie implementation")

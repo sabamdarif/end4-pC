@@ -7,7 +7,6 @@ A personal fork of [pctrade/end4-pC](https://github.com/pctrade/end4-pC), itself
 - **niri only.** There is no Hyprland support and no compositor abstraction layer. Talk to the compositor through `services/NiriData.qml`, `services/NiriConfig.qml` and `niri msg`; never add `hyprctl`, `Quickshell.Hyprland` or a second compositor branch.
 - **Preserve the visual language.** Reuse existing Material 3 Expressive components, `Appearance` values, symbols, and responsive patterns.
 - **Translate user-visible text.** Route it through `Translation.tr()`.
-- **Keep duplicated defaults synchronized.** `modules/common/Config.qml` and `defaults/ai/prompts/ii-Default.md` contain the default AI prompt and must remain byte-for-byte equivalent.
 - **Register top-level panels.** Import and register them in `panelFamilies/IllogicalImpulseFamily.qml`.
 - **Never hardcode settings page indexes.** Use stable keys or names.
 - **Keep this file accurate and below 1000 lines.** Update it when architecture or workflow changes.

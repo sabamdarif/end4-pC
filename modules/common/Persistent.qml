@@ -61,11 +61,6 @@ Singleton {
 
             property string compositorSignature: ""
 
-            property JsonObject ai: JsonObject {
-                property string model: "gemini-2.5-flash"
-                property real temperature: 0.5
-            }
-
             property JsonObject cheatsheet: JsonObject {
                 property int tabIndex: 0
             }

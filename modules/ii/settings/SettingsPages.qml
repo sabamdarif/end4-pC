@@ -136,7 +136,6 @@ Singleton {
                 { key: "battery",           name: Translation.tr("Battery"),            icon: "battery_android_frame_full", component: root.page("system/BatteryConfig.qml") },
                 { key: "updates",           name: Translation.tr("Updates"),            icon: "deployed_code_update", component: root.page("system/UpdatesConfig.qml") },
                 { key: "weather",           name: Translation.tr("Weather"),            icon: "flare",           component: root.page("system/WeatherConfig.qml") },
-                { key: "ai",                name: Translation.tr("AI"),                 icon: "neurology",       component: root.page("system/AiConfig.qml") },
                 { key: "search",            name: Translation.tr("Search"),             icon: "search",          component: root.page("system/SearchConfig.qml") },
                 { key: "save-paths",        name: Translation.tr("Save Paths"),         icon: "folder",          component: root.page("system/SavePathsConfig.qml") },
                 { key: "network-requests",  name: Translation.tr("Network Requests"),   icon: "cloud",           component: root.page("system/NetworkRequestsConfig.qml") },
