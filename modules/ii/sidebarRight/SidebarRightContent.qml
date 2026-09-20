@@ -25,6 +25,9 @@ Item {
     id: root
     property int sidebarWidth: Appearance.sizes.sidebarWidth
     property int sidebarPadding: 10
+
+    Component.onCompleted: DateTime.uptimeSubscribers++
+    Component.onDestruction: DateTime.uptimeSubscribers--
     readonly property real compositorRounding: NiriConfig.options.decoration.rounding
     property string settingsQmlPath: Quickshell.shellPath("settings.qml")
     property bool showAudioOutputDialog: false

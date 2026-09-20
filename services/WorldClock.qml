@@ -8,6 +8,10 @@ import Quickshell.Io
 Singleton {
     id: root
 
+    // World clock widgets subscribe here; the 1s tick and offset refresh run only while shown.
+    property int subscribers: 0
+    onSubscribersChanged: if (subscribers > 0) root.refreshOffsets()
+
     // just fb fixme later
     readonly property var fallbackTimezones: [
         // O
@@ -90,8 +94,7 @@ Singleton {
         Config.options.background.widgets.worldClock.timezones = updated
     }
 
-    onTimezonesChanged: root.refreshOffsets()
-    Component.onCompleted: root.refreshOffsets()
+    onTimezonesChanged: if (root.subscribers > 0) root.refreshOffsets()
 
     readonly property string ampmToken: {
         const fmt = Config.options?.time.format ?? "HH:mm"
@@ -104,7 +107,7 @@ Singleton {
     property var now: new Date()
     Timer {
         interval: 1000
-        running: true
+        running: root.subscribers > 0
         repeat: true
         onTriggered: root.now = new Date()
     }
@@ -118,7 +121,7 @@ Singleton {
 
     Timer {
         interval: 5 * 60 * 1000
-        running: true
+        running: root.subscribers > 0
         repeat: true
         onTriggered: root.refreshOffsets()
     }

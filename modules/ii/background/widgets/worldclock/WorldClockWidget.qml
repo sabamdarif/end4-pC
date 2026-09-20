@@ -12,6 +12,9 @@ AbstractBackgroundWidget {
     configEntryName: "worldClock"
     hoverEnabled: true
 
+    Component.onCompleted: WorldClock.subscribers++
+    Component.onDestruction: WorldClock.subscribers--
+
     property string sizeMode: root.configEntry.sizeMode ?? "2x2"
 
     property real widgetWidth:  sizeMode === "2x2" ? 276 : 420

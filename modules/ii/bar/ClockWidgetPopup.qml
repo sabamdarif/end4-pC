@@ -8,6 +8,9 @@ StyledPopup {
     id: root
     property var today: new Date()
 
+    Component.onCompleted: DateTime.uptimeSubscribers++
+    Component.onDestruction: DateTime.uptimeSubscribers--
+
     function usageColor(value) {
         if (value > 0.9) return Appearance.colors.colError
         if (value > 0.6) return Appearance.m3colors.m3tertiary

@@ -13,6 +13,9 @@ AbstractBackgroundWidget {
     configEntryName: "resources"
     hoverEnabled: true
 
+    Component.onCompleted: ResourceUsage.subscribers++
+    Component.onDestruction: ResourceUsage.subscribers--
+
     property real widgetWidth: 420
     property real cardSpacing: 12
     property real cardHeight: 120

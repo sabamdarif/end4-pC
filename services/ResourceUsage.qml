@@ -11,6 +11,8 @@ import Quickshell.Io
  */
 Singleton {
     id: root
+    // Widgets displaying resource usage subscribe here; polling runs only while something is shown.
+    property int subscribers: 0
     property real memoryTotal: 1
     property real memoryFree: 0
     property real memoryUsed: memoryTotal - memoryFree
@@ -67,7 +69,7 @@ Singleton {
 
     Timer {
         interval: Config?.options.resources.updateInterval ?? 3000
-        running: true
+        running: root.subscribers > 0
         repeat: true
         onTriggered: {
             tempProc.running = false
@@ -106,7 +108,7 @@ Singleton {
 
     Timer {
         interval: 1
-        running: true
+        running: root.subscribers > 0
         repeat: true
         onTriggered: {
             fileMeminfo.reload()

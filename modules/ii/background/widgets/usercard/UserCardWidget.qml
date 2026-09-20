@@ -13,6 +13,10 @@ import qs.modules.ii.background.widgets
 AbstractBackgroundWidget {
     id: root
     configEntryName: "userCard"
+
+    Component.onCompleted: DateTime.uptimeSubscribers++
+    Component.onDestruction: DateTime.uptimeSubscribers--
+
     implicitWidth: 276
     implicitHeight: 252
 

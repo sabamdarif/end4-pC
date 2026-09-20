@@ -38,14 +38,6 @@ Singleton {
         updateState(null);
     }
 
-    // Periodic check to ensure state stays in sync
-    Timer {
-        interval: 1000
-        repeat: true
-        running: true
-        onTriggered: root.updateState(null)
-    }
-
     Process {
         id: checkProc
         property var pendingCallback: null

@@ -42,9 +42,11 @@ Item {
 
     Component.onCompleted: {
         Config.readWriteDelay = 0
+        DateTime.uptimeSubscribers++
         const group = SettingsPages.groupOf(root.currentLeaf)
         if (group !== "") root.setGroupExpanded(group, true)
     }
+    Component.onDestruction: DateTime.uptimeSubscribers--
 
     onCurrentLeafChanged: {
         if (root.currentLeaf !== "about") return

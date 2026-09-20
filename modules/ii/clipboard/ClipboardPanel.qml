@@ -46,8 +46,6 @@ Scope {
                     GlobalFocusGrab.dismiss();
                     return;
                 }
-                Cliphist.refresh();
-                content.reset();
                 GlobalFocusGrab.addDismissable(panelWindow);
             }
         }
@@ -59,12 +57,19 @@ Scope {
             }
         }
 
-        ClipboardContent {
-            id: content
+        // Content (including decoded history thumbnails) is destroyed on close to free memory.
+        Loader {
+            id: contentLoader
             anchors.centerIn: parent
-            visible: GlobalStates.clipboardOpen
-            width: Appearance.sizes.clipboardPanelWidth
-            height: Appearance.sizes.clipboardPanelHeight
+            active: GlobalStates.clipboardOpen
+            sourceComponent: ClipboardContent {
+                width: Appearance.sizes.clipboardPanelWidth
+                height: Appearance.sizes.clipboardPanelHeight
+                Component.onCompleted: {
+                    Cliphist.refresh();
+                    reset();
+                }
+            }
         }
     }
 

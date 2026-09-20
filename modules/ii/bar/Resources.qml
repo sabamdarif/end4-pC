@@ -11,6 +11,9 @@ BarWidgetSwitcherArea {
 
     hoverEnabled: !Config.options.bar.tooltips.clickToShow
 
+    Component.onCompleted: ResourceUsage.subscribers++
+    Component.onDestruction: ResourceUsage.subscribers--
+
     rowDefault: Component {
         RowLayout {
             spacing: 0

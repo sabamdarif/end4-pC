@@ -10,6 +10,7 @@ import Quickshell.Io
  * A nice wrapper for date and time strings.
  */
 Singleton {
+    id: root
     property var clock: SystemClock {
         id: clock
         precision: {
@@ -30,10 +31,12 @@ Singleton {
     readonly property string digitM0: minuteStr.charAt(0)
     readonly property string digitM1: minuteStr.charAt(1)
     property string uptime: "0h, 0m"
+    // Widgets showing uptime subscribe here; the /proc/uptime poll runs only while one is shown.
+    property int uptimeSubscribers: 0
 
     Timer {
         interval: 10
-        running: true
+        running: root.uptimeSubscribers > 0
         repeat: true
         onTriggered: {
             fileUptime.reload();
