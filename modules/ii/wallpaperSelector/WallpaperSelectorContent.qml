@@ -17,6 +17,7 @@ MouseArea {
     property bool useDarkMode: Appearance.m3colors.darkmode
     property string source: "local"
     property string selectedResolution: "1080p"
+    property string selectedColorGroup: ""
     property bool filterFieldFocused: false
     // Toolbar fields live inside Loaders, so their ids are out of scope here.
     readonly property Item searchField: root.source === "local"
@@ -161,8 +162,10 @@ MouseArea {
                 anchors.fill: parent
                 visible: Config.options.wallpaperSelector.showBlurBackground
                 fillMode: Image.PreserveAspectCrop
-                source: Config.options.background.wallpaperPath
-                cache: false
+                source: Config.options.wallpaperSelector.showBlurBackground ? Config.options.background.wallpaperPath : ""
+                // Only shown under a radius 48 blur, so a small decode looks the same
+                // and stays small enough for the pixmap cache to keep it between openings
+                sourceSize: Qt.size(480, 480)
                 layer.enabled: true
                 layer.effect: OpacityMask {
                     maskSource: Rectangle {
@@ -296,6 +299,7 @@ MouseArea {
                                     model: ["1080p", "2K", "4K"]
                                     delegate: RippleButton {
                                         required property string modelData
+                                        visible: root.source !== "naive"
                                         implicitHeight: 38
                                         buttonRadius: height / 2
                                         toggled: root.selectedResolution === modelData
@@ -310,6 +314,23 @@ MouseArea {
                                                 ? Appearance.colors.colOnSecondaryContainer
                                                 : Appearance.colors.colOnLayer2
                                         }
+                                    }
+                                }
+                                Loader {
+                                    active: root.source === "naive"
+                                    visible: active
+                                    sourceComponent: CustomColorSelectionArray {
+                                        currentValue: root.selectedColorGroup
+                                        options: [
+                                            { value: "",       displayName: Translation.tr("All colors"), color: "transparent", rainbow: true },
+                                            { value: "red",    displayName: Translation.tr("Red"),        color: "#E0483E" },
+                                            { value: "orange", displayName: Translation.tr("Orange"),     color: "#E08A3E" },
+                                            { value: "yellow", displayName: Translation.tr("Yellow"),     color: "#E0C93E" },
+                                            { value: "green",  displayName: Translation.tr("Green"),      color: "#6CBF5C" },
+                                            { value: "blue",   displayName: Translation.tr("Blue"),       color: "#4C7FE0" },
+                                            { value: "purple", displayName: Translation.tr("Purple"),     color: "#8A5CE0" },
+                                        ]
+                                        onSelected: newValue => root.selectedColorGroup = newValue
                                     }
                                 }
                                 ToolbarTextField {
@@ -350,6 +371,7 @@ MouseArea {
                             model: [
                                 { value: "local",     displayName: Translation.tr("Local") },
                                 { value: "wallhaven", displayName: Translation.tr("Wallhaven") },
+                                { value: "naive",     displayName: Translation.tr("NA-ive") },
                                 { value: "unsplash",  displayName: Translation.tr("Unsplash") },
                                 { value: "pexels",    displayName: Translation.tr("Pexels") },
                             ]
@@ -404,6 +426,7 @@ MouseArea {
                         OnlineWallpaperGrid {
                             provider: root.source
                             resolution: root.selectedResolution
+                            colorGroup: root.selectedColorGroup
                             onWallpaperSelected: path => root.selectWallpaperPath(path)
                             onUpdateThumbnailsRequested: root.updateThumbnails()
                         }

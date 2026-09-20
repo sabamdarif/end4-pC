@@ -13,6 +13,7 @@ Item {
 
     property string provider: "wallhaven"
     property string resolution: "1080p"
+    property string colorGroup: ""
     property int columns: Config.options.wallpaperSelector.columns || 4
     property real previewCellAspectRatio: 4 / 3
     property var hoveredItem: null
@@ -32,11 +33,13 @@ Item {
 
     onProviderChanged:   { root.hoveredItem = null; _syncAndFetch() }
     onResolutionChanged: _syncAndFetch()
+    onColorGroupChanged: { if (root.provider === "naive") _syncAndFetch() }
 
     function _syncAndFetch() {
         if (root.missingKey) return
         OnlineWallpapers.provider   = root.provider
         OnlineWallpapers.resolution = root.resolution
+        OnlineWallpapers.colorGroup = root.colorGroup
         OnlineWallpapers.fetch()
     }
 
