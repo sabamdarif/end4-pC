@@ -542,6 +542,11 @@ Singleton {
 
             property JsonObject osd: JsonObject {
                 property int timeout: 1000
+                property bool enableVolume: true
+                property bool enableBrightness: true
+                property bool enableCapsLock: true
+                property bool enableNumLock: true
+                property bool enableMicMute: true
             }
 
             property JsonObject osk: JsonObject {

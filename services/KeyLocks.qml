@@ -1,74 +1,56 @@
 pragma Singleton
 pragma ComponentBehavior: Bound
 
+import qs.modules.common
+import qs.modules.common.functions
 import QtQuick
 import Quickshell
 import Quickshell.Io
 
 /**
- * Service for tracking and triggering Caps Lock and Num Lock states and OSD notifications.
+ * Tracks Caps Lock and Num Lock state by passively watching keyboard LED
+ * events from /dev/input (scripts/keylocks/watch-led.py). We cannot bind the
+ * lock keys in niri, because niri consumes any bound key and the lock would
+ * never toggle; the watcher observes the real LED state without stealing keys.
  */
 Singleton {
     id: root
 
+    readonly property string watcherPath: FileUtils.trimFileProtocol(`${Directories.scriptPath}/keylocks/watch-led.py`)
+
     property bool capsLock: false
     property bool numLock: false
+    // False until the startup snapshot has been applied, so we do not flash an
+    // OSD on shell launch.
+    property bool ready: false
 
     signal showCapsLockOsd(bool state)
     signal showNumLockOsd(bool state)
 
-    function updateState(callback) {
-        checkProc.pendingCallback = callback || null;
-        checkProc.running = true;
-    }
-
-    function triggerCapsLock() {
-        updateState(function() {
-            root.showCapsLockOsd(root.capsLock);
-        });
-    }
-
-    function triggerNumLock() {
-        updateState(function() {
-            root.showNumLockOsd(root.numLock);
-        });
-    }
-
-    Component.onCompleted: {
-        updateState(null);
-    }
-
     Process {
-        id: checkProc
-        property var pendingCallback: null
-        command: ["sh", "-c", "cat /sys/class/leds/*::capslock/brightness 2>/dev/null | head -n1; cat /sys/class/leds/*::numlock/brightness 2>/dev/null | head -n1"]
-        stdout: StdioCollector {
-            id: collector
-            onStreamFinished: {
-                const lines = collector.text.trim().split("\n");
-                if (lines.length >= 1 && lines[0] !== "") {
-                    root.capsLock = parseInt(lines[0]) > 0;
+        id: watcher
+        running: true
+        command: ["python3", root.watcherPath]
+
+        stdout: SplitParser {
+            onRead: line => {
+                const text = line.trim();
+                if (text === "") return;
+                if (text === "ready") {
+                    root.ready = true;
+                    return;
                 }
-                if (lines.length >= 2 && lines[1] !== "") {
-                    root.numLock = parseInt(lines[1]) > 0;
-                }
-                if (checkProc.pendingCallback) {
-                    checkProc.pendingCallback();
-                    checkProc.pendingCallback = null;
+                const parts = text.split(" ");
+                if (parts.length < 2) return;
+                const state = parseInt(parts[1]) > 0;
+                if (parts[0] === "caps") {
+                    root.capsLock = state;
+                    if (root.ready) root.showCapsLockOsd(state);
+                } else if (parts[0] === "num") {
+                    root.numLock = state;
+                    if (root.ready) root.showNumLockOsd(state);
                 }
             }
-        }
-    }
-
-    IpcHandler {
-        target: "keylocks"
-
-        function capsLock() {
-            root.triggerCapsLock();
-        }
-
-        function numLock() {
-            root.triggerNumLock();
         }
     }
 }

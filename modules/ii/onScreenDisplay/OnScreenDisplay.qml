@@ -35,6 +35,10 @@ Scope {
         {
             id: "numlock",
             sourceUrl: "indicators/NumLockIndicator.qml"
+        },
+        {
+            id: "micmute",
+            sourceUrl: "indicators/MicMuteIndicator.qml"
         }
     ]
 
@@ -57,6 +61,8 @@ Scope {
     Connections {
         target: Brightness
         function onBrightnessChanged() {
+            if (!Config.options.osd.enableBrightness)
+                return;
             root.protectionMessage = "";
             root.currentIndicator = "brightness";
             root.triggerOsd();
@@ -76,15 +82,27 @@ Scope {
         // Listen to volume changes
         target: Audio.sink?.audio ?? null
         function onVolumeChanged() {
-            if (!Audio.ready)
+            if (!Audio.ready || !Config.options.osd.enableVolume)
                 return;
             root.currentIndicator = "volume";
             root.triggerOsd();
         }
         function onMutedChanged() {
-            if (!Audio.ready)
+            if (!Audio.ready || !Config.options.osd.enableVolume)
                 return;
             root.currentIndicator = "volume";
+            root.triggerOsd();
+        }
+    }
+
+    Connections {
+        // Listen to microphone mute changes
+        target: Audio.source?.audio ?? null
+        function onMutedChanged() {
+            if (!Audio.ready || !Config.options.osd.enableMicMute)
+                return;
+            root.protectionMessage = "";
+            root.currentIndicator = "micmute";
             root.triggerOsd();
         }
     }
@@ -102,21 +120,15 @@ Scope {
     Connections {
         target: KeyLocks
         function onShowCapsLockOsd() {
+            if (!Config.options.osd.enableCapsLock)
+                return;
             root.protectionMessage = "";
             root.currentIndicator = "capslock";
             root.triggerOsd();
         }
         function onShowNumLockOsd() {
-            root.protectionMessage = "";
-            root.currentIndicator = "numlock";
-            root.triggerOsd();
-        }
-        function onCapsLockChanged() {
-            root.protectionMessage = "";
-            root.currentIndicator = "capslock";
-            root.triggerOsd();
-        }
-        function onNumLockChanged() {
+            if (!Config.options.osd.enableNumLock)
+                return;
             root.protectionMessage = "";
             root.currentIndicator = "numlock";
             root.triggerOsd();
@@ -251,11 +263,15 @@ Scope {
 
         function increment() {
             Audio.incrementVolume();
+            root.protectionMessage = "";
+            root.currentIndicator = "volume";
             root.triggerOsd();
         }
 
         function decrement() {
             Audio.decrementVolume();
+            root.protectionMessage = "";
+            root.currentIndicator = "volume";
             root.triggerOsd();
         }
     }
