@@ -26,10 +26,6 @@ Scope {
 
         property string pendingSearchText: ""
 
-        mask: Region {
-            item: contentLoader.item
-        }
-
         anchors {
             top: true
             bottom: true
@@ -37,11 +33,19 @@ Scope {
             right: true
         }
 
+        // Full-window backdrop: a click anywhere outside the launcher card closes it.
+        // The card itself swallows clicks (see SearchWidget) so they never reach here.
+        MouseArea {
+            anchors.fill: parent
+            onClicked: GlobalStates.overviewOpen = false
+        }
+
         Connections {
             target: GlobalStates
             function onOverviewOpenChanged() {
                 if (!GlobalStates.overviewOpen) {
                     overviewScope.dontAutoCancelSearch = false;
+                    LauncherSearch.query = "";
                     GlobalFocusGrab.dismiss();
                 } else {
                     GlobalFocusGrab.addDismissable(panelWindow);
@@ -68,7 +72,8 @@ Scope {
         }
 
         // Content is destroyed when the overview closes to free the launcher search tree.
-        // A fresh SearchWidget starts empty, so no explicit cancel is needed on reopen.
+        // The shared LauncherSearch.query is reset on close (see onOverviewOpenChanged), so a
+        // reopened SearchWidget starts empty instead of showing the previous session's results.
         Loader {
             id: contentLoader
             anchors.centerIn: parent
@@ -79,6 +84,10 @@ Scope {
                     item.searchWidgetItem.focusFirstItem();
                     panelWindow.pendingSearchText = "";
                 }
+                Qt.callLater(() => {
+                    if (contentLoader.item)
+                        contentLoader.item.searchWidgetItem.focusSearchInput();
+                });
             }
 
             sourceComponent: Column {

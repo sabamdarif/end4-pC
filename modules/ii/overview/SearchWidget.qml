@@ -183,6 +183,12 @@ Item { // Wrapper
         border.color: ColorUtils.transparentize(Appearance.colors.colOutline, 0.72)
         border.width: 1
 
+        // Swallow clicks on empty parts of the card so they don't reach the
+        // backdrop closer in Overview.qml.
+        MouseArea {
+            anchors.fill: parent
+        }
+
         ColumnLayout {
             anchors.fill: parent
             anchors.margins: 16
@@ -200,9 +206,35 @@ Item { // Wrapper
                 onSubmitted: root.launch(root.items[Math.max(0, grid.currentIndex)])
 
                 Component.onCompleted: {
-                    searchInput.Keys.downPressed.connect(() => {
-                        grid.forceActiveFocus();
-                        grid.currentIndex = 0;
+                    // While showing results, keep focus in the search box (so typing keeps
+                    // working) but drive the grid selection with the arrow keys directly,
+                    // instead of requiring Down to hand focus to the grid first.
+                    searchInput.Keys.downPressed.connect(event => {
+                        if (root.showResults) {
+                            grid.moveCurrentIndexDown();
+                            if (event) event.accepted = true;
+                        } else {
+                            grid.forceActiveFocus();
+                            grid.currentIndex = 0;
+                        }
+                    });
+                    searchInput.Keys.upPressed.connect(event => {
+                        if (root.showResults && grid.currentIndex >= root.gridColumns) {
+                            grid.moveCurrentIndexUp();
+                            if (event) event.accepted = true;
+                        }
+                    });
+                    searchInput.Keys.leftPressed.connect(event => {
+                        if (root.showResults) {
+                            grid.moveCurrentIndexLeft();
+                            if (event) event.accepted = true;
+                        }
+                    });
+                    searchInput.Keys.rightPressed.connect(event => {
+                        if (root.showResults) {
+                            grid.moveCurrentIndexRight();
+                            if (event) event.accepted = true;
+                        }
                     });
                 }
             }
@@ -270,6 +302,12 @@ Item { // Wrapper
                 highlightMoveDuration: 120
                 boundsBehavior: Flickable.StopAtBounds
 
+                // Each new search returns a fresh list, so re-select the first result.
+                onModelChanged: {
+                    currentIndex = 0;
+                    positionViewAtBeginning();
+                }
+
                 ScrollBar.vertical: StyledScrollBar {}
 
                 Keys.onPressed: event => {
@@ -288,7 +326,7 @@ Item { // Wrapper
                     required property var modelData
                     width: grid.cellWidth
                     height: grid.cellHeight
-                    readonly property bool selected: tileMouse.containsMouse || (GridView.isCurrentItem && grid.activeFocus)
+                    readonly property bool selected: tileMouse.containsMouse || (GridView.isCurrentItem && (grid.activeFocus || root.showResults))
                     readonly property var shapeType: root.getShapeForApp(index, modelData.name)
                     readonly property color shapeColor: root.getColorForApp(index, modelData.name)
 
