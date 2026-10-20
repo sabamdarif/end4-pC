@@ -52,7 +52,7 @@ Scope {
                 property bool superShow: false
                 property bool mustShow: hoverRegion.containsMouse || superShow
                 exclusionMode: ExclusionMode.Ignore
-                exclusiveZone: (Config?.options.bar.autoHide.enable && (!mustShow || !Config?.options.bar.autoHide.pushWindows)) ? 0 : Appearance.sizes.baseBarHeight + (Config.options.bar.cornerStyle === 1 ? Appearance.sizes.windowGapsOut : 0) + (Config.options.bar.cornerStyle === 2 ? -6 : 0)
+                exclusiveZone: (Config?.options.bar.autoHide.enable && (!mustShow || !Config?.options.bar.autoHide.pushWindows)) ? 0 : Appearance.sizes.baseBarHeight + (Config.options.bar.cornerStyle === 1 ? Appearance.sizes.windowGapsOut : 0) + (Config.options.bar.cornerStyle === 2 ? -6 : 0) + (Config.options.bar.cornerStyle === 4 ? 4 : 0)
                 WlrLayershell.namespace: "quickshell:bar"
                 WlrLayershell.layer: WlrLayer.Top
                 implicitHeight: Appearance.sizes.barHeight + Appearance.rounding.screenRounding
@@ -72,7 +72,7 @@ Scope {
                 margins {
                     top: Config.options.bar.cornerStyle === 3 ? 5 : 0
                     right: (Config.options.interactions.deadPixelWorkaround.enable && barRoot.anchors.right) * -1
-                    bottom: (Config.options.interactions.deadPixelWorkaround.enable && barRoot.anchors.bottom) * -1 || Config.options.bar.cornerStyle === 3 ? 5 : 0
+                    bottom: ((Config.options.interactions.deadPixelWorkaround.enable && barRoot.anchors.bottom) * -1) || (Config.options.bar.cornerStyle === 3 ? 5 : 0)
                 }
 
                 MouseArea  {

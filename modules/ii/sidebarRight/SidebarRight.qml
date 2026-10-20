@@ -86,7 +86,8 @@ Scope {
             top: {
                 if (!centerOnly) return 0;
                 switch (Config.options.bar.cornerStyle) {
-                    case 0: return -Appearance.sizes.barHeight;
+                    case 0:
+                    case 4: return -Appearance.sizes.barHeight;
                     case 1: return -Appearance.sizes.barHeight + Appearance.sizes.windowGapsOut;
                     case 2: return -Appearance.sizes.barHeight + Appearance.sizes.windowGapsOut;
                     case 3: return -Appearance.sizes.barHeight - Appearance.sizes.windowGapsOut;

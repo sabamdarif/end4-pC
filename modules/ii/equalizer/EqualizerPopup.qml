@@ -53,7 +53,7 @@ Scope {
         if (!barVertical) return Config.options.bar.bottom ? "bottom" : "top"
         return Config.options.bar.bottom ? "right" : "left"
     }
-    readonly property real gap: Config.options.bar.cornerStyle === 3 ? Appearance.sizes.windowGapsOut : 0
+    readonly property real gap: [3, 4].includes(Config.options.bar.cornerStyle) ? Appearance.sizes.windowGapsOut : 0
     readonly property bool cornerStyleReducesGap: Config.options.bar.cornerStyle === 1 || Config.options.bar.cornerStyle === 2
     readonly property real barThickness: barVertical ? Appearance.sizes.verticalBarWidth : Appearance.sizes.barHeight
 

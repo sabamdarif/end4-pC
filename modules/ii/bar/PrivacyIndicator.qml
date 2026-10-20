@@ -9,7 +9,7 @@ MouseArea {
     id: root
 
     property bool vertical: false
-    readonly property bool isMaterial: Config.options.bar.cornerStyle === 3
+    readonly property bool isMaterial: Config.options.bar.cornerStyle === 3 || Config.options.bar.cornerStyle === 4
     readonly property bool cameraActive: Privacy.cameraShown && Privacy.cameraInUse
     readonly property bool micActive: Privacy.micShown && Privacy.micInUse
     readonly property bool screenShareActive: Privacy.screenShareShown && Privacy.screenSharing

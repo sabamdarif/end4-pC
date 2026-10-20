@@ -13,7 +13,7 @@ Item {
     property bool borderless: Config.options.bar.borderless
     property bool showDate: Config.options.bar.verbose
     property bool vertical: Config.options.bar.vertical
-    property bool isMaterial: Config.options.bar.cornerStyle === 3
+    property bool isMaterial: Config.options.bar.cornerStyle === 3 || Config.options.bar.cornerStyle === 4
 
     // Only the Android quick panel has a user-managed tile list. Other styles have a fixed
     // set of toggles, so a null list here means "do not filter".

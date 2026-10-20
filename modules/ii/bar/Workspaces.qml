@@ -19,7 +19,7 @@ ButtonMouseArea {
     property bool vertical: Config.options.bar.vertical
     property bool superPressAndHeld: false // Relevant modifications at bottom of file
 
-    property real workspaceButtonWidth: Config.options.bar.cornerStyle === 3 ? 30 : 26
+    property real workspaceButtonWidth: [3, 4].includes(Config.options.bar.cornerStyle) ? 30 : 26
     property real activeWorkspaceMargin: 2
     property real activeWorkspaceSize: workspaceButtonWidth - activeWorkspaceMargin * 2
     property real workspaceIconSize: workspaceButtonWidth * 0.69
