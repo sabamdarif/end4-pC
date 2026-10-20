@@ -26,6 +26,7 @@ Item {
     property Item lastHoveredButton: null
     property bool buttonHovered: false
     property bool requestDockShow: previewPopup.show
+    property var contextMenu: null
     signal orderChanged(var newOrder)
     property var  _workOrder: pinnedApps.slice()
     property int  activeDragVisualIndex: -1
@@ -165,7 +166,10 @@ Item {
                 }
 
                 middleClickAction: () => { slotItem.deskEntry?.execute() }
-                altAction:         () => { TaskbarApps.togglePin(slotItem.appId) }
+                altAction:         () => {
+                    if (root.contextMenu) root.contextMenu.open(dockBtn, slotItem.appId)
+                    else TaskbarApps.togglePin(slotItem.appId)
+                }
 
                 contentItem: Item {
                     anchors.centerIn: parent
@@ -281,6 +285,7 @@ Item {
 
         property bool shouldShow: (popupMouseArea.containsMouse || root.buttonHovered)
                                   && !root._dragging
+                                  && !(root.contextMenu?.isOpen ?? false)
                                   && appTopLevel
                                   && appTopLevel.toplevels
                                   && appTopLevel.toplevels.length > 0

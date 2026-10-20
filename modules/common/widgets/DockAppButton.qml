@@ -12,6 +12,7 @@ DockButton {
     id: root
     property var appToplevel
     property var appListRoot
+    property var contextMenu
     property int lastFocused: -1
     property real iconSize: 33
     property real countDotWidth: 10
@@ -76,7 +77,10 @@ DockButton {
     }
 
     altAction: () => {
-        TaskbarApps.togglePin(appToplevel.appId);
+        if (root.contextMenu)
+            root.contextMenu.open(root, appToplevel.appId);
+        else
+            TaskbarApps.togglePin(appToplevel.appId);
     }
 
     contentItem: Loader {

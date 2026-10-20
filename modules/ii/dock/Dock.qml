@@ -31,6 +31,8 @@ Scope {
                 && NiriData.currentOutput === modelData.name
 
             property bool reveal: {
+                if (dockContextMenu.isOpen)
+                    return true
                 if (fullscreenOnThisMonitor)
                     return Config.options?.dock.hoverToReveal && dockMouseArea.containsMouse
                 return root.pinned
@@ -110,6 +112,10 @@ Scope {
                             radius: Appearance.rounding.normal + 6
                         }
 
+                        DockContextMenu {
+                            id: dockContextMenu
+                        }
+
                         RowLayout {
                             id: dockRow
                             anchors.top: parent.top
@@ -159,6 +165,7 @@ Scope {
                                 Layout.topMargin: 2
                                 Layout.leftMargin: Config.options.dock.showPinButton ? 0 : -18
                                 pinnedApps:    Config.options?.dock.pinnedApps ?? []
+                                contextMenu:   dockContextMenu
                                 buttonPadding: dockRow.padding
                                 btnSize:       46
                                 btnSpacing:    1
@@ -211,6 +218,7 @@ Scope {
                                         delegate: DockAppButton {
                                             required property var modelData
                                             appToplevel: modelData
+                                            contextMenu: dockContextMenu
                                             Layout.fillHeight: true
                                             Layout.topMargin: 2
                                             appListRoot: appListBridge
