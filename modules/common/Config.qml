@@ -266,7 +266,7 @@ Singleton {
                         property string placementStrategy: "free"
                         property real x: 0
                         property real y: 0
-                        property string style: "bars" // "bars", "mirror", "aurora", "ring", "dots"
+                        property string style: "bars" // "bars", "mirror", "aurora", "ring", "dots", "halo"
                         property string colorSource: "theme" // "theme", "cover"
                         property real sensitivity: 1
                         property int height: 260 // mirror, aurora and dots

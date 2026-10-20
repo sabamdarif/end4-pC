@@ -218,6 +218,11 @@ ContentPage {
                             displayName: Translation.tr("Dots"),
                             icon: "grid_on",
                             value: "dots"
+                        },
+                        {
+                            displayName: Translation.tr("Halo"),
+                            icon: "brightness_empty",
+                            value: "halo"
                         }
                     ]
                 }
