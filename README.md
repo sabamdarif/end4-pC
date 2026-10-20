@@ -58,8 +58,10 @@ killall qs 2>/dev/null; qs -c end4-pC > /dev/null 2>&1 & disown
 To load it on login, add this to `~/.config/niri/config.kdl`:
 
 ```kdl
-spawn-at-startup "qs" "-c" "end4-pC"
+spawn-sh-at-startup "MALLOC_CONF=background_thread:true,dirty_decay_ms:10000,muzzy_decay_ms:10000 qs -c end4-pC"
 ```
+
+The `MALLOC_CONF` prefix is optional but recommended: quickshell links jemalloc, which never returns freed memory to the OS while the shell sits idle. These options make it purge in the background, which keeps idle RSS low after heavy panels (settings, wallpaper selector) have been closed.
 
 > [!TIP]
 > niri picks up config changes as you save them, so only the shell itself needs restarting: `killall qs; qs -c end4-pC & disown`.

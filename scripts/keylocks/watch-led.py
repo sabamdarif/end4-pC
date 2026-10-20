@@ -91,8 +91,13 @@ def main():
     for fd in fds:
         poller.register(fd, select.POLLIN)
 
+    # A qs restart kills this process only indirectly; without a watchdog it
+    # lingers as an orphan. Poll with a timeout and exit once reparented.
+    ppid = os.getppid()
     while True:
-        events = poller.poll()
+        events = poller.poll(5000)
+        if os.getppid() != ppid:
+            return 0
         for fd, _ in events:
             try:
                 data = os.read(fd, _EVENT_SIZE * 64)

@@ -29,7 +29,12 @@ Singleton {
 
     Process {
         id: watcher
-        running: true
+        // The python watcher costs ~10 MB resident; only keep it alive while a
+        // lock-state OSD is actually enabled.
+        running: Config.options.osd.enableCapsLock || Config.options.osd.enableNumLock
+        onRunningChanged: {
+            if (!running) root.ready = false
+        }
         command: ["python3", root.watcherPath]
 
         stdout: SplitParser {
