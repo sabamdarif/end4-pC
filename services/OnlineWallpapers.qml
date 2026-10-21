@@ -151,7 +151,8 @@ Singleton {
     // A challenge/error page (Cloudflare 503, 5xx, rate-limit) arrives as HTML, so
     // JSON.parse would throw a cryptic SyntaxError. Detect it and report plainly.
     function _looksLikeHtml(body) {
-        return body.trimStart().startsWith("<");
+        // trimStart() is ES2019 and missing from Qt's QML engine
+        return /^\s*</.test(body);
     }
 
     function _parseWallhaven(jsonStr) {
