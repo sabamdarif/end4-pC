@@ -188,7 +188,12 @@ Item {
                         color: Appearance.colors.colOnLayer0
                     }
                     StyledText {
-                        text: root.pinnedCount > 0 ? Translation.tr("%1 entries · %2 pinned").arg(root.rows.length).arg(root.pinnedCount) : Translation.tr("%1 entries").arg(root.rows.length)
+                        text: {
+                            const countText = root.pinnedCount > 0 ? Translation.tr("%1 entries · %2 pinned").arg(root.rows.length).arg(root.pinnedCount) : Translation.tr("%1 entries").arg(root.rows.length);
+                            if (Cliphist.incognito)
+                                return `${countText} · ${Translation.tr("Incognito")}`;
+                            return countText;
+                        }
                         font.pixelSize: Appearance.font.pixelSize.smaller
                         color: Appearance.colors.colSubtext
                     }
@@ -196,6 +201,31 @@ Item {
 
                 Item {
                     Layout.fillWidth: true
+                }
+
+                RippleButton { // Incognito
+                    id: incognitoButton
+                    implicitWidth: 40
+                    implicitHeight: 40
+                    buttonRadius: Appearance.rounding.full
+                    toggled: Cliphist.incognito
+                    visible: !clearButton.confirming
+                    colBackground: incognitoButton.toggled ? Appearance.colors.colPrimary : ColorUtils.transparentize(Appearance.colors.colLayer1Hover, 1)
+                    colBackgroundHover: incognitoButton.toggled ? Appearance.colors.colPrimaryHover : Appearance.colors.colLayer1Hover
+
+                    onClicked: Cliphist.toggleIncognito()
+
+                    contentItem: MaterialSymbol {
+                        anchors.centerIn: parent
+                        text: "visibility_off"
+                        iconSize: 18
+                        fill: 1
+                        color: incognitoButton.toggled ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer0
+                    }
+
+                    StyledToolTip {
+                        text: incognitoButton.toggled ? Translation.tr("Incognito active (click to erase session)") : Translation.tr("Incognito mode")
+                    }
                 }
 
                 RippleButton { // Clear all

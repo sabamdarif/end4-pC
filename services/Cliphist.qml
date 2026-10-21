@@ -16,6 +16,9 @@ Singleton {
     property bool sloppySearch: Config.options?.search.sloppy ?? false
     property real scoreThreshold: 0.2
     property list<string> entries: []
+    property bool incognito: false
+    property var preIncognitoIds: ({})
+    property list<string> incognitoEntryIds: []
     readonly property var preparedEntries: entries.map(a => ({
         name: Fuzzy.prepare(`${a.replace(/^\s*\S+\s+/, "")}`),
         entry: a
@@ -107,6 +110,8 @@ Singleton {
     }
 
     function wipe() {
+        root.preIncognitoIds = ({});
+        root.incognitoEntryIds = [];
         wipeProc.running = true;
     }
 
@@ -140,11 +145,102 @@ Singleton {
 
         onExited: (exitCode, exitStatus) => {
             if (exitCode === 0) {
-                root.entries = readProc.buffer
+                root.entries = readProc.buffer;
+                if (root.incognito) {
+                    const tracked = [...root.incognitoEntryIds];
+                    for (let i = 0; i < root.entries.length; i++) {
+                        const match = root.entries[i].match(/^(\d+)\t/);
+                        if (match && !root.preIncognitoIds[match[1]]) {
+                            if (!tracked.includes(match[1]))
+                                tracked.push(match[1]);
+                        }
+                    }
+                    root.incognitoEntryIds = tracked;
+                }
             } else {
-                console.error("[Cliphist] Failed to refresh with code", exitCode, "and status", exitStatus)
+                console.error("[Cliphist] Failed to refresh with code", exitCode, "and status", exitStatus);
             }
         }
+    }
+
+    Process {
+        id: batchDeleteProc
+        property string payload: ""
+        command: ["bash", "-c", `printf '%b' "${batchDeleteProc.payload}" | ${root.cliphistBinary} delete`]
+        function deleteEntries(ids) {
+            if (!ids || ids.length === 0)
+                return;
+            batchDeleteProc.payload = ids.map(id => `${id}\\t\\n`).join("");
+            batchDeleteProc.running = true;
+        }
+        onExited: (exitCode, exitStatus) => {
+            batchDeleteProc.payload = "";
+            root.refresh();
+        }
+    }
+
+    Process {
+        id: stopIncognitoProc
+        property list<string> buffer: []
+        command: [root.cliphistBinary, "list"]
+
+        stdout: SplitParser {
+            onRead: (line) => {
+                stopIncognitoProc.buffer.push(line);
+            }
+        }
+
+        onExited: (exitCode, exitStatus) => {
+            const toDeleteMap = {};
+            if (exitCode === 0) {
+                for (let i = 0; i < stopIncognitoProc.buffer.length; i++) {
+                    const match = stopIncognitoProc.buffer[i].match(/^(\d+)\t/);
+                    if (match && !root.preIncognitoIds[match[1]])
+                        toDeleteMap[match[1]] = true;
+                }
+            }
+            for (let i = 0; i < root.incognitoEntryIds.length; i++) {
+                toDeleteMap[root.incognitoEntryIds[i]] = true;
+            }
+            root.preIncognitoIds = ({});
+            root.incognitoEntryIds = [];
+            Quickshell.clipboardText = "";
+            Quickshell.execDetached(["wl-copy", "--clear"]);
+
+            const ids = Object.keys(toDeleteMap);
+            if (ids.length > 0) {
+                batchDeleteProc.deleteEntries(ids);
+            } else {
+                root.refresh();
+            }
+        }
+    }
+
+    function startIncognito() {
+        root.incognito = true;
+        const ids = {};
+        for (let i = 0; i < root.entries.length; i++) {
+            const match = root.entries[i].match(/^(\d+)\t/);
+            if (match)
+                ids[match[1]] = true;
+        }
+        root.preIncognitoIds = ids;
+        root.incognitoEntryIds = [];
+    }
+
+    function stopIncognito() {
+        if (!root.incognito)
+            return;
+        root.incognito = false;
+        stopIncognitoProc.buffer = [];
+        stopIncognitoProc.running = true;
+    }
+
+    function toggleIncognito() {
+        if (root.incognito)
+            stopIncognito();
+        else
+            startIncognito();
     }
 
     IpcHandler {
@@ -152,6 +248,10 @@ Singleton {
 
         function update(): void {
             root.refresh()
+        }
+
+        function toggleIncognito(): void {
+            root.toggleIncognito()
         }
     }
 }
