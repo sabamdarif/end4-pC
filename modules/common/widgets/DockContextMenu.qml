@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Wayland
 import Quickshell.Widgets
 import qs.services
 import qs.modules.common
@@ -56,6 +57,33 @@ Item {
     function niriWindowId(toplevel) {
         const win = NiriData.windows.find(w => w.title === toplevel.title);
         return win?.id ?? -1;
+    }
+
+    // niri has no focus-grab protocol and overlay popups never change NiriData's
+    // focused window, so outside clicks are caught by a fullscreen surface one
+    // layer below the popup, same pattern as the sidebars.
+    PanelWindow {
+        id: dismissCatcher
+        visible: root.isOpen
+        color: "transparent"
+
+        WlrLayershell.namespace: "quickshell:dock:contextMenuDismiss"
+        WlrLayershell.layer: WlrLayer.Top
+        WlrLayershell.exclusiveZone: -1
+        WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+
+        anchors {
+            top: true
+            left: true
+            right: true
+            bottom: true
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.AllButtons
+            onClicked: GlobalFocusGrab.dismiss()
+        }
     }
 
     function moveToWorkspace(ws) {
