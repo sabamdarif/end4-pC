@@ -64,53 +64,33 @@ Scope {
 
         function setSearchingText(text) {
             if (contentLoader.item) {
-                contentLoader.item.searchWidgetItem.setSearchingText(text);
-                contentLoader.item.searchWidgetItem.focusFirstItem();
+                contentLoader.item.setSearchingText(text);
+                contentLoader.item.focusSearchInput();
             } else {
                 panelWindow.pendingSearchText = text;
             }
         }
 
-        // Content is destroyed when the overview closes to free the launcher search tree.
-        // The shared LauncherSearch.query is reset on close (see onOverviewOpenChanged), so a
-        // reopened SearchWidget starts empty instead of showing the previous session's results.
+        // Content is destroyed when the overview closes to free memory.
         Loader {
             id: contentLoader
-            anchors.centerIn: parent
+            anchors.top: parent.top
+            anchors.topMargin: Math.round(parent.height * 0.14)
+            anchors.horizontalCenter: parent.horizontalCenter
             active: GlobalStates.overviewOpen
             onLoaded: {
                 if (panelWindow.pendingSearchText !== "") {
-                    item.searchWidgetItem.setSearchingText(panelWindow.pendingSearchText);
-                    item.searchWidgetItem.focusFirstItem();
+                    item.setSearchingText(panelWindow.pendingSearchText);
                     panelWindow.pendingSearchText = "";
                 }
                 Qt.callLater(() => {
                     if (contentLoader.item)
-                        contentLoader.item.searchWidgetItem.focusSearchInput();
+                        contentLoader.item.focusSearchInput();
                 });
             }
 
-            sourceComponent: Column {
-                id: columnLayout
-                spacing: 0
-                property alias searchWidgetItem: searchWidget
-
-                Keys.onPressed: event => {
-                    if (event.key === Qt.Key_Escape) {
-                        GlobalStates.overviewOpen = false;
-                    } else if (event.key === Qt.Key_Left) {
-                        if (!searchWidget.searchingText)
-                            NiriData.focusWorkspaceUp();
-                    } else if (event.key === Qt.Key_Right) {
-                        if (!searchWidget.searchingText)
-                            NiriData.focusWorkspaceDown();
-                    }
-                }
-
-                SearchWidget {
-                    id: searchWidget
-                    anchors.horizontalCenter: parent.horizontalCenter
-                }
+            sourceComponent: SearchWidget {
+                id: searchWidget
             }
         }
     }

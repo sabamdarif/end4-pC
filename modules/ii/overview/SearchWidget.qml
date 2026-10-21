@@ -1,13 +1,11 @@
 pragma ComponentBehavior: Bound
 
-import Qt.labs.synchronizer
-import Qt5Compat.GraphicalEffects
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Shapes
 import Quickshell
 import Quickshell.Widgets
-
 import qs
 import qs.services
 import qs.modules.common
@@ -15,409 +13,1048 @@ import qs.modules.common.widgets
 import qs.modules.common.models
 import qs.modules.common.functions
 
-Item { // Wrapper
+Item {
     id: root
 
-    readonly property int gridColumns: 5
-    readonly property int tileSize: 116
-    readonly property int tileHeight: 126
-    readonly property int iconSize: 40
+    readonly property int searchBarHeight: 62
+    readonly property int maxExpandedHeight: Math.min(680, Math.round(Screen.height * 0.78))
+    readonly property int panelWidth: Math.min(840, Math.round(Screen.width * 0.65))
 
-    property string searchingText: LauncherSearch.query
-    property bool showResults: searchingText != ""
-    property string activeCategory: "All"
+    property string query: LauncherSearch.query
+    readonly property bool showResults: root.query.length > 0
+    readonly property bool isSpaceOnly: root.query === " "
+    readonly property var displayedApps: root.isSpaceOnly ? LauncherSearch.appResults : LauncherSearch.appResults.slice(0, 6)
 
-    readonly property var categories: ["All", "Work", "Social", "Tools", "Media", "System"]
+    property string selectedSection: ""
+    property int sectionIndex: -1
 
-    readonly property var organicShapes: [
-        MaterialShape.Shape.Gem,
-        MaterialShape.Shape.Cookie4Sided,
-        MaterialShape.Shape.Sunny,
-        MaterialShape.Shape.Cookie7Sided,
-        MaterialShape.Shape.Clover4Leaf,
-        MaterialShape.Shape.Triangle,
-        MaterialShape.Shape.Square,
-        MaterialShape.Shape.Slanted,
-        MaterialShape.Shape.Arch,
-        MaterialShape.Shape.Puffy,
-        MaterialShape.Shape.PuffyDiamond,
-        MaterialShape.Shape.Bun,
-        MaterialShape.Shape.SoftBurst
-    ]
+    function getActiveSections() {
+        const list = [];
+        if (LauncherSearch.mathResult) list.push("math");
+        if (root.displayedApps.length > 0) list.push("apps");
+        if (LauncherSearch.fileResults.length > 0 && !root.isSpaceOnly) list.push("files");
+        if (LauncherSearch.iconResults.length > 0 && !root.isSpaceOnly) list.push("icons");
+        if (LauncherSearch.settingsResults.length > 0 && !root.isSpaceOnly) list.push("settings");
+        return list;
+    }
 
-    readonly property var shapeColors: [
-        Appearance.colors.colPrimaryContainer,
-        Appearance.colors.colSecondaryContainer,
-        Appearance.colors.colTertiaryContainer,
-        Appearance.colors.colSurfaceContainerHigh,
-        Appearance.colors.colSurfaceContainerHighest
-    ]
+    function getSectionCount(section) {
+        switch (section) {
+            case "math": return LauncherSearch.mathResult ? 1 : 0;
+            case "apps": return root.displayedApps.length;
+            case "files": return LauncherSearch.fileResults.length;
+            case "icons": return LauncherSearch.iconResults.length;
+            case "settings": return LauncherSearch.settingsResults.length;
+            default: return 0;
+        }
+    }
 
-    function matchesCategory(entry, cat) {
-        if (cat === "All") return true;
-        const text = (entry.name + " " + (entry.id ?? "") + " " + (entry.comment ?? "")).toLowerCase();
-        if (cat === "Work") {
-            return text.match(/office|word|writer|calc|sheet|presentation|slide|code|dev|editor|project|kate|nvim|emacs|idea|studio|work|pdf/) !== null;
-        } else if (cat === "Social") {
-            return text.match(/network|chat|message|messenger|social|discord|telegram|slack|signal|element|matrix|email|mail|thunderbird|social|browser|firefox|chrome|zen|vesktop|web/) !== null;
-        } else if (cat === "Tools") {
-            return text.match(/utility|tool|calc|clock|counter|convert|archiv|terminal|foot|kitty|alacritty|wezterm|ghostty|hread|gnome-calculator|st/) !== null;
-        } else if (cat === "Media") {
-            return text.match(/audio|video|music|player|mpv|vlc|spotify|cider|rhythmbox|gimp|inkscape|blender|draw|photo|gallery|media|obs|camera|feh|imv/) !== null;
-        } else if (cat === "System") {
-            return text.match(/system|setting|config|control|manager|file|nemo|nautilus|thunar|dolphin|htop|btop|gparted|btrfs|store|discover/) !== null;
+    function selectFirstAvailable() {
+        if (!root.showResults) {
+            root.selectedSection = "";
+            root.sectionIndex = -1;
+            return;
+        }
+        const sections = getActiveSections();
+        if (sections.length > 0) {
+            root.selectedSection = sections[0];
+            root.sectionIndex = 0;
+            ensureSelectionVisible();
+        } else {
+            root.selectedSection = "";
+            root.sectionIndex = -1;
+        }
+    }
+
+    onQueryChanged: {
+        if (flickable) flickable.contentY = 0;
+        root.selectFirstAvailable();
+    }
+
+    Connections {
+        target: LauncherSearch
+        function onMathResultChanged() {
+            if (root.selectedSection === "" || root.selectedSection === "math")
+                root.selectFirstAvailable();
+        }
+        function onAppResultsChanged() {
+            if (root.selectedSection === "" || (root.selectedSection === "apps" && root.sectionIndex >= root.displayedApps.length))
+                root.selectFirstAvailable();
+        }
+        function onIconResultsChanged() {
+            if (root.selectedSection === "" || (root.selectedSection === "icons" && root.sectionIndex >= LauncherSearch.iconResults.length))
+                root.selectFirstAvailable();
+        }
+        function onSettingsResultsChanged() {
+            if (root.selectedSection === "" || (root.selectedSection === "settings" && root.sectionIndex >= LauncherSearch.settingsResults.length))
+                root.selectFirstAvailable();
+        }
+    }
+
+    Connections {
+        target: FileSearch
+        function onResultsChanged() {
+            if (root.selectedSection === "" || (root.selectedSection === "files" && root.sectionIndex >= LauncherSearch.fileResults.length))
+                root.selectFirstAvailable();
+        }
+    }
+
+    Connections {
+        target: GlobalStates
+        function onOverviewOpenChanged() {
+            if (GlobalStates.overviewOpen) {
+                searchInput.forceActiveFocus();
+                root.selectFirstAvailable();
+            } else {
+                root.selectedSection = "";
+                root.sectionIndex = -1;
+            }
+        }
+    }
+
+    function ensureSelectionVisible() {
+        if (!flickable || root.selectedSection === "" || root.sectionIndex < 0) return;
+        let targetY = 0;
+        let targetH = 60;
+
+        if (root.selectedSection === "math" && mathCard && mathCard.visible) {
+            targetY = mathCard.y;
+            targetH = mathCard.height;
+        } else if (root.selectedSection === "apps" && appsSection && appsSection.visible) {
+            const row = Math.floor(root.sectionIndex / 6);
+            targetY = appsSection.y + 24 + row * 114;
+            targetH = 104;
+        } else if (root.selectedSection === "files" && filesSection && filesSection.visible) {
+            targetY = filesSection.y + 24 + root.sectionIndex * 60;
+            targetH = 58;
+        } else if (root.selectedSection === "icons" && iconsSection && iconsSection.visible) {
+            const row = Math.floor(root.sectionIndex / 6);
+            targetY = iconsSection.y + 24 + row * 76;
+            targetH = 68;
+        } else if (root.selectedSection === "settings" && settingsSection && settingsSection.visible) {
+            targetY = settingsSection.y + 24 + root.sectionIndex * 54;
+            targetH = 52;
+        } else {
+            return;
+        }
+
+        if (targetY < flickable.contentY) {
+            flickable.contentY = Math.max(0, targetY - 10);
+        } else if (targetY + targetH > flickable.contentY + flickable.height) {
+            flickable.contentY = Math.min(Math.max(0, flickable.contentHeight - flickable.height), targetY + targetH + 16 - flickable.height);
+        }
+    }
+
+    function navDown() {
+        const sections = getActiveSections();
+        if (sections.length === 0) return;
+
+        if (root.selectedSection === "" || !sections.includes(root.selectedSection)) {
+            root.selectedSection = sections[0];
+            root.sectionIndex = 0;
+            ensureSelectionVisible();
+            return;
+        }
+
+        const sec = root.selectedSection;
+        const count = getSectionCount(sec);
+        const secIdx = sections.indexOf(sec);
+
+        if (sec === "apps" || sec === "icons") {
+            const cols = 6;
+            const nextIdx = root.sectionIndex + cols;
+            if (nextIdx < count) {
+                root.sectionIndex = nextIdx;
+            } else {
+                const curRow = Math.floor(root.sectionIndex / cols);
+                const totalRows = Math.ceil(count / cols);
+                if (curRow < totalRows - 1) {
+                    root.sectionIndex = count - 1;
+                } else {
+                    if (secIdx + 1 < sections.length) {
+                        root.selectedSection = sections[secIdx + 1];
+                        root.sectionIndex = 0;
+                    }
+                }
+            }
+        } else {
+            if (root.sectionIndex + 1 < count) {
+                root.sectionIndex++;
+            } else {
+                if (secIdx + 1 < sections.length) {
+                    root.selectedSection = sections[secIdx + 1];
+                    root.sectionIndex = 0;
+                }
+            }
+        }
+        ensureSelectionVisible();
+    }
+
+    function navUp() {
+        const sections = getActiveSections();
+        if (sections.length === 0) return;
+
+        if (root.selectedSection === "" || !sections.includes(root.selectedSection)) {
+            root.selectedSection = sections[0];
+            root.sectionIndex = 0;
+            ensureSelectionVisible();
+            return;
+        }
+
+        const sec = root.selectedSection;
+        const secIdx = sections.indexOf(sec);
+
+        if (sec === "apps" || sec === "icons") {
+            const cols = 6;
+            if (root.sectionIndex >= cols) {
+                root.sectionIndex -= cols;
+            } else {
+                if (secIdx > 0) {
+                    const prevSec = sections[secIdx - 1];
+                    const prevCount = getSectionCount(prevSec);
+                    root.selectedSection = prevSec;
+                    if (prevSec === "apps" || prevSec === "icons") {
+                        const col = root.sectionIndex % 6;
+                        const prevRows = Math.ceil(prevCount / 6);
+                        const targetIdx = (prevRows - 1) * 6 + col;
+                        root.sectionIndex = Math.min(prevCount - 1, targetIdx);
+                    } else {
+                        root.sectionIndex = prevCount - 1;
+                    }
+                }
+            }
+        } else {
+            if (root.sectionIndex > 0) {
+                root.sectionIndex--;
+            } else {
+                if (secIdx > 0) {
+                    const prevSec = sections[secIdx - 1];
+                    const prevCount = getSectionCount(prevSec);
+                    root.selectedSection = prevSec;
+                    if (prevSec === "apps" || prevSec === "icons") {
+                        root.sectionIndex = prevCount - 1;
+                    } else {
+                        root.sectionIndex = prevCount - 1;
+                    }
+                }
+            }
+        }
+        ensureSelectionVisible();
+    }
+
+    function navRight() {
+        const sec = root.selectedSection;
+        if (sec !== "apps" && sec !== "icons") {
+            return false;
+        }
+        const count = getSectionCount(sec);
+        if (root.sectionIndex + 1 < count) {
+            root.sectionIndex++;
+            ensureSelectionVisible();
         }
         return true;
     }
 
-    function getShapeForApp(index, name) {
-        let codeSum = 0;
-        for (let i = 0; i < name.length; i++) {
-            codeSum += name.charCodeAt(i);
+    function navLeft() {
+        const sec = root.selectedSection;
+        if (sec !== "apps" && sec !== "icons") {
+            return false;
         }
-        return organicShapes[(index + codeSum) % organicShapes.length];
-    }
-
-    function getColorForApp(index, name) {
-        let codeSum = 0;
-        for (let i = 0; i < name.length; i++) {
-            codeSum += name.charCodeAt(i);
+        if (root.sectionIndex > 0) {
+            root.sectionIndex--;
+            ensureSelectionVisible();
         }
-        return shapeColors[(index + codeSum) % shapeColors.length];
+        return true;
     }
 
-    property var items: {
-        if (root.showResults)
-            return LauncherSearch.results ?? [];
-        return AppSearch.list
-            .slice()
-            .filter(entry => root.matchesCategory(entry, root.activeCategory))
-            .sort((a, b) => a.name.localeCompare(b.name))
-            .map(entry => ({
-                name: entry.name,
-                iconName: entry.icon,
-                iconType: LauncherSearchResult.IconType.System,
-                execute: () => {
-                    if (!entry.runInTerminal)
-                        entry.execute();
-                    else
-                        Quickshell.execDetached(["bash", "-c", `${Config.options.apps.terminal} -e '${StringUtils.shellSingleQuoteEscape(entry.command.join(' '))}'`]);
-                }
-            }));
-    }
-
-    implicitWidth: root.tileSize * root.gridColumns + Appearance.sizes.elevationMargin * 2 + 40
-    implicitHeight: Math.min(620, Math.max(380, Screen.height * 0.68)) + Appearance.sizes.elevationMargin * 2
-
-    function focusFirstItem() {
-        grid.currentIndex = 0;
-    }
+    implicitWidth: root.panelWidth
+    implicitHeight: card.height
 
     function focusSearchInput() {
-        searchBar.forceFocus();
-    }
-
-    function disableExpandAnimation() {}
-
-    function cancelSearch() {
-        searchBar.searchInput.text = "";
-        LauncherSearch.query = "";
-        root.activeCategory = "All";
+        searchInput.forceActiveFocus();
     }
 
     function setSearchingText(text) {
-        searchBar.searchInput.text = text;
+        searchInput.text = text;
         LauncherSearch.query = text;
+        FileSearch.query = text;
     }
 
-    function launch(item) {
-        if (!item?.execute)
-            return;
+    function launchSelected() {
+        const sec = root.selectedSection;
+        const idx = root.sectionIndex;
         GlobalStates.overviewOpen = false;
-        item.execute();
+
+        if (sec === "math" && LauncherSearch.mathResult) {
+            Quickshell.clipboardText = LauncherSearch.mathResult.result;
+        } else if (sec === "apps" && idx >= 0 && idx < root.displayedApps.length) {
+            const item = root.displayedApps[idx];
+            if (item?.execute) item.execute();
+        } else if (sec === "files" && idx >= 0 && idx < LauncherSearch.fileResults.length) {
+            const item = LauncherSearch.fileResults[idx];
+            if (item?.execute) item.execute();
+        } else if (sec === "icons" && idx >= 0 && idx < LauncherSearch.iconResults.length) {
+            const item = LauncherSearch.iconResults[idx];
+            if (item?.execute) item.execute();
+        } else if (sec === "settings" && idx >= 0 && idx < LauncherSearch.settingsResults.length) {
+            const item = LauncherSearch.settingsResults[idx];
+            if (item?.execute) item.execute();
+        } else {
+            if (LauncherSearch.mathResult) {
+                Quickshell.clipboardText = LauncherSearch.mathResult.result;
+            } else if (root.displayedApps.length > 0) {
+                root.displayedApps[0].execute();
+            } else if (LauncherSearch.fileResults.length > 0) {
+                LauncherSearch.fileResults[0].execute();
+            }
+        }
     }
 
     Keys.onPressed: event => {
-        if (event.key === Qt.Key_Escape)
-            return;
-
-        if (event.key === Qt.Key_Backspace) {
-            if (!searchBar.searchInput.activeFocus) {
-                root.focusSearchInput();
-                let ti = searchBar.searchInput;
-                if (ti.cursorPosition > 0) {
-                    ti.text = ti.text.slice(0, ti.cursorPosition - 1) + ti.text.slice(ti.cursorPosition);
-                }
-                ti.cursorPosition = ti.text.length;
+        if (event.key === Qt.Key_Escape) {
+            if (root.query.length > 0) {
+                searchInput.text = "";
+                LauncherSearch.query = "";
+                FileSearch.query = "";
+                event.accepted = true;
+            } else {
+                GlobalStates.overviewOpen = false;
                 event.accepted = true;
             }
             return;
         }
 
-        if (event.text && event.text.length === 1 && event.key !== Qt.Key_Enter && event.key !== Qt.Key_Return && event.key !== Qt.Key_Delete && event.text.charCodeAt(0) >= 0x20) {
-            if (!searchBar.searchInput.activeFocus) {
-                root.focusSearchInput();
-                searchBar.searchInput.text += event.text;
-                searchBar.searchInput.cursorPosition = searchBar.searchInput.text.length;
+        if (event.key === Qt.Key_Down) {
+            root.navDown();
+            event.accepted = true;
+            return;
+        }
+
+        if (event.key === Qt.Key_Up) {
+            root.navUp();
+            event.accepted = true;
+            return;
+        }
+
+        if (event.key === Qt.Key_Right) {
+            if (root.navRight()) {
                 event.accepted = true;
+                return;
             }
+        }
+
+        if (event.key === Qt.Key_Left) {
+            if (root.navLeft()) {
+                event.accepted = true;
+                return;
+            }
+        }
+
+        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+            root.launchSelected();
+            event.accepted = true;
+            return;
         }
     }
 
     StyledRectangularShadow {
-        target: searchWidgetContent
+        target: card
     }
 
-    Rectangle { // Main Glassmorphic Container
-        id: searchWidgetContent
-        anchors {
-            top: parent.top
-            horizontalCenter: parent.horizontalCenter
-            topMargin: Appearance.sizes.elevationMargin
-        }
-        clip: true
-        implicitWidth: root.implicitWidth - Appearance.sizes.elevationMargin * 2
-        implicitHeight: root.implicitHeight - Appearance.sizes.elevationMargin * 2
-        radius: 30
-        color: Appearance.colors.colBackgroundSurfaceContainer
-        border.color: ColorUtils.transparentize(Appearance.colors.colOutline, 0.72)
+    Rectangle {
+        id: card
+        width: root.panelWidth
+        height: root.showResults ? Math.min(root.maxExpandedHeight, Math.max(root.searchBarHeight, contentColumn.implicitHeight + root.searchBarHeight + 38)) : root.searchBarHeight
+        radius: 28
+        color: Appearance.colors.colLayer0
         border.width: 1
+        border.color: searchInput.activeFocus ? Appearance.colors.colPrimary : ColorUtils.transparentize(Appearance.colors.colOutline, 0.7)
+        clip: true
 
-        // Swallow clicks on empty parts of the card so they don't reach the
-        // backdrop closer in Overview.qml.
+        Behavior on height {
+            NumberAnimation {
+                duration: 240
+                easing.type: Easing.OutCubic
+            }
+        }
+
+        Behavior on border.color {
+            animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+        }
+
+        // Catch clicks on the card so backdrop doesn't close it
         MouseArea {
             anchors.fill: parent
         }
 
-        ColumnLayout {
+        Column {
             anchors.fill: parent
-            anchors.margins: 16
-            spacing: 12
+            spacing: 0
 
-            SearchBar {
-                id: searchBar
-                Layout.fillWidth: true
-                Layout.alignment: Qt.AlignHCenter
+            // Top Search Bar (56px)
+            Item {
+                width: parent.width
+                height: root.searchBarHeight
 
-                Synchronizer on searchingText {
-                    property alias source: root.searchingText
-                }
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: 18
+                    anchors.rightMargin: 14
+                    spacing: 12
 
-                onSubmitted: root.launch(root.items[Math.max(0, grid.currentIndex)])
+                    MaterialSymbol {
+                        iconSize: 24
+                        text: "search"
+                        color: searchInput.activeFocus ? Appearance.colors.colPrimary : Appearance.colors.colSubtext
+                    }
 
-                Component.onCompleted: {
-                    // While showing results, keep focus in the search box (so typing keeps
-                    // working) but drive the grid selection with the arrow keys directly,
-                    // instead of requiring Down to hand focus to the grid first.
-                    searchInput.Keys.downPressed.connect(event => {
-                        if (root.showResults) {
-                            grid.moveCurrentIndexDown();
-                            if (event) event.accepted = true;
-                        } else {
-                            grid.forceActiveFocus();
-                            grid.currentIndex = 0;
+                    ToolbarTextField {
+                        id: searchInput
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        colBackground: "transparent"
+                        font.pixelSize: Appearance.font.pixelSize.large
+
+                        onTextChanged: {
+                            LauncherSearch.query = text;
+                            FileSearch.query = text;
                         }
-                    });
-                    searchInput.Keys.upPressed.connect(event => {
-                        if (root.showResults && grid.currentIndex >= root.gridColumns) {
-                            grid.moveCurrentIndexUp();
-                            if (event) event.accepted = true;
-                        }
-                    });
-                    searchInput.Keys.leftPressed.connect(event => {
-                        if (root.showResults) {
-                            grid.moveCurrentIndexLeft();
-                            if (event) event.accepted = true;
-                        }
-                    });
-                    searchInput.Keys.rightPressed.connect(event => {
-                        if (root.showResults) {
-                            grid.moveCurrentIndexRight();
-                            if (event) event.accepted = true;
-                        }
-                    });
-                }
-            }
 
-            // Category Filter Pills Bar
-            RowLayout {
-                id: categoriesRow
-                Layout.alignment: Qt.AlignHCenter
-                visible: !root.showResults
-                spacing: 10
+                        onAccepted: root.launchSelected()
 
-                Repeater {
-                    model: root.categories
-
-                    delegate: RippleButton {
-                        id: catBtn
-                        required property string modelData
-                        readonly property bool isActive: root.activeCategory === modelData
-
-                        buttonRadius: 18
-                        padding: 0
-                        leftPadding: 16
-                        rightPadding: 16
-                        topPadding: 0
-                        bottomPadding: 0
-                        implicitHeight: 36
-
-                        scale: catBtn.down ? 0.88 : (catBtn.hovered ? 1.05 : 1.0)
-                        Behavior on scale {
-                            NumberAnimation {
-                                duration: catBtn.down ? 90 : 250
-                                easing.type: catBtn.down ? Easing.OutCubic : Easing.OutBack
-                                easing.overshoot: 1.4
+                        Keys.onPressed: event => {
+                            if (event.key === Qt.Key_Down) {
+                                root.navDown();
+                                event.accepted = true;
+                                return;
+                            }
+                            if (event.key === Qt.Key_Up) {
+                                root.navUp();
+                                event.accepted = true;
+                                return;
+                            }
+                            if (event.key === Qt.Key_Right) {
+                                if (root.selectedSection === "apps" || root.selectedSection === "icons") {
+                                    if (root.navRight()) {
+                                        event.accepted = true;
+                                        return;
+                                    }
+                                }
+                            }
+                            if (event.key === Qt.Key_Left) {
+                                if (root.selectedSection === "apps" || root.selectedSection === "icons") {
+                                    if (root.navLeft()) {
+                                        event.accepted = true;
+                                        return;
+                                    }
+                                }
                             }
                         }
 
-                        colBackground: isActive ? Appearance.colors.colPrimary : Appearance.colors.colLayer1
-                        colBackgroundHover: isActive ? Appearance.colors.colPrimaryHover : Appearance.colors.colLayer2
+                        Component.onCompleted: {
+                            forceActiveFocus();
+                        }
+                    }
+
+                    RippleButton {
+                        visible: root.query.length > 0
+                        implicitWidth: 36
+                        implicitHeight: 36
+                        buttonRadius: 18
+                        colBackground: "transparent"
+                        colBackgroundHover: Appearance.colors.colLayer1Hover
+                        onClicked: {
+                            searchInput.text = "";
+                            LauncherSearch.query = "";
+                            FileSearch.query = "";
+                            searchInput.forceActiveFocus();
+                        }
+
+                        contentItem: MaterialSymbol {
+                            anchors.centerIn: parent
+                            iconSize: 20
+                            text: "close"
+                            color: Appearance.colors.colSubtext
+                        }
+                    }
+
+                    RippleButton {
+                        id: lensBtn
+                        implicitWidth: 38
+                        implicitHeight: 38
+                        buttonRadius: 19
+                        colBackground: lensBtn.hovered ? Appearance.colors.colLayer1Hover : "transparent"
+                        colBackgroundHover: Appearance.colors.colLayer1Hover
                         colRipple: Appearance.colors.colPrimaryContainer
 
-                        onClicked: root.activeCategory = modelData
+                        scale: lensBtn.down ? 0.9 : 1.0
+                        Behavior on scale {
+                            NumberAnimation { duration: 100 }
+                        }
 
-                        contentItem: StyledText {
-                            text: catBtn.modelData
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                            font.pixelSize: Appearance.font.pixelSize.normal
-                            font.weight: catBtn.isActive ? Font.Bold : Font.Normal
-                            color: catBtn.isActive ? Appearance.colors.colOnPrimary : Appearance.colors.colOnSurface
+                        onClicked: {
+                            GlobalStates.overviewOpen = false;
+                            Quickshell.execDetached(["qs", "-p", Quickshell.shellPath(""), "ipc", "call", "region", "search"]);
+                        }
+
+                        contentItem: Item {
+                            anchors.centerIn: parent
+                            implicitWidth: 22
+                            implicitHeight: 22
+
+                            Shape {
+                                anchors.centerIn: parent
+                                width: 24
+                                height: 24
+                                scale: 22 / 24
+                                layer.enabled: true
+                                layer.samples: 4
+
+                                ShapePath {
+                                    fillColor: lensBtn.hovered ? Appearance.colors.colPrimaryHover : Appearance.colors.colPrimary
+                                    strokeColor: "transparent"
+
+                                    Behavior on fillColor {
+                                        animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                                    }
+
+                                    PathSvg {
+                                        path: "M12 17.333q-1.667 0-2.833-1.166Q8 15 8 13.333q0-1.666 1.167-2.833Q10.333 9.333 12 9.333q1.667 0 2.833 1.167Q16 11.667 16 13.333q0 1.667-1.167 2.834-1.166 1.166-2.833 1.166Zm8 5.334q-1.1 0-1.883-.784-.784-.783-.784-1.883t.784-1.883q.783-.784 1.883-.784t1.883.784q.784.783.784 1.883t-.784 1.883q-.783.784-1.883.784ZM5.333 24q-2.2 0-3.766-1.567Q0 20.867 0 18.667V16h2.667v2.667q0 1.1.783 1.883.783.783 1.883.783H12V24Zm16-10.667V8q0-1.1-.783-1.883-.783-.784-1.883-.784H5.333q-1.1 0-1.883.784Q2.667 6.9 2.667 8v4H0V8q0-2.2 1.567-3.767 1.566-1.566 3.766-1.566H8L9.333 0h5.334L16 2.667h2.667q2.2 0 3.766 1.566Q24 5.8 24 8v5.333z"
+                                    }
+                                }
+                            }
+                        }
+
+                        StyledToolTip {
+                            text: Translation.tr("Google Lens / Region Search")
                         }
                     }
                 }
             }
 
-            // App Grid with Organic Shapes
-            GridView {
-                id: grid
-                Layout.fillWidth: true
-                Layout.fillHeight: true
+            // Divider line
+            Rectangle {
+                width: parent.width
+                height: 1
+                color: ColorUtils.transparentize(Appearance.colors.colOutline, 0.8)
+                visible: root.showResults
+            }
+
+            // Results Container
+            Item {
+                width: parent.width
+                height: Math.max(0, card.height - root.searchBarHeight - 1)
                 clip: true
-                cellWidth: Math.floor(width / root.gridColumns)
-                cellHeight: root.tileHeight
-                model: root.items
-                currentIndex: 0
-                highlightMoveDuration: 120
-                boundsBehavior: Flickable.StopAtBounds
+                visible: root.showResults
+                opacity: root.showResults ? 1.0 : 0.0
 
-                // Each new search returns a fresh list, so re-select the first result.
-                onModelChanged: {
-                    currentIndex = 0;
-                    positionViewAtBeginning();
-                }
-
-                ScrollBar.vertical: StyledScrollBar {}
-
-                Keys.onPressed: event => {
-                    if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                        root.launch(root.items[grid.currentIndex]);
-                        event.accepted = true;
-                    } else if (event.key === Qt.Key_Up && grid.currentIndex < root.gridColumns) {
-                        root.focusSearchInput();
-                        event.accepted = true;
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: 180
+                        easing.type: Easing.OutQuad
                     }
                 }
 
-                delegate: Item {
-                    id: tileWrap
-                    required property int index
-                    required property var modelData
-                    width: grid.cellWidth
-                    height: grid.cellHeight
-                    readonly property bool selected: tileMouse.containsMouse || (GridView.isCurrentItem && (grid.activeFocus || root.showResults))
-                    readonly property var shapeType: root.getShapeForApp(index, modelData.name)
-                    readonly property color shapeColor: root.getColorForApp(index, modelData.name)
+                Flickable {
+                    id: flickable
+                    anchors {
+                        fill: parent
+                        topMargin: 12
+                        bottomMargin: 16
+                        leftMargin: 16
+                        rightMargin: 16
+                    }
+                    contentWidth: width
+                    contentHeight: contentColumn.implicitHeight
+                    boundsBehavior: Flickable.StopAtBounds
+                    clip: true
 
-                    MouseArea {
-                        id: tileMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.launch(tileWrap.modelData)
+                    Behavior on contentY {
+                        NumberAnimation { duration: 150; easing.type: Easing.OutQuad }
                     }
 
-                    ColumnLayout {
-                        anchors.fill: parent
-                        anchors.margins: 4
-                        spacing: 8
+                    Column {
+                        id: contentColumn
+                        width: flickable.width
+                        spacing: 14
 
-                        // Organic Material Shape Frame
-                        Item {
-                            Layout.alignment: Qt.AlignHCenter
-                            implicitWidth: 66
-                            implicitHeight: 66
-                            scale: tileMouse.pressed ? 0.85 : (tileWrap.selected ? 1.08 : 1.0)
+                        // --- 1. APPS SECTION (Horizontal row / grid) ---
+                        Column {
+                            id: appsSection
+                            width: parent.width
+                            spacing: 8
+                            visible: root.displayedApps.length > 0
 
-                            Behavior on scale {
-                                NumberAnimation {
-                                    duration: tileMouse.pressed ? 90 : 280
-                                    easing.type: tileMouse.pressed ? Easing.OutCubic : Easing.OutBack
-                                    easing.overshoot: 1.5
+                            RowLayout {
+                                width: parent.width
+                                visible: root.isSpaceOnly
+
+                                StyledText {
+                                    text: Translation.tr("All Applications (%1)").arg(LauncherSearch.appResults.length)
+                                    font.pixelSize: Appearance.font.pixelSize.smaller
+                                    font.weight: Font.DemiBold
+                                    color: Appearance.colors.colSubtext
                                 }
                             }
 
-                            MaterialShape {
-                                id: shapeCanvas
-                                anchors.fill: parent
-                                shape: tileWrap.shapeType
-                                color: tileWrap.selected ? Appearance.colors.colPrimaryContainerHover : tileWrap.shapeColor
-                                borderWidth: 0
+                            Flow {
+                                width: parent.width
+                                spacing: 10
 
-                                Behavior on color {
-                                    animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
-                                }
-                            }
+                                Repeater {
+                                    model: root.displayedApps
 
-                            // App Icon
-                            Loader {
-                                anchors.centerIn: parent
-                                sourceComponent: tileWrap.modelData.iconType === LauncherSearchResult.IconType.Material
-                                    ? materialIcon
-                                    : (tileWrap.modelData.iconType === LauncherSearchResult.IconType.Text ? textIcon : systemIcon)
+                                    delegate: RippleButton {
+                                        id: appTile
+                                        required property var modelData
+                                        required property int index
 
-                                Component {
-                                    id: systemIcon
-                                    IconImage {
-                                        implicitSize: root.iconSize
-                                        source: Quickshell.iconPath(tileWrap.modelData.iconName, "image-missing")
-                                    }
-                                }
-                                Component {
-                                    id: materialIcon
-                                    MaterialSymbol {
-                                        iconSize: root.iconSize
-                                        text: tileWrap.modelData.iconName
-                                        color: tileWrap.selected ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnSurface
-                                    }
-                                }
-                                Component {
-                                    id: textIcon
-                                    StyledText {
-                                        font.pixelSize: root.iconSize
-                                        text: tileWrap.modelData.iconName
-                                        color: tileWrap.selected ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnSurface
+                                        readonly property bool isSelected: root.selectedSection === "apps" && root.sectionIndex === index
+                                        width: Math.floor((contentColumn.width - 50) / 6)
+                                        implicitHeight: 104
+                                        buttonRadius: 16
+                                        colBackground: isSelected ? Appearance.colors.colPrimaryContainer : (appTile.hovered ? Appearance.colors.colLayer1Hover : "transparent")
+                                        colBackgroundHover: Appearance.colors.colPrimaryContainerHover
+                                        colRipple: Appearance.colors.colPrimaryContainerActive
+
+                                        onHoveredChanged: {
+                                            if (hovered) {
+                                                root.selectedSection = "apps";
+                                                root.sectionIndex = index;
+                                            }
+                                        }
+
+                                        onClicked: {
+                                            GlobalStates.overviewOpen = false;
+                                            appTile.modelData.execute();
+                                        }
+
+                                        ColumnLayout {
+                                            anchors.centerIn: parent
+                                            spacing: 4
+
+                                            IconImage {
+                                                Layout.alignment: Qt.AlignHCenter
+                                                implicitWidth: 54
+                                                implicitHeight: 54
+                                                source: Quickshell.iconPath(appTile.modelData.iconName, "application-x-executable")
+                                            }
+
+                                            StyledText {
+                                                Layout.preferredWidth: appTile.width - 12
+                                                horizontalAlignment: Text.AlignHCenter
+                                                elide: Text.ElideRight
+                                                text: appTile.modelData.name
+                                                font.pixelSize: Appearance.font.pixelSize.normal
+                                                font.weight: appTile.isSelected ? Font.Medium : Font.Normal
+                                                color: appTile.isSelected ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnLayer0
+                                            }
+                                        }
                                     }
                                 }
                             }
                         }
 
-                        // App Label Text
-                        StyledText {
-                            Layout.fillWidth: true
-                            Layout.leftMargin: 2
-                            Layout.rightMargin: 2
-                            horizontalAlignment: Text.AlignHCenter
-                            maximumLineCount: 1
-                            elide: Text.ElideRight
-                            font.pixelSize: Appearance.font.pixelSize.small
-                            font.weight: tileWrap.selected ? Font.Bold : Font.Normal
-                            color: tileWrap.selected ? Appearance.colors.colPrimary : Appearance.colors.colOnSurface
-                            text: tileWrap.modelData.name
+                        // --- 2. CALCULATOR SECTION ---
+                        Rectangle {
+                            id: mathCard
+                            width: parent.width
+                            height: 72
+                            radius: 18
+                            readonly property bool isSelected: root.selectedSection === "math" && root.sectionIndex === 0
+                            color: isSelected ? ColorUtils.transparentize(Appearance.colors.colPrimaryContainer, 0.5) : Appearance.colors.colLayer1
+                            border.width: isSelected ? 2 : 1
+                            border.color: isSelected ? Appearance.colors.colPrimary : ColorUtils.transparentize(Appearance.colors.colOutline, 0.8)
+                            visible: LauncherSearch.mathResult !== null
 
                             Behavior on color {
                                 animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onEntered: {
+                                    root.selectedSection = "math";
+                                    root.sectionIndex = 0;
+                                }
+                                onClicked: {
+                                    if (LauncherSearch.mathResult) {
+                                        Quickshell.clipboardText = LauncherSearch.mathResult.result;
+                                        GlobalStates.overviewOpen = false;
+                                    }
+                                }
+                            }
+
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: 18
+                                anchors.rightMargin: 18
+                                spacing: 16
+
+                                MaterialShapeWrappedMaterialSymbol {
+                                    iconSize: 26
+                                    padding: 10
+                                    shape: MaterialShape.Shape.Cookie4Sided
+                                    color: Appearance.colors.colPrimaryContainer
+                                    colSymbol: Appearance.colors.colOnPrimaryContainer
+                                    text: "calculate"
+                                }
+
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 0
+
+                                    StyledText {
+                                        text: LauncherSearch.mathResult?.result ?? ""
+                                        font.pixelSize: Appearance.font.pixelSize.huge
+                                        font.weight: Font.Bold
+                                        color: Appearance.colors.colPrimary
+                                    }
+
+                                    StyledText {
+                                        text: `= ${LauncherSearch.mathResult?.expression ?? ""}`
+                                        font.pixelSize: Appearance.font.pixelSize.small
+                                        color: Appearance.colors.colSubtext
+                                    }
+                                }
+
+                                RippleButton {
+                                    implicitWidth: 36
+                                    implicitHeight: 36
+                                    buttonRadius: 18
+                                    colBackground: Appearance.colors.colLayer2
+                                    onClicked: {
+                                        if (LauncherSearch.mathResult) {
+                                            Quickshell.clipboardText = LauncherSearch.mathResult.result;
+                                            GlobalStates.overviewOpen = false;
+                                        }
+                                    }
+
+                                    contentItem: MaterialSymbol {
+                                        anchors.centerIn: parent
+                                        text: "content_copy"
+                                        iconSize: 18
+                                        color: Appearance.colors.colOnLayer0
+                                    }
+
+                                    StyledToolTip {
+                                        text: Translation.tr("Copy result")
+                                    }
+                                }
+                            }
+                        }
+
+                        // --- 3. FILES / DOCUMENTS SECTION ---
+                        Column {
+                            id: filesSection
+                            width: parent.width
+                            spacing: 6
+                            visible: LauncherSearch.fileResults.length > 0 && !root.isSpaceOnly
+
+                            RowLayout {
+                                width: parent.width
+
+                                StyledText {
+                                    text: Translation.tr("Documents (%1)").arg(LauncherSearch.fileResults.length)
+                                    font.pixelSize: Appearance.font.pixelSize.smaller
+                                    font.weight: Font.DemiBold
+                                    color: Appearance.colors.colSubtext
+                                }
+                            }
+
+                            Rectangle {
+                                width: parent.width
+                                height: fileColumn.implicitHeight + 8
+                                radius: 18
+                                color: Appearance.colors.colLayer1
+                                border.width: 1
+                                border.color: ColorUtils.transparentize(Appearance.colors.colOutline, 0.8)
+
+                                Column {
+                                    id: fileColumn
+                                    anchors {
+                                        top: parent.top
+                                        left: parent.left
+                                        right: parent.right
+                                        margins: 4
+                                    }
+                                    spacing: 2
+
+                                    Repeater {
+                                        model: LauncherSearch.fileResults
+
+                                        delegate: Rectangle {
+                                            id: fileRow
+                                            required property var modelData
+                                            required property int index
+
+                                            readonly property bool isSelected: root.selectedSection === "files" && root.sectionIndex === index
+
+                                            width: fileColumn.width
+                                            height: 58
+                                            radius: 12
+                                            color: isSelected ? Appearance.colors.colPrimaryContainer : (fileHoverArea.containsMouse ? Appearance.colors.colLayer1Hover : "transparent")
+
+                                            MouseArea {
+                                                id: fileHoverArea
+                                                anchors.fill: parent
+                                                hoverEnabled: true
+                                                cursorShape: Qt.PointingHandCursor
+                                                onEntered: {
+                                                    root.selectedSection = "files";
+                                                    root.sectionIndex = fileRow.index;
+                                                }
+                                                onClicked: {
+                                                    GlobalStates.overviewOpen = false;
+                                                    fileRow.modelData.execute();
+                                                }
+                                            }
+
+                                            RowLayout {
+                                                anchors.fill: parent
+                                                anchors.leftMargin: 12
+                                                anchors.rightMargin: 10
+                                                spacing: 12
+
+                                                Rectangle {
+                                                    Layout.preferredWidth: 40
+                                                    Layout.preferredHeight: 40
+                                                    radius: 10
+                                                    color: fileRow.isSelected ? Appearance.colors.colPrimary : Appearance.colors.colLayer2
+
+                                                    MaterialSymbol {
+                                                        anchors.centerIn: parent
+                                                        iconSize: 22
+                                                        text: fileRow.modelData.icon
+                                                        color: fileRow.isSelected ? Appearance.colors.colOnPrimary : Appearance.colors.colPrimary
+                                                    }
+                                                }
+
+                                                ColumnLayout {
+                                                    Layout.fillWidth: true
+                                                    spacing: 0
+
+                                                    StyledText {
+                                                        Layout.fillWidth: true
+                                                        elide: Text.ElideRight
+                                                        text: fileRow.modelData.name
+                                                        font.pixelSize: Appearance.font.pixelSize.normal
+                                                        font.weight: fileRow.isSelected ? Font.Medium : Font.Normal
+                                                        color: fileRow.isSelected ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnLayer0
+                                                    }
+
+                                                    StyledText {
+                                                        Layout.fillWidth: true
+                                                        elide: Text.ElideMiddle
+                                                        text: fileRow.modelData.dir
+                                                        font.pixelSize: Appearance.font.pixelSize.smaller
+                                                        color: fileRow.isSelected ? ColorUtils.transparentize(Appearance.colors.colOnPrimaryContainer, 0.25) : Appearance.colors.colSubtext
+                                                    }
+                                                }
+
+                                                RippleButton {
+                                                    implicitWidth: 32
+                                                    implicitHeight: 32
+                                                    buttonRadius: 16
+                                                    colBackground: "transparent"
+                                                    colBackgroundHover: fileRow.isSelected ? Appearance.colors.colPrimaryContainerHover : Appearance.colors.colLayer1Hover
+                                                    onClicked: fileRow.modelData.openFolder()
+
+                                                    contentItem: MaterialSymbol {
+                                                        anchors.centerIn: parent
+                                                        iconSize: 18
+                                                        text: "folder_open"
+                                                        color: fileRow.isSelected ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colSubtext
+                                                    }
+
+                                                    StyledToolTip {
+                                                        text: Translation.tr("Open folder")
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // --- 4. ICONS (Material Symbols) SECTION ---
+                        Column {
+                            id: iconsSection
+                            width: parent.width
+                            spacing: 6
+                            visible: LauncherSearch.iconResults.length > 0 && !root.isSpaceOnly
+
+                            StyledText {
+                                text: Translation.tr("Icons")
+                                font.pixelSize: Appearance.font.pixelSize.smaller
+                                font.weight: Font.DemiBold
+                                color: Appearance.colors.colSubtext
+                            }
+
+                            Flow {
+                                width: parent.width
+                                spacing: 8
+
+                                Repeater {
+                                    model: LauncherSearch.iconResults
+
+                                    delegate: RippleButton {
+                                        id: iconTile
+                                        required property var modelData
+                                        required property int index
+
+                                        readonly property bool isSelected: root.selectedSection === "icons" && root.sectionIndex === index
+                                        width: Math.floor((contentColumn.width - 40) / 6)
+                                        implicitHeight: 68
+                                        buttonRadius: 12
+                                        colBackground: isSelected ? Appearance.colors.colPrimaryContainer : (iconTile.hovered ? Appearance.colors.colLayer1Hover : Appearance.colors.colLayer1)
+                                        colBackgroundHover: Appearance.colors.colPrimaryContainerHover
+                                        colRipple: Appearance.colors.colPrimaryContainerActive
+
+                                        onHoveredChanged: {
+                                            if (hovered) {
+                                                root.selectedSection = "icons";
+                                                root.sectionIndex = index;
+                                            }
+                                        }
+
+                                        onClicked: {
+                                            iconTile.modelData.execute();
+                                            GlobalStates.overviewOpen = false;
+                                        }
+
+                                        ColumnLayout {
+                                            anchors.centerIn: parent
+                                            spacing: 4
+
+                                            MaterialSymbol {
+                                                Layout.alignment: Qt.AlignHCenter
+                                                iconSize: 26
+                                                text: iconTile.modelData.iconName
+                                                color: iconTile.isSelected ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnLayer0
+                                            }
+
+                                            StyledText {
+                                                Layout.preferredWidth: iconTile.width - 8
+                                                horizontalAlignment: Text.AlignHCenter
+                                                elide: Text.ElideRight
+                                                text: iconTile.modelData.name
+                                                font.pixelSize: Appearance.font.pixelSize.smaller
+                                                font.weight: iconTile.isSelected ? Font.Medium : Font.Normal
+                                                color: iconTile.isSelected ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colSubtext
+                                            }
+                                        }
+
+                                        StyledToolTip {
+                                            text: Translation.tr("Copy '%1'").arg(iconTile.modelData.name)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // --- 5. SETTINGS SECTION ---
+                        Column {
+                            id: settingsSection
+                            width: parent.width
+                            spacing: 6
+                            visible: LauncherSearch.settingsResults.length > 0 && !root.isSpaceOnly
+
+                            StyledText {
+                                text: Translation.tr("Settings")
+                                font.pixelSize: Appearance.font.pixelSize.smaller
+                                font.weight: Font.DemiBold
+                                color: Appearance.colors.colSubtext
+                            }
+
+                            Rectangle {
+                                width: parent.width
+                                height: settingsColumn.implicitHeight + 8
+                                radius: 18
+                                color: Appearance.colors.colLayer1
+                                border.width: 1
+                                border.color: ColorUtils.transparentize(Appearance.colors.colOutline, 0.8)
+
+                                Column {
+                                    id: settingsColumn
+                                    anchors {
+                                        top: parent.top
+                                        left: parent.left
+                                        right: parent.right
+                                        margins: 4
+                                    }
+                                    spacing: 2
+
+                                    Repeater {
+                                        model: LauncherSearch.settingsResults
+
+                                        delegate: Rectangle {
+                                            id: settingsRow
+                                            required property var modelData
+                                            required property int index
+
+                                            readonly property bool isSelected: root.selectedSection === "settings" && root.sectionIndex === index
+                                            width: settingsColumn.width
+                                            height: 52
+                                            radius: 12
+                                            color: isSelected ? Appearance.colors.colPrimaryContainer : (setHover.containsMouse ? Appearance.colors.colLayer1Hover : "transparent")
+
+                                            MouseArea {
+                                                id: setHover
+                                                anchors.fill: parent
+                                                hoverEnabled: true
+                                                cursorShape: Qt.PointingHandCursor
+                                                onEntered: {
+                                                    root.selectedSection = "settings";
+                                                    root.sectionIndex = settingsRow.index;
+                                                }
+                                                onClicked: {
+                                                    settingsRow.modelData.execute();
+                                                }
+                                            }
+
+                                            RowLayout {
+                                                anchors.fill: parent
+                                                anchors.leftMargin: 12
+                                                anchors.rightMargin: 12
+                                                spacing: 12
+
+                                                MaterialSymbol {
+                                                    iconSize: 22
+                                                    text: "settings"
+                                                    color: settingsRow.isSelected ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colPrimary
+                                                }
+
+                                                ColumnLayout {
+                                                    Layout.fillWidth: true
+                                                    spacing: 0
+
+                                                    StyledText {
+                                                        text: settingsRow.modelData.name
+                                                        font.pixelSize: Appearance.font.pixelSize.normal
+                                                        font.weight: settingsRow.isSelected ? Font.Medium : Font.Normal
+                                                        color: settingsRow.isSelected ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnLayer0
+                                                    }
+
+                                                    StyledText {
+                                                        text: settingsRow.modelData.comment
+                                                        font.pixelSize: Appearance.font.pixelSize.smaller
+                                                        color: settingsRow.isSelected ? ColorUtils.transparentize(Appearance.colors.colOnPrimaryContainer, 0.25) : Appearance.colors.colSubtext
+                                                    }
+                                                }
+
+                                                MaterialSymbol {
+                                                    iconSize: 18
+                                                    text: "arrow_forward"
+                                                    color: settingsRow.isSelected ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colSubtext
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -426,6 +1063,3 @@ Item { // Wrapper
         }
     }
 }
-
-
-

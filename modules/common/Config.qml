@@ -608,6 +608,13 @@ Singleton {
                 property string engineBaseUrl: "https://www.google.com/search?q="
                 property list<string> excludedSites: ["quora.com", "facebook.com"]
                 property bool sloppy: false // Uses levenshtein distance based scoring instead of fuzzy sort. Very weird.
+                property JsonObject providers: JsonObject {
+                    property bool files: true
+                    property bool calculator: true
+                    property bool icons: true
+                    property bool settings: true
+                }
+                property list<string> searchLocations: ["~", "~/Documents", "~/Downloads", "~/Pictures", "~/Videos", "~/Projects"]
                 property JsonObject prefix: JsonObject {
                     property bool showDefaultActionsWithoutPrefix: true
                     property string action: "/"

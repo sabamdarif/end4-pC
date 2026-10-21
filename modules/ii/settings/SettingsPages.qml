@@ -113,7 +113,6 @@ Singleton {
                 { key: "desktop-widgets", name: Translation.tr("Widgets"),         icon: "widgets",         component: root.page("desktop/WidgetsConfig.qml") },
                 { key: "custom-image",    name: Translation.tr("Custom Image"),    icon: "image",           component: root.page("desktop/CustomImageConfig.qml") },
                 { key: "overlay",         name: Translation.tr("Overlay"),         icon: "layers",          component: root.page("desktop/OverlayConfig.qml") },
-                { key: "region-selector", name: Translation.tr("Region Selector"), icon: "screenshot_region", component: root.page("desktop/RegionSelectorConfig.qml") },
             ]
         },
         {
@@ -132,7 +131,6 @@ Singleton {
                 { key: "updates",           name: Translation.tr("Updates"),            icon: "deployed_code_update", component: root.page("system/UpdatesConfig.qml") },
                 { key: "weather",           name: Translation.tr("Weather"),            icon: "flare",           component: root.page("system/WeatherConfig.qml") },
                 { key: "search",            name: Translation.tr("Search"),             icon: "search",          component: root.page("system/SearchConfig.qml") },
-                { key: "music-recognition", name: Translation.tr("Music Recognition"),  icon: "music_cast",      component: root.page("system/MusicRecognitionConfig.qml") },
             ]
         },
         {
