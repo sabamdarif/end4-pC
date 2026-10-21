@@ -86,12 +86,12 @@ Item {
         }
     }
 
-    function moveToWorkspace(ws) {
+    function moveToWorkspace(workspaceId) {
         for (const toplevel of root.toplevels) {
             const windowId = niriWindowId(toplevel);
             if (windowId > 0)
                 Quickshell.execDetached(["niri", "msg", "action", "move-window-to-workspace",
-                    "--window-id", String(windowId), "--focus", "false", String(ws)]);
+                    "--window-id", String(windowId), "--focus", "false", String(workspaceId)]);
         }
     }
 
@@ -109,9 +109,14 @@ Item {
             id: contextPopup
             visible: true
 
-            // The fork's dock is bottom-only.
-            readonly property int workspacesShown: Math.max(1, Config.options?.bar.workspaces.shown ?? 10)
-            readonly property int workspaceGroup: Math.floor((Math.max(NiriData.activeWorkspaceIdx, 1) - 1) / workspacesShown)
+            // niri's workspaces are dynamic, so mirror the ones niri reports for
+            // the focused output instead of the bar's fixed shown count.
+            readonly property var workspacesOnOutput: {
+                const output = NiriData.currentOutput;
+                return NiriData.workspaces
+                    .filter(ws => ws.output === output)
+                    .sort((a, b) => a.idx - b.idx);
+            }
 
             anchor {
                 window: root.QsWindow.window
@@ -207,23 +212,22 @@ Item {
                         spacing: 2
 
                         Repeater {
-                            model: contextPopup.workspacesShown
+                            model: contextPopup.workspacesOnOutput
                             delegate: RippleButton {
                                 id: wsButton
-                                required property int index
-                                readonly property int workspaceId: contextPopup.workspaceGroup * contextPopup.workspacesShown + index + 1
+                                required property var modelData
                                 implicitWidth: 28
                                 implicitHeight: 28
                                 buttonRadius: Appearance.rounding.small
                                 contentItem: StyledText {
                                     anchors.centerIn: parent
-                                    text: String(wsButton.workspaceId)
+                                    text: String(wsButton.modelData.idx)
                                     font.pixelSize: Appearance.font.pixelSize.small
                                     horizontalAlignment: Text.AlignHCenter
                                     color: Appearance.m3colors.m3onSurface
                                 }
                                 onClicked: {
-                                    root.moveToWorkspace(wsButton.workspaceId);
+                                    root.moveToWorkspace(wsButton.modelData.id);
                                     root.close();
                                 }
                             }
