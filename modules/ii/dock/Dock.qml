@@ -45,6 +45,25 @@ Scope {
             property bool fullscreenOnThisMonitor: (ToplevelManager.activeToplevel?.fullscreen ?? false)
                 && NiriData.currentOutput === modelData.name
 
+            readonly property bool hasWindowsOnWorkspace: {
+                if (!NiriData.isNiri) {
+                    return (ToplevelManager.toplevels?.values?.length ?? 0) > 0;
+                }
+                const workspaces = NiriData.workspaces;
+                const windows = NiriData.windows;
+                if (!workspaces || workspaces.length === 0) {
+                    return (ToplevelManager.toplevels?.values?.length ?? 0) > 0;
+                }
+                const currentWs = workspaces.find(ws => ws.output === modelData.name && (ws.is_active || ws.is_focused))
+                    ?? workspaces.find(ws => ws.is_active || ws.is_focused)
+                    ?? workspaces[0];
+                if (!currentWs) return false;
+                if (currentWs.active_window_id !== null && currentWs.active_window_id !== undefined) {
+                    return true;
+                }
+                return windows.some(w => w.workspace_id == currentWs.id);
+            }
+
             property bool reveal: {
                 if (dockContextMenu.isOpen)
                     return true
@@ -54,7 +73,7 @@ Scope {
                     || (Config.options?.dock.hoverToReveal && dockMouseArea.containsMouse)
                     || activeAppsArea.requestDockShow
                     || dragSlots.requestDockShow
-                    || (!ToplevelManager.activeToplevel?.activated)
+                    || !hasWindowsOnWorkspace
             }
 
             exclusiveZone: (root.pinned && !fullscreenOnThisMonitor)
