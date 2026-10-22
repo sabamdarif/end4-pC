@@ -37,5 +37,6 @@ AbstractQuickPanel {
             }
         }
         CloudflareWarp {}
+        LiveWallpaperToggle {}
     }
 }

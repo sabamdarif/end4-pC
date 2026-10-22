@@ -328,6 +328,10 @@ Singleton {
                 property bool enableWallpaperPreview: false
                 property string thumbnailPath: ""
                 property bool hideWhenFullscreen: true
+                property JsonObject liveWallpaper: JsonObject {
+                    property bool pauseOnBattery: false
+                    property real pauseBelowPercent: 0
+                }
                 property JsonObject parallax: JsonObject {
                     property bool vertical: false
                     property bool autoVertical: false

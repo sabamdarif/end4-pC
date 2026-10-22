@@ -114,8 +114,18 @@ Variants {
             return Wallpapers.previewPath || Wallpapers.confirmedPath || Config.options.background.wallpaperPath;
         }
 
+        function thumbnailFor(path) {
+            if (!path) return Config.options.background.thumbnailPath;
+            if (path === Config.options.background.wallpaperPath && Config.options.background.thumbnailPath)
+                return Config.options.background.thumbnailPath;
+            const resolved = CF.FileUtils.trimFileProtocol(`${Qt.resolvedUrl(path)}`);
+            const encoded = resolved.split("/").map(part => encodeURIComponent(part)).join("/");
+            const hash = Qt.md5(`file://${encoded}`);
+            return `${Directories.genericCache}/thumbnails/large/${hash}.png`;
+        }
+
         property bool wallpaperIsVideo: bgRoot.effectiveWallpaperPath.endsWith(".mp4") || bgRoot.effectiveWallpaperPath.endsWith(".webm") || bgRoot.effectiveWallpaperPath.endsWith(".mkv") || bgRoot.effectiveWallpaperPath.endsWith(".avi") || bgRoot.effectiveWallpaperPath.endsWith(".mov")
-        property string wallpaperPath: wallpaperIsVideo ? Config.options.background.thumbnailPath : bgRoot.effectiveWallpaperPath
+        property string wallpaperPath: wallpaperIsVideo ? bgRoot.thumbnailFor(bgRoot.effectiveWallpaperPath) : bgRoot.effectiveWallpaperPath
         property bool wallpaperSafetyTriggered: {
             const enabled = Config.options.workSafety.enable.wallpaper;
             const sensitiveWallpaper = (CF.StringUtils.stringListContainsSubstring(wallpaperPath.toLowerCase(), Config.options.workSafety.triggerCondition.fileKeywords));

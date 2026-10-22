@@ -16,11 +16,50 @@ MouseArea {
     property real previewCellAspectRatio: 4 / 3
     property bool useDarkMode: Appearance.m3colors.darkmode
     property string source: "local"
+    readonly property bool isLocalSource: root.source === "local" || root.source === "live"
+    readonly property bool hasLivePath: Boolean((Config.options.wallpaperSelector.liveWallpapersPath ?? "").trim().length > 0)
+
+    readonly property var providerModel: {
+        const list = [
+            { value: "local",     displayName: Translation.tr("Local") }
+        ];
+        if (root.hasLivePath) {
+            list.push({ value: "live", displayName: Translation.tr("Local (live)") });
+        }
+        list.push(
+            { value: "wallhaven", displayName: Translation.tr("Wallhaven") },
+            { value: "naive",     displayName: Translation.tr("NA-ive") },
+            { value: "unsplash",  displayName: Translation.tr("Unsplash") },
+            { value: "pexels",    displayName: Translation.tr("Pexels") }
+        );
+        return list;
+    }
+
+    function switchSource(val) {
+        root.source = val;
+        if (val === "live") {
+            GlobalStates.wallpaperSelectorTarget = "live";
+            const livePath = Config.options.wallpaperSelector.liveWallpapersPath;
+            Wallpapers.setDirectory((livePath ?? "").trim().length > 0 ? livePath : Wallpapers.defaultFolder);
+        } else if (val === "local") {
+            GlobalStates.wallpaperSelectorTarget = "wallpaper";
+            const userPath = Config.options.wallpaperSelector.userPath;
+            Wallpapers.setDirectory((userPath ?? "").trim().length > 0 ? userPath : Wallpapers.defaultFolder);
+        }
+    }
+
+    onHasLivePathChanged: {
+        const idx = root.providerModel.findIndex(m => m.value === root.source);
+        if (idx !== -1 && sourceCombo.currentIndex !== idx) {
+            sourceCombo.currentIndex = idx;
+        }
+    }
+
     property string selectedResolution: "1080p"
     property string selectedColorGroup: ""
     property bool filterFieldFocused: false
     // Toolbar fields live inside Loaders, so their ids are out of scope here.
-    readonly property Item searchField: root.source === "local"
+    readonly property Item searchField: root.isLocalSource
         ? (localToolbarLoader.item?.searchField ?? null)
         : (onlineToolbarLoader.item?.searchField ?? null)
 
@@ -224,12 +263,12 @@ MouseArea {
 
                         MaterialShapeWrappedMaterialSymbol {
                             wrappedShape: MaterialShape.Shape.Gem
-                            text: "image"
+                            text: (GlobalStates.wallpaperSelectorTarget === "live" || root.source === "live") ? "video_library" : "image"
                             iconSize: Appearance.font.pixelSize.larger
                         }
 
                         StyledText {
-                            text: GlobalStates.wallpaperSelectorTarget === "live"
+                            text: (GlobalStates.wallpaperSelectorTarget === "live" || root.source === "live")
                                 ? Translation.tr("Live Wallpaper Selector")
                                 : Translation.tr("Wallpaper Selector")
                             font.pixelSize: Appearance.font.pixelSize.large
@@ -241,7 +280,7 @@ MouseArea {
 
                         Loader {
                             id: localToolbarLoader
-                            active: root.source === "local"
+                            active: root.isLocalSource
                             visible: active
                             sourceComponent: RowLayout {
                                 property alias searchField: filterField
@@ -290,7 +329,7 @@ MouseArea {
 
                         Loader {
                             id: onlineToolbarLoader
-                            active: root.source !== "local"
+                            active: !root.isLocalSource
                             visible: active
                             sourceComponent: RowLayout {
                                 property alias searchField: onlineSearchField
@@ -367,18 +406,15 @@ MouseArea {
 
                         StyledComboBox {
                             id: sourceCombo
-                            implicitWidth: 120
-                            model: [
-                                { value: "local",     displayName: Translation.tr("Local") },
-                                { value: "wallhaven", displayName: Translation.tr("Wallhaven") },
-                                { value: "naive",     displayName: Translation.tr("NA-ive") },
-                                { value: "unsplash",  displayName: Translation.tr("Unsplash") },
-                                { value: "pexels",    displayName: Translation.tr("Pexels") },
-                            ]
+                            implicitWidth: 140
+                            model: root.providerModel
                             textRole: "displayName"
-                            onCurrentIndexChanged: {
-                                root.source = model[currentIndex].value
-                                root.forceActiveFocus()
+                            onActivated: index => {
+                                const item = model[index];
+                                if (item) {
+                                    root.switchSource(item.value);
+                                }
+                                root.forceActiveFocus();
                             }
                         }
 
@@ -409,7 +445,7 @@ MouseArea {
                     Loader {
                         id: gridLoader
                         anchors.fill: parent
-                        sourceComponent: root.source === "local" ? localGridComponent : onlineGridComponent
+                        sourceComponent: root.isLocalSource ? localGridComponent : onlineGridComponent
                     }
 
                     Component {
@@ -440,14 +476,27 @@ MouseArea {
     Connections {
         target: GlobalStates
         function onWallpaperSelectorOpenChanged() {
-            if (GlobalStates.wallpaperSelectorOpen && monitorIsFocused) {
-                if (root.source === "local")
-                    root.searchField?.forceActiveFocus()
-                else
-                    root.forceActiveFocus()
-            } else if (!GlobalStates.wallpaperSelectorOpen) {
+            if (GlobalStates.wallpaperSelectorOpen) {
+                const targetVal = GlobalStates.wallpaperSelectorTarget === "live" ? "live" : "local";
+                const targetIdx = root.providerModel.findIndex(m => m.value === targetVal);
+                if (targetIdx !== -1) {
+                    sourceCombo.currentIndex = targetIdx;
+                    root.source = targetVal;
+                } else {
+                    sourceCombo.currentIndex = 0;
+                    root.source = "local";
+                }
+                if (monitorIsFocused) {
+                    if (root.isLocalSource)
+                        root.searchField?.forceActiveFocus();
+                    else
+                        root.forceActiveFocus();
+                }
+            } else {
                 Wallpapers.stopPreview();
                 GlobalStates.wallpaperSelectorTarget = "wallpaper";
+                root.source = "local";
+                sourceCombo.currentIndex = 0;
             }
         }
     }

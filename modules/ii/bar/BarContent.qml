@@ -27,6 +27,7 @@ Item {
         let result = layout
         if (!trayHasItems) result = result.filter(name => name !== "sysTray")
         if (!Privacy.active) result = result.filter(name => name !== "privacyIndicator")
+        if (!LiveWallpaper.available) result = result.filter(name => name !== "liveWallpaper")
         return result
     }
 

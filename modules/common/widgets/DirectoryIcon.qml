@@ -25,7 +25,7 @@ Image {
 
     onStatusChanged: {
         if (status === Image.Error)
-            source = Quickshell.iconPath("error");
+            source = Quickshell.iconPath("application-x-zerosize");
     }
 
     Process {
@@ -34,7 +34,10 @@ Image {
         stdout: StdioCollector {
             onStreamFinished: {
                 const mime = text.split(";")[0].replace("/", "-");
-                root.source = Images.validImageTypes.some(t => mime === `image-${t}`) ? fileModelData.fileUrl : Quickshell.iconPath(mime, "image-missing");
+                const isVideo = mime.startsWith("video-");
+                root.source = Images.validImageTypes.some(t => mime === `image-${t}`)
+                    ? fileModelData.fileUrl
+                    : (isVideo ? Quickshell.iconPath("video-x-generic", "video") : Quickshell.iconPath(mime, "application-x-zerosize"));
             }
         }
     }
