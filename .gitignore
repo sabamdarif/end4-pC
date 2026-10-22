@@ -1,4 +1,4 @@
-/.workbuddy-ai/memory
 __pycache__/
 *.pyc
 
+*PLAN.md
