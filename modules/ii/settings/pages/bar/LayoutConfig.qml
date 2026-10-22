@@ -10,6 +10,19 @@ ContentPage {
     id: page
     forceWidth: true
 
+    readonly property var activeWidgets: [
+        ...(Config.options.bar.layouts.leftLayout ?? []),
+        ...(Config.options.bar.layouts.middleLayout ?? []),
+        ...(Config.options.bar.layouts.rightLayout ?? [])
+    ]
+
+    readonly property bool hasWorkspaces: activeWidgets.indexOf("workspaces") !== -1
+    readonly property bool hasResources: activeWidgets.indexOf("resources") !== -1
+    readonly property bool hasMedia: activeWidgets.indexOf("media") !== -1
+    readonly property bool hasTray: activeWidgets.indexOf("sysTray") !== -1
+    readonly property bool hasUtilButtons: activeWidgets.indexOf("utilButtons") !== -1
+    readonly property bool hasPrivacy: activeWidgets.indexOf("privacyIndicator") !== -1
+
     property var allWidgets: [
         { id: "workspaces",        name: Translation.tr("Workspaces"),           icon: "steppers" },
         { id: "weatherBar",        name: Translation.tr("Weather"),              icon: "flare" },
@@ -28,16 +41,12 @@ ContentPage {
         { id: "privacyIndicator",  name: Translation.tr("Privacy"),              icon: "shield_lock" },
         { id: "docktoPanel",       name: Translation.tr("Dock to Panel"),        icon: "apps" },
         { id: "visualizer",        name: Translation.tr("Visualizer"),           icon: "graphic_eq" },
-        { id: "xkbIndicator",   name: Translation.tr("Keyboard Layout"), icon: "keyboard" },
-        { id: "divisor",            name: Translation.tr("Divider"),             icon: "horizontal_distribute" },
+        { id: "xkbIndicator",      name: Translation.tr("Keyboard Layout"),      icon: "keyboard" },
+        { id: "divisor",           name: Translation.tr("Divider"),              icon: "horizontal_distribute" },
     ]
 
     function availableFor() {
-        let used = [
-            ...Config.options.bar.layouts.leftLayout,
-            ...Config.options.bar.layouts.middleLayout,
-            ...Config.options.bar.layouts.rightLayout
-        ]
+        let used = page.activeWidgets
         const multipleAllowed = ["visualizer", "divisor"]
         return allWidgets.filter(w => {
             if (w.id === "divisor" && Config.options.bar.borderless !== "transparent") return false
@@ -78,6 +87,284 @@ ContentPage {
                 availableWidgets: page.availableFor()
                 getWidgetName: page.getWidgetName
                 onUpdate: list => Config.options.bar.layouts.rightLayout = list
+            }
+        }
+    }
+
+    ContentSection {
+        visible: page.hasWorkspaces
+        shape: MaterialShape.Shape.Cookie12Sided
+        icon: "steppers"
+        title: Translation.tr("Workspaces")
+
+        GroupedList {
+            ConfigSelectionArray {
+                text: Translation.tr("Indicator style")
+                icon: "page_control"
+                currentValue: ["dot", "number", "han", "roman"].includes(Config.options.bar.workspaces.indicatorStyle)
+                    ? Config.options.bar.workspaces.indicatorStyle
+                    : "dot"
+                onSelected: newValue => {
+                    Config.options.bar.workspaces.indicatorStyle = newValue
+                }
+                options: [
+                    { displayName: Translation.tr("Dots"),      icon: "radio_button_checked", value: "dot" },
+                    { displayName: Translation.tr("Numbers"),   icon: "timer_10",             value: "number" },
+                    { displayName: Translation.tr("Han chars"), icon: "glyphs",               value: "han" },
+                    { displayName: Translation.tr("Roman"),     icon: "account_balance",      value: "roman" }
+                ]
+            }
+        }
+    }
+
+    ContentSection {
+        visible: page.hasResources
+        icon: "empty_dashboard"
+        shape: MaterialShape.Shape.Burst
+        title: Translation.tr("Resources")
+
+        GroupedList {
+            ConfigRow {
+                uniform: true
+                ConfigSwitch {
+                    buttonIcon: "planner_review"
+                    text: Translation.tr("CPU")
+                    checked: Config.options.bar.resources.alwaysShowCpu
+                    onCheckedChanged: { Config.options.bar.resources.alwaysShowCpu = checked }
+                }
+                ConfigSwitch {
+                    buttonIcon: "thermostat"
+                    text: Translation.tr("CPU Temperature")
+                    checked: Config.options.bar.resources.alwaysShowCpuTemp
+                    onCheckedChanged: { Config.options.bar.resources.alwaysShowCpuTemp = checked }
+                }
+            }
+            ConfigRow {
+                uniform: true
+                ConfigSwitch {
+                    buttonIcon: "memory"
+                    text: Translation.tr("RAM")
+                    checked: Config.options.bar.resources.alwaysShowRam
+                    onCheckedChanged: { Config.options.bar.resources.alwaysShowRam = checked }
+                }
+                ConfigSwitch {
+                    buttonIcon: "storage"
+                    text: Translation.tr("Disk")
+                    checked: Config.options.bar.resources.alwaysShowDisk
+                    onCheckedChanged: { Config.options.bar.resources.alwaysShowDisk = checked }
+                }
+            }
+            ConfigRow {
+                uniform: true
+                ConfigSwitch {
+                    buttonIcon: "swap_horiz"
+                    text: Translation.tr("Swap")
+                    checked: Config.options.bar.resources.alwaysShowSwap
+                    onCheckedChanged: { Config.options.bar.resources.alwaysShowSwap = checked }
+                }
+            }
+            ConfigSelectionArray {
+                text: Translation.tr("Style")
+                icon: "style"
+                currentValue: Config.options.bar.resources.style
+                onSelected: newValue => { Config.options.bar.resources.style = newValue; }
+                options: [
+                    { displayName: Translation.tr("Filled"),    icon: "incomplete_circle",  value: "filled" },
+                    { displayName: Translation.tr("Outline"),   icon: "circles",            value: "outline" }
+                ]
+            }
+            ConfigSwitch {
+                buttonIcon: "decimal_increase"
+                text: Translation.tr("Show Percentage")
+                checked: Config.options.bar.resources.showValue
+                onCheckedChanged: { Config.options.bar.resources.showValue = checked; }
+            }
+            ConfigSpinBox {
+                icon: "av_timer"
+                text: Translation.tr("Polling interval (ms)")
+                value: Config.options.resources.updateInterval
+                from: 100
+                to: 10000
+                stepSize: 100
+                onValueChanged: {
+                    Config.options.resources.updateInterval = value;
+                }
+            }
+        }
+    }
+
+    ContentSection {
+        visible: page.hasMedia
+        icon: "music_note"
+        shape: MaterialShape.Shape.Sunny
+        title: Translation.tr("Media")
+
+        GroupedList {
+            ConfigTextArea {
+                id: preferredPlayerField
+                Layout.fillWidth: true
+                buttonIcon: "play_circle"
+                text: Translation.tr("Preferred Player")
+                placeholderText: Translation.tr("e.g. spotify, firefox")
+                value: Config.options.bar.media.preferredPlayer
+                onValueChanged: {
+                    mediaDebounceTimer.restart();
+                }
+
+                Timer {
+                    id: mediaDebounceTimer
+                    interval: 600
+                    repeat: false
+                    onTriggered: {
+                        Config.options.bar.media.preferredPlayer = preferredPlayerField.value;
+                    }
+                }
+            }
+            ConfigSwitch {
+                buttonIcon: "keep"
+                text: Translation.tr("Pin media controls")
+                checked: Config.options.bar.media.alwaysVisible
+                onCheckedChanged: { Config.options.bar.media.alwaysVisible = checked; }
+            }
+            ConfigSwitch {
+                buttonIcon: "titlecase"
+                text: Translation.tr("Show only title")
+                checked: Config.options.bar.media.onlyTitle
+                onCheckedChanged: { Config.options.bar.media.onlyTitle = checked; }
+            }
+            ConfigSpinBox {
+                icon: "width"
+                text: Translation.tr("Max media width")
+                value: Config.options.bar.media.maxWidth
+                from: 100
+                to: 500
+                stepSize: 10
+                onValueChanged: {
+                    Config.options.bar.media.maxWidth = value;
+                }
+            }
+        }
+    }
+
+    ContentSection {
+        visible: page.hasTray
+        shape: MaterialShape.Shape.Square
+        icon: "inbox_customize"
+        title: Translation.tr("Tray")
+
+        GroupedList {
+            ConfigSwitch {
+                buttonIcon: "keep"
+                text: Translation.tr("Make icons pinned by default")
+                checked: Config.options.tray.invertPinnedItems
+                onCheckedChanged: { Config.options.tray.invertPinnedItems = checked; }
+            }
+            ConfigSwitch {
+                buttonIcon: "colors"
+                text: Translation.tr("Tint icons")
+                checked: Config.options.tray.monochromeIcons
+                onCheckedChanged: { Config.options.tray.monochromeIcons = checked; }
+            }
+        }
+    }
+
+    ContentSection {
+        visible: page.hasUtilButtons
+        icon: "buttons_alt"
+        shape: MaterialShape.Shape.SoftBurst
+        title: Translation.tr("Utility buttons")
+
+        GroupedList {
+            ConfigRow {
+                uniform: true
+                ConfigSwitch {
+                    buttonIcon: "screenshot_region"
+                    text: Translation.tr("Screen snip")
+                    checked: Config.options.bar.utilButtons.showScreenSnip
+                    onCheckedChanged: { Config.options.bar.utilButtons.showScreenSnip = checked }
+                }
+                ConfigSwitch {
+                    buttonIcon: "colorize"
+                    text: Translation.tr("Color picker")
+                    checked: Config.options.bar.utilButtons.showColorPicker
+                    onCheckedChanged: { Config.options.bar.utilButtons.showColorPicker = checked }
+                }
+            }
+            ConfigRow {
+                uniform: true
+                ConfigSwitch {
+                    buttonIcon: "mic"
+                    text: Translation.tr("Mic toggle")
+                    checked: Config.options.bar.utilButtons.showMicToggle
+                    onCheckedChanged: { Config.options.bar.utilButtons.showMicToggle = checked }
+                }
+                ConfigSwitch {
+                    buttonIcon: "dark_mode"
+                    text: Translation.tr("Dark/Light toggle")
+                    checked: Config.options.bar.utilButtons.showDarkModeToggle
+                    onCheckedChanged: { Config.options.bar.utilButtons.showDarkModeToggle = checked }
+                }
+            }
+            ConfigRow {
+                uniform: true
+                ConfigSwitch {
+                    buttonIcon: "speed"
+                    text: Translation.tr("Performance Profile")
+                    checked: Config.options.bar.utilButtons.showPerformanceProfileToggle
+                    onCheckedChanged: { Config.options.bar.utilButtons.showPerformanceProfileToggle = checked }
+                }
+                ConfigSwitch {
+                    buttonIcon: "screen_record"
+                    text: Translation.tr("Record Screen")
+                    checked: Config.options.bar.utilButtons.showScreenRecord
+                    onCheckedChanged: { Config.options.bar.utilButtons.showScreenRecord = checked }
+                }
+            }
+            ConfigRow {
+                uniform: true
+                ConfigSwitch {
+                    buttonIcon: "imagesmode"
+                    text: Translation.tr("Wallpapers Toggle")
+                    checked: Config.options.bar.utilButtons.showWallpaperToggle
+                    onCheckedChanged: { Config.options.bar.utilButtons.showWallpaperToggle = checked }
+                }
+            }
+        }
+    }
+
+    ContentSection {
+        visible: page.hasPrivacy
+        shape: MaterialShape.Shape.Cookie6Sided
+        icon: "shield_lock"
+        title: Translation.tr("Privacy indicator")
+
+        StyledText {
+            Layout.fillWidth: true
+            text: Translation.tr("The indicator only appears while one of these is in use. Add it to the bar from the layout page.")
+            font.pixelSize: Appearance.font.pixelSize.small
+            color: Appearance.colors.colOnSurfaceVariant
+            opacity: 0.7
+            wrapMode: Text.WordWrap
+        }
+
+        GroupedList {
+            ConfigSwitch {
+                buttonIcon: "videocam"
+                text: Translation.tr("Camera access")
+                checked: Config.options.bar.privacy.showCamera
+                onCheckedChanged: { Config.options.bar.privacy.showCamera = checked; }
+            }
+            ConfigSwitch {
+                buttonIcon: "mic"
+                text: Translation.tr("Microphone access")
+                checked: Config.options.bar.privacy.showMicrophone
+                onCheckedChanged: { Config.options.bar.privacy.showMicrophone = checked; }
+            }
+            ConfigSwitch {
+                buttonIcon: "screen_share"
+                text: Translation.tr("Screen sharing")
+                checked: Config.options.bar.privacy.showScreenShare
+                onCheckedChanged: { Config.options.bar.privacy.showScreenShare = checked; }
             }
         }
     }

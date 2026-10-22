@@ -15,10 +15,6 @@ NestableObject {
     readonly property int group: 0
 
     property list<bool> occupied: []
-    property list<var> biggestWindow: occupied.map((_, index) => {
-        const ws = NiriData.workspaces[index];
-        return ws ? NiriData.biggestWindowForWorkspace(ws.id) : null;
-    })
 
     function getWorkspaceId(group, index) {
         return NiriData.workspaces[index]?.idx ?? (index + 1);

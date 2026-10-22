@@ -19,13 +19,30 @@ ButtonMouseArea {
     property bool vertical: Config.options.bar.vertical
     property bool superPressAndHeld: false // Relevant modifications at bottom of file
 
+    readonly property string indicatorStyle: {
+        const s = Config.options.bar.workspaces.indicatorStyle;
+        return ["dot", "number", "han", "roman"].includes(s) ? s : "dot";
+    }
+    readonly property bool isNumberStyle: ["number", "han", "roman"].includes(indicatorStyle)
+
+    function getWorkspaceText(wsId) {
+        if (wsId < 1) return "";
+        const idx = wsId - 1;
+        const style = root.indicatorStyle;
+        if (style === "han") {
+            const hanChars = ["一","二","三","四","五","六","七","八","九","十","十一","十二","十三","十四","十五","十六","十七","十八","十九","二十"];
+            return hanChars[idx] || String(wsId);
+        }
+        if (style === "roman") {
+            const romanChars = ["I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX"];
+            return romanChars[idx] || String(wsId);
+        }
+        return String(wsId);
+    }
+
     property real workspaceButtonWidth: [3, 4].includes(Config.options.bar.cornerStyle) ? 30 : 26
     property real activeWorkspaceMargin: 2
     property real activeWorkspaceSize: workspaceButtonWidth - activeWorkspaceMargin * 2
-    property real workspaceIconSize: workspaceButtonWidth * 0.69
-    property real workspaceIconSizeShrinked: workspaceButtonWidth * 0.55
-    property real workspaceIconOpacityShrinked: 1
-    property real workspaceIconMarginShrinked: -4
     property int workspaceIndexInGroup: (wsModel.activeWorkspace - 1) % wsModel.shownCount
 
     Layout.alignment: vertical ? Qt.AlignHCenter : Qt.AlignVCenter
@@ -179,81 +196,6 @@ ButtonMouseArea {
             maskThresholdMin: 0.5
             maskSpreadAtMin: 1
         }
-
-        /////////////////// App icons ///////////////////
-        WorkspaceLayout {
-            id: appsGrid
-            z: 6
-
-            Repeater {
-                model: wsModel.shownCount
-                delegate: WorkspaceItem {
-                    id: wsApp
-                    property var biggestWindow: wsModel.biggestWindow[index]
-                    property var mainAppIconSource: Quickshell.iconPath(AppService.guessIcon(biggestWindow?.app_id), "image-missing")
-
-                    AppIcon {
-                        id: appIcon
-                        property real cornerMargin: (!root.superPressAndHeld && Config.options?.bar.workspaces.showAppIcons && wsApp.biggestWindow) ? (root.workspaceButtonWidth - root.workspaceIconSize) / 2 : root.workspaceIconMarginShrinked
-                        anchors {
-                            bottom: parent.bottom
-                            right: parent.right
-                            bottomMargin: (parent.implicitHeight - root.workspaceButtonWidth) / 2 + cornerMargin
-                            rightMargin: (parent.implicitWidth - root.workspaceButtonWidth) / 2 + cornerMargin
-                        }
-
-                        animated: !wsApp.biggestWindow // Prevent the "image-missing" icon
-                        visible: false // Prevent dupe: the colorizer already copies the icon
-
-                        source: wsApp.mainAppIconSource
-                        implicitSize: NumberUtils.roundToEven(root.workspaceIconSize)
-
-                        Behavior on opacity {
-                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
-                        }
-                        Behavior on cornerMargin {
-                            animation: Appearance.animation.elementMoveSmall.numberAnimation.createObject(this)
-                        }
-                    }
-
-                    Circle {
-                        id: iconMask
-                        visible: false
-                        layer.enabled: true
-                        diameter: appIcon.implicitSize
-                    }
-
-                    Loader { // Somehow putting this multieffect in a loader prevents it from not showing up
-                        id: colorizer
-                        anchors.fill: appIcon
-                        sourceComponent: Colorizer {
-                            implicitWidth: appIcon.implicitWidth
-                            implicitHeight: appIcon.implicitHeight
-                            colorizationColor: Appearance.m3colors.darkmode ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnPrimary
-                            colorization: Config.options.bar.workspaces.monochromeIcons ? 0.8 : 0.5
-                            brightness: 0
-                            source: appIcon
-
-                            opacity: !Config.options?.bar.workspaces.showAppIcons ? 0 : (wsApp.biggestWindow && !root.superPressAndHeld && Config.options?.bar.workspaces.showAppIcons) ? 1 : wsApp.biggestWindow ? root.workspaceIconOpacityShrinked : 0
-                            visible: opacity > 0
-                            scale: ((!root.superPressAndHeld && Config.options?.bar.workspaces.showAppIcons) ? root.workspaceIconSize : root.workspaceIconSizeShrinked) / root.workspaceIconSize
-
-                            Behavior on opacity {
-                                animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
-                            }
-                            Behavior on scale {
-                                animation: Appearance.animation.elementMoveSmall.numberAnimation.createObject(this)
-                            }
-
-                            maskEnabled: true
-                            maskSource: iconMask
-                            maskThresholdMin: 0.5
-                            maskSpreadAtMin: 1
-                        }
-                    }
-                }
-            }
-        }
     }
 
     /////////////////// Super key press handling ///////////////////
@@ -304,7 +246,6 @@ ButtonMouseArea {
 
     component NumberWorkspaceItem: WorkspaceItem {
         id: wsNum
-        property bool hasBiggestWindow: !!wsModel.biggestWindow[index]
         property int wsId: wsModel.getWorkspaceIdAt(index)
         property color contentColor: (wsModel.occupied[wsNum.index] && wsId !== wsModel.fakeWorkspace) ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnLayer1Inactive
         property bool showingNumbers: {
@@ -312,50 +253,16 @@ ButtonMouseArea {
                 return true;
             if (GlobalStates.screenLocked)
                 return false;
-            if (Config.options?.bar.workspaces.alwaysShowNumbers && (!Config.options?.bar.workspaces.showAppIcons || !wsNum.hasBiggestWindow))
-                return true;
-            return false;
+            return root.isNumberStyle;
         }
 
         FadeLoader {
             shown: !wsNum.showingNumbers
             anchors.centerIn: parent
-            Loader {
+            Circle {
                 anchors.centerIn: parent
-                sourceComponent: (Config.options?.bar.workspaces.indicatorStyle ?? "dot") === "icon" ? iconComponent : dotComponent
-
-                Component {
-                    id: dotComponent
-                    Circle {
-                        anchors.centerIn: parent
-                        diameter: root.workspaceButtonWidth * 0.18
-                        color: wsNum.contentColor
-                    }
-                }
-
-                Component {
-                    id: iconComponent
-                    MaterialSymbol {
-                        anchors.centerIn: parent
-                        iconSize: root.workspaceButtonWidth * 0.50
-                        color: wsNum.contentColor
-                        text: {
-                            switch (wsNum.wsId) {
-                                case 1:  return "code"
-                                case 2:  return "public"
-                                case 3:  return "music_note"
-                                case 4:  return "edit_square"
-                                case 5:  return "image"
-                                case 6:  return "forum"
-                                case 7:  return "browser_updated"
-                                case 8:  return "finance_mode"
-                                case 9:  return "monitor"
-                                case 10: return "analytics"
-                                default: return "circle"
-                            }
-                        }
-                    }
-                }
+                diameter: root.workspaceButtonWidth * 0.18
+                color: wsNum.contentColor
             }
         }
         FadeLoader {
@@ -368,7 +275,7 @@ ButtonMouseArea {
                     family: Config.options?.bar.workspaces.useNerdFont ? Appearance.font.family.iconNerd : defaultFont
                 }
                 color: wsNum.contentColor
-                text: Config.options?.bar.workspaces.numberMap[wsNum.wsId - 1] || wsNum.wsId
+                text: root.getWorkspaceText(wsNum.wsId)
             }
         }
     }

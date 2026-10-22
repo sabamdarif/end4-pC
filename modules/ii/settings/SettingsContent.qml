@@ -123,12 +123,24 @@ Item {
 
             const parts = GlobalStates.settingsPage.split(":");
             const target = parts[0];
-            const searchTerm = parts.length > 1 ? parts[1] : "";
+            let searchTerm = parts.length > 1 ? parts[1] : "";
+
+            const legacyBarTargets = {
+                "bar-workspaces": "Workspaces",
+                "bar-resources": "Resources",
+                "bar-media": "Media",
+                "bar-tray": "Tray",
+                "bar-util-buttons": "Utility buttons",
+                "bar-privacy": "Privacy"
+            };
 
             // Prefer the stable key; fall back to display names so an old-style
             // link ("Desktop") still lands somewhere sensible.
             let leafKey = SettingsPages.leafIndex(target) >= 0 ? target : ""
-            if (leafKey === "") {
+            if (target in legacyBarTargets) {
+                leafKey = "bar-layout";
+                if (searchTerm === "") searchTerm = legacyBarTargets[target];
+            } else if (leafKey === "") {
                 const byName = SettingsPages.leaves.find(l => l.name.toLowerCase() === target.toLowerCase())
                     ?? SettingsPages.leaves.find(l => l.groupName.toLowerCase() === target.toLowerCase())
                 if (byName) leafKey = byName.key

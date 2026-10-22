@@ -392,13 +392,9 @@ Singleton {
                 }
 
                 property JsonObject workspaces: JsonObject {
-                    property bool monochromeIcons: true
                     property int shown: 10
-                    property bool showAppIcons: true
-                    property string indicatorStyle: "dot" // "dot" or "icon"
-                    property bool alwaysShowNumbers: false
+                    property string indicatorStyle: "dot" // "dot", "number", "han", "roman"
                     property int showNumberDelay: 300 // milliseconds
-                    property list<string> numberMap: ["1", "2"] // Characters to show instead of numbers on workspace indicator
                     property bool useNerdFont: false
                 }
                 property JsonObject weather: JsonObject {

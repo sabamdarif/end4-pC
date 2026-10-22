@@ -95,14 +95,8 @@ Singleton {
         {
             key: "bar", name: Translation.tr("Bar"), icon: "toast", iconRotation: 180,
             children: [
-                { key: "bar-layout",       name: Translation.tr("Layout"),            icon: "splitscreen_add",     component: root.page("bar/LayoutConfig.qml") },
-                { key: "bar-position",     name: Translation.tr("Position & Style"),  icon: "pivot_table_chart",   component: root.page("bar/PositionStyleConfig.qml") },
-                { key: "bar-workspaces",   name: Translation.tr("Workspaces"),        icon: "steppers",            component: root.page("bar/WorkspacesConfig.qml") },
-                { key: "bar-resources",    name: Translation.tr("Resources"),         icon: "empty_dashboard",     component: root.page("bar/ResourcesConfig.qml") },
-                { key: "bar-media",        name: Translation.tr("Media"),             icon: "music_note",          component: root.page("bar/MediaConfig.qml") },
-                { key: "bar-tray",         name: Translation.tr("Tray"),              icon: "inbox",               component: root.page("bar/TrayConfig.qml") },
-                { key: "bar-util-buttons", name: Translation.tr("Utility Buttons"),   icon: "toggle_on",           component: root.page("bar/UtilButtonsConfig.qml") },
-                { key: "bar-privacy",      name: Translation.tr("Privacy"),           icon: "shield_lock",         component: root.page("bar/PrivacyConfig.qml") },
+                { key: "bar-layout",   name: Translation.tr("Layout"),           icon: "splitscreen_add",   component: root.page("bar/LayoutConfig.qml") },
+                { key: "bar-position", name: Translation.tr("Position & Style"), icon: "pivot_table_chart", component: root.page("bar/PositionStyleConfig.qml") },
             ]
         },
         {
