@@ -17,6 +17,24 @@ Item {
         "Circle", "Square", "Cookie12Sided", "Clover4Leaf", "Pill", "Heart"
     ]
 
+    readonly property var transitionsList: [
+        { displayName: Translation.tr("None"),       icon: "block",         value: "" },
+        { displayName: Translation.tr("Circle"),     icon: "circle",        value: "circleSelect" },
+        { displayName: Translation.tr("Circle Pit"), icon: "blur_circular", value: "circlePit" },
+        { displayName: Translation.tr("Magic"),      icon: "auto_awesome",  value: "magic" },
+        { displayName: Translation.tr("Doom"),       icon: "whatshot",      value: "Doom" },
+        { displayName: Translation.tr("Peel"),       icon: "layers",        value: "Peel" },
+        { displayName: Translation.tr("Fade"),       icon: "gradient",      value: "transition" },
+        { displayName: Translation.tr("Pixelate"),   icon: "grain",         value: "pixelate" },
+        { displayName: Translation.tr("Stripes"),    icon: "texture_minus", value: "stripes" },
+        { displayName: Translation.tr("CRT"),        icon: "tv",            value: "crt" },
+        { displayName: Translation.tr("Dissolve"),   icon: "blur_on",       value: "dissolve" },
+        { displayName: Translation.tr("Glitch"),     icon: "bug_report",    value: "glitch" },
+        { displayName: Translation.tr("Ripple"),     icon: "water",         value: "ripple" },
+        { displayName: Translation.tr("Shatter"),    icon: "broken_image",  value: "shatter" },
+        { displayName: Translation.tr("Random"),     icon: "shuffle",       value: "random" },
+    ]
+
     ColumnLayout {
         id: col
         width: root.width
@@ -219,56 +237,58 @@ Item {
         // Transitions
         Rectangle {
             Layout.fillWidth: true
-            implicitHeight: transCol.implicitHeight + 16
+            implicitHeight: 260
             radius: Appearance.rounding.verylarge
             color: Appearance.colors.colLayer0
+            clip: true
 
-            ColumnLayout {
-                id: transCol
+            StyledListView {
+                id: transList
                 anchors { fill: parent; margins: 8 }
-
-                Repeater {
-                    model: [
-                        { displayName: Translation.tr("Disable"),    icon: "block",        value: "" },
-                        { displayName: Translation.tr("Magic"),   icon: "auto_awesome", value: "magic" },
-                        { displayName: Translation.tr("Stripes"), icon: "texture_minus", value: "stripes" },
-                        { displayName: Translation.tr("Random"),  icon: "shuffle",      value: "random" },
-                    ]
-                    delegate: RippleButton {
-                        id: transRow
-                        required property var modelData
-                        Layout.fillWidth: true
-                        implicitHeight: 40
-                        toggled: Config.options.background.wallpaperAnimation === transRow.modelData.value
-                        colBackground: "transparent"
-                        buttonRadius: Appearance.rounding.verylarge
-                        colBackgroundHover: Appearance.colors.colLayer2
-                        colBackgroundToggled: Appearance.colors.colSecondaryContainer
-                        colBackgroundToggledHover: Appearance.colors.colSecondaryContainerHover
-                        colRippleToggled: Appearance.colors.colSecondaryContainerActive
-                        onClicked: Config.options.background.wallpaperAnimation = transRow.modelData.value
-                        contentItem: RowLayout {
-                            anchors { fill: parent; leftMargin: 12; rightMargin: 12 }
-                            spacing: 12
-                            MaterialSymbol {
-                                text: transRow.modelData.icon
-                                iconSize: Appearance.font.pixelSize.larger
-                                color: transRow.toggled ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnLayer1
-                                fill: transRow.toggled ? 1 : 0
-                            }
-                            StyledText {
-                                Layout.fillWidth: true
-                                text: transRow.modelData.displayName
-                                font.pixelSize: Appearance.font.pixelSize.normal
-                                color: transRow.toggled ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnLayer1
-                            }
-                            MaterialSymbol {
-                                visible: transRow.toggled
-                                text: "check"
-                                iconSize: Appearance.font.pixelSize.normal
-                                color: Appearance.colors.colOnSecondaryContainer
-                            }
+                spacing: 2
+                animateAppearance: false
+                model: root.transitionsList
+                delegate: RippleButton {
+                    id: transRow
+                    required property var modelData
+                    width: transList.width
+                    implicitHeight: 40
+                    toggled: Config.options.background.wallpaperAnimation === transRow.modelData.value
+                    colBackground: "transparent"
+                    buttonRadius: Appearance.rounding.verylarge
+                    colBackgroundHover: Appearance.colors.colLayer2
+                    colBackgroundToggled: Appearance.colors.colSecondaryContainer
+                    colBackgroundToggledHover: Appearance.colors.colSecondaryContainerHover
+                    colRippleToggled: Appearance.colors.colSecondaryContainerActive
+                    onClicked: Config.options.background.wallpaperAnimation = transRow.modelData.value
+                    contentItem: RowLayout {
+                        anchors { fill: parent; leftMargin: 12; rightMargin: 12 }
+                        spacing: 12
+                        MaterialSymbol {
+                            text: transRow.modelData.icon
+                            iconSize: Appearance.font.pixelSize.larger
+                            color: transRow.toggled ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnLayer1
+                            fill: transRow.toggled ? 1 : 0
                         }
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: transRow.modelData.displayName
+                            font.pixelSize: Appearance.font.pixelSize.normal
+                            color: transRow.toggled ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnLayer1
+                        }
+                        MaterialSymbol {
+                            visible: transRow.toggled
+                            text: "check"
+                            iconSize: Appearance.font.pixelSize.normal
+                            color: Appearance.colors.colOnSecondaryContainer
+                        }
+                    }
+                }
+
+                Component.onCompleted: {
+                    const idx = root.transitionsList.findIndex(t => t.value === Config.options.background.wallpaperAnimation)
+                    if (idx >= 0) {
+                        Qt.callLater(() => transList.positionViewAtIndex(idx, ListView.Contain))
                     }
                 }
             }
