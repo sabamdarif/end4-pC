@@ -416,22 +416,20 @@ Variants {
                         const validExt = /\.(png|jpe?g|webp|bmp|gif)$/i.test(path)
                         if (validExt) {
                             Wallpapers.select(path, Appearance.m3colors.darkmode)
+                            drop.accept()
                         } else {
-                            const globalPos = wallpaperDropArea.mapToGlobal(drop.x, drop.y)
-                            DropShelf.show(drop.urls, globalPos.x, globalPos.y)
+                            drop.accepted = false
                         }
                     } else {
-                        const globalPos = wallpaperDropArea.mapToGlobal(drop.x, drop.y)
-                        DropShelf.show(drop.urls, globalPos.x, globalPos.y)
+                        drop.accepted = false
                     }
-                    drop.accept()
                     wallpaperDropArea.currentUrls = []
                 }
 
                 Rectangle {
                     id: dropOverlay
                     anchors.fill: parent
-                    visible: wallpaperDropArea.containsDrag
+                    visible: wallpaperDropArea.containsDrag && dropOverlay.isSingleImage
                     color: CF.ColorUtils.transparentize(Appearance.colors.colPrimary, 0.6)
 
                     property bool isSingleImage: wallpaperDropArea.currentUrls.length === 1
@@ -444,15 +442,13 @@ Variants {
                         spacing: 8
                         MaterialSymbol {
                             Layout.alignment: Qt.AlignHCenter
-                            text: dropOverlay.isSingleImage ? "wallpaper" : "stacks"
+                            text: "wallpaper"
                             iconSize: 64
                             color: Appearance.colors.colOnPrimary
                         }
                         StyledText {
                             Layout.alignment: Qt.AlignHCenter
-                            text: dropOverlay.isSingleImage
-                                ? Translation.tr("Drop to set as wallpaper")
-                                : Translation.tr("Drop to add to shelf")
+                            text: Translation.tr("Drop to set as wallpaper")
                             font.pixelSize: Appearance.font.pixelSize.large
                             color: Appearance.colors.colOnPrimary
                         }
