@@ -37,14 +37,14 @@ Singleton {
         }
 
         const focusedName = root.getFocusedScreenName();
-        const monitor = monitors.find(m => focusedName === m.screen.name);
+        const monitor = monitors.find(m => focusedName === m.screen.name) ?? monitors[0];
         if (monitor)
             monitor.setBrightness(monitor.brightness + 0.05);
     }
 
     function decreaseBrightness(): void {
         const focusedName = root.getFocusedScreenName();
-        const monitor = monitors.find(m => focusedName === m.screen.name);
+        const monitor = monitors.find(m => focusedName === m.screen.name) ?? monitors[0];
         if (monitor && monitor.brightness > 0) 
             monitor.setBrightness(monitor.brightness - 0.05);
         // if brightness is 0, then decrease gamma
@@ -115,7 +115,7 @@ Singleton {
         }
 
         Behavior on appliedBrightness {
-            enabled: monitor.animateChanges
+            enabled: monitor.ready && monitor.animateChanges
             NumberAnimation {
                 duration: 200
                 easing.type: Easing.BezierSpline
@@ -123,6 +123,7 @@ Singleton {
             }
         }
         onAppliedBrightnessChanged: {
+            if (!monitor.ready) return;
             if (monitor.animateChanges) syncBrightness();
             else setTimer.restart();
         }
@@ -131,6 +132,7 @@ Singleton {
             const match = root.ddcMonitors.find(m => m.name === screen.name && !root.monitors.slice(0, root.monitors.indexOf(this)).some(mon => mon.busNum === m.busNum));
             isDdc = !!match;
             busNum = match?.busNum ?? "";
+            monitor.ready = false;
             initProc.command = isDdc ? ["ddcutil", "-b", busNum, "getvcp", "10", "--brief"] : ["sh", "-c", `echo "a b c $(brightnessctl g) $(brightnessctl m)"`];
             initProc.running = true;
         }
@@ -149,11 +151,15 @@ Singleton {
                             }
                         }
                     }
-                    monitor.ready = true;
+                    Qt.callLater(() => {
+                        monitor.ready = true;
+                    });
                 }
             }
             onExited: (exitCode, exitStatus) => {
-                monitor.ready = true;
+                Qt.callLater(() => {
+                    monitor.ready = true;
+                });
                 initializeMonitor(root.monitors.indexOf(monitor) + 1);
             }
         }
@@ -163,11 +169,12 @@ Singleton {
             id: setTimer
             interval: monitor.isDdc ? 300 : 0
             onTriggered: {
-                syncBrightness();
+                if (monitor.ready) syncBrightness();
             }
         }
 
         function syncBrightness() {
+            if (!monitor.ready) return;
             const brightnessValue = monitor.appliedBrightness;
             if (isDdc) {
                 const rawValueRounded = Math.max(Math.floor(brightnessValue * monitor.rawMaxBrightness), 1);
@@ -176,12 +183,13 @@ Singleton {
                 const valuePercentNumber = Math.floor(brightnessValue * 100);
                 let valuePercent = `${valuePercentNumber}%`;
                 if (valuePercentNumber == 0) valuePercent = "1"; // Prevent fully black
-                setProc.exec(["brightnessctl", "--class", "backlight", "s", valuePercent, "--quiet"])
+                Quickshell.execDetached(["brightnessctl", "--class", "backlight", "s", valuePercent, "--quiet"]);
             }
         }
 
         function setBrightness(value: real): void {
             value = Math.max(0, Math.min(1, value));
+            monitor.ready = true;
             monitor.brightness = value;
         }
     }

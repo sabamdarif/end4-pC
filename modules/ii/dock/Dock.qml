@@ -16,6 +16,21 @@ Scope {
     id: root
     property bool pinned: Config.options?.dock.pinnedOnStartup ?? false
 
+    onPinnedChanged: {
+        if (Config.options?.dock && Config.options.dock.pinnedOnStartup !== root.pinned) {
+            Config.options.dock.pinnedOnStartup = root.pinned;
+        }
+    }
+
+    Connections {
+        target: Config.options?.dock ?? null
+        function onPinnedOnStartupChanged() {
+            if (root.pinned !== Config.options.dock.pinnedOnStartup) {
+                root.pinned = Config.options.dock.pinnedOnStartup;
+            }
+        }
+    }
+
     Variants {
         model: Quickshell.screens
 
