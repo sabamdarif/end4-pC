@@ -162,7 +162,7 @@ ContentPage {
                 buttonIcon: "add_circle"
                 text: Translation.tr("Add application")
                 model: [{ displayName: Translation.tr("Pick an application…"), value: "" }]
-                    .concat(AppSearch.list
+                    .concat(AppService.list
                         .filter(a => !a.noDisplay)
                         .map(a => ({ displayName: a.name, value: a.id }))
                         .sort((x, y) => x.displayName.localeCompare(y.displayName)))

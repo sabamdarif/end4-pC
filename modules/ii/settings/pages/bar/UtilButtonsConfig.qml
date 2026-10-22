@@ -32,41 +32,35 @@ ContentPage {
             ConfigRow {
                 uniform: true
                 ConfigSwitch {
-                    buttonIcon: "keyboard"
-                    text: Translation.tr("Keyboard toggle")
-                    checked: Config.options.bar.utilButtons.showKeyboardToggle
-                    onCheckedChanged: { Config.options.bar.utilButtons.showKeyboardToggle = checked }
-                }
-                ConfigSwitch {
                     buttonIcon: "mic"
                     text: Translation.tr("Mic toggle")
                     checked: Config.options.bar.utilButtons.showMicToggle
                     onCheckedChanged: { Config.options.bar.utilButtons.showMicToggle = checked }
                 }
-            }
-            ConfigRow {
-                uniform: true
                 ConfigSwitch {
                     buttonIcon: "dark_mode"
                     text: Translation.tr("Dark/Light toggle")
                     checked: Config.options.bar.utilButtons.showDarkModeToggle
                     onCheckedChanged: { Config.options.bar.utilButtons.showDarkModeToggle = checked }
                 }
+            }
+            ConfigRow {
+                uniform: true
                 ConfigSwitch {
                     buttonIcon: "speed"
                     text: Translation.tr("Performance Profile")
                     checked: Config.options.bar.utilButtons.showPerformanceProfileToggle
                     onCheckedChanged: { Config.options.bar.utilButtons.showPerformanceProfileToggle = checked }
                 }
-            }
-            ConfigRow {
-                uniform: true
                 ConfigSwitch {
                     buttonIcon: "screen_record"
                     text: Translation.tr("Record Screen")
                     checked: Config.options.bar.utilButtons.showScreenRecord
                     onCheckedChanged: { Config.options.bar.utilButtons.showScreenRecord = checked }
                 }
+            }
+            ConfigRow {
+                uniform: true
                 ConfigSwitch {
                     buttonIcon: "imagesmode"
                     text: Translation.tr("Wallpapers Toggle")

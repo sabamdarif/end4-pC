@@ -73,14 +73,6 @@ Item {
                 color: root.isMaterial ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer1
             }
         }
-        Revealer {
-            reveal: EasyEffects.active && root.hasToggle("easyEffects")
-            MaterialSymbol {
-                text: "graphic_eq"
-                iconSize: Appearance.font.pixelSize.larger
-                color: root.isMaterial ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer1
-            }
-        }
         Loader {
             source: "XkbIndicator.qml"
             onLoaded: item.color = root.isMaterial ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer1

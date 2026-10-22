@@ -384,7 +384,6 @@ Singleton {
                     property bool showScreenSnip: true
                     property bool showColorPicker: false
                     property bool showMicToggle: false
-                    property bool showKeyboardToggle: true
                     property bool showWallpaperToggle: false
                     property bool showDarkModeToggle: true
                     property bool showPerformanceProfileToggle: false
@@ -483,12 +482,7 @@ Singleton {
             }
 
             property JsonObject language: JsonObject {
-                property string ui: "auto" // UI language. "auto" for system locale, or specific language code like "zh_CN", "en_US"
-                property JsonObject translator: JsonObject {
-                    property string engine: "auto" // Run `trans -list-engines` for available engines. auto should use google
-                    property string targetLanguage: "auto" // Run `trans -list-all` for available languages
-                    property string sourceLanguage: "auto"
-                }
+                property string ui: "en_US"
             }
 
             property JsonObject launcher: JsonObject {
@@ -549,11 +543,6 @@ Singleton {
                 property bool enableMicMute: true
             }
 
-            property JsonObject osk: JsonObject {
-                property string layout: "qwerty_full"
-                property bool pinnedOnStartup: false
-            }
-
             property JsonObject overlay: JsonObject {
                 property bool openingZoomAnimation: true
                 property bool darkenScreen: true
@@ -598,11 +587,6 @@ Singleton {
                 property bool filterPassive: true
             }
 
-            property JsonObject musicRecognition: JsonObject {
-                property int timeout: 16
-                property int interval: 4
-            }
-
             property JsonObject search: JsonObject {
                 property int nonAppResultDelay: 30 // This prevents lagging when typing
                 property string engineBaseUrl: "https://www.google.com/search?q="
@@ -611,21 +595,9 @@ Singleton {
                 property JsonObject providers: JsonObject {
                     property bool files: true
                     property bool calculator: true
-                    property bool icons: true
                     property bool settings: true
                 }
                 property list<string> searchLocations: ["~", "~/Documents", "~/Downloads", "~/Pictures", "~/Videos", "~/Projects"]
-                property JsonObject prefix: JsonObject {
-                    property bool showDefaultActionsWithoutPrefix: true
-                    property string action: "/"
-                    property string app: ">"
-                    property string emojis: ":"
-                    property string keybinds: "<"
-                    property string symbols: "."
-                    property string math: "="
-                    property string shellCommand: "$"
-                    property string webSearch: "?"
-                }
                 property JsonObject imageSearch: JsonObject {
                     property string imageSearchEngineBaseUrl: "https://lens.google.com/uploadbyurl?url="
                     property bool useCircleSelection: false

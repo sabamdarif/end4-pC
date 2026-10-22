@@ -58,7 +58,6 @@ Singleton {
                 { key: "default-apps", name: Translation.tr("Default Applications"),  icon: "apps",          component: root.page("apps/DefaultAppsConfig.qml") },
                 { key: "autostart",    name: Translation.tr("Autostart"),             icon: "rocket_launch", component: root.page("apps/AutostartConfig.qml") },
                 { key: "clipboard",    name: Translation.tr("Clipboard"),             icon: "content_paste", component: root.page("apps/ClipboardConfig.qml") },
-                { key: "all-apps",     name: Translation.tr("All Apps"),               icon: "app_badging",   component: root.page("apps/AllAppsConfig.qml") },
             ]
         },
         {
@@ -126,7 +125,6 @@ Singleton {
             key: "system", name: Translation.tr("System"), icon: "settings",
             children: [
                 { key: "date-time",         name: Translation.tr("Date & Time"),        icon: "nest_clock_farsight_analog", component: root.page("system/DateTimeConfig.qml") },
-                { key: "language",          name: Translation.tr("Language & Region"),  icon: "translate",       component: root.page("system/LanguageConfig.qml") },
                 { key: "battery",           name: Translation.tr("Battery"),            icon: "battery_android_frame_full", component: root.page("system/BatteryConfig.qml") },
                 { key: "updates",           name: Translation.tr("Updates"),            icon: "deployed_code_update", component: root.page("system/UpdatesConfig.qml") },
                 { key: "weather",           name: Translation.tr("Weather"),            icon: "flare",           component: root.page("system/WeatherConfig.qml") },

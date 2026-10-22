@@ -88,7 +88,6 @@ Singleton {
                     if (names.length === 0) return;
                     root.layoutCodes = names;
                     root.currentLayoutName = names[parsed["current_idx"] ?? 0];
-                    Config.options.osk.layout = root.currentLayoutName.split(" (")[0];
                 } catch (e) {
                     console.log("[NiriXkb] Could not parse niri keyboard-layouts:", e);
                 }

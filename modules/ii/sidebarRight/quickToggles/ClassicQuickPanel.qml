@@ -36,7 +36,6 @@ AbstractQuickPanel {
                 root.openKeepAwakeDialog();
             }
         }
-        EasyEffectsToggle {}
         CloudflareWarp {}
     }
 }

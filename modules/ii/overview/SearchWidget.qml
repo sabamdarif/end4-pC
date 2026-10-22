@@ -28,12 +28,16 @@ Item {
     property string selectedSection: ""
     property int sectionIndex: -1
 
+    FileSearch {
+        id: fileSearch
+        query: (Config.options.search.providers?.files ?? true) ? root.query : ""
+    }
+
     function getActiveSections() {
         const list = [];
         if (LauncherSearch.mathResult) list.push("math");
         if (root.displayedApps.length > 0) list.push("apps");
-        if (LauncherSearch.fileResults.length > 0 && !root.isSpaceOnly) list.push("files");
-        if (LauncherSearch.iconResults.length > 0 && !root.isSpaceOnly) list.push("icons");
+        if (fileSearch.results.length > 0 && !root.isSpaceOnly) list.push("files");
         if (LauncherSearch.settingsResults.length > 0 && !root.isSpaceOnly) list.push("settings");
         return list;
     }
@@ -42,8 +46,7 @@ Item {
         switch (section) {
             case "math": return LauncherSearch.mathResult ? 1 : 0;
             case "apps": return root.displayedApps.length;
-            case "files": return LauncherSearch.fileResults.length;
-            case "icons": return LauncherSearch.iconResults.length;
+            case "files": return fileSearch.results.length;
             case "settings": return LauncherSearch.settingsResults.length;
             default: return 0;
         }
@@ -81,10 +84,6 @@ Item {
             if (root.selectedSection === "" || (root.selectedSection === "apps" && root.sectionIndex >= root.displayedApps.length))
                 root.selectFirstAvailable();
         }
-        function onIconResultsChanged() {
-            if (root.selectedSection === "" || (root.selectedSection === "icons" && root.sectionIndex >= LauncherSearch.iconResults.length))
-                root.selectFirstAvailable();
-        }
         function onSettingsResultsChanged() {
             if (root.selectedSection === "" || (root.selectedSection === "settings" && root.sectionIndex >= LauncherSearch.settingsResults.length))
                 root.selectFirstAvailable();
@@ -92,9 +91,9 @@ Item {
     }
 
     Connections {
-        target: FileSearch
+        target: fileSearch
         function onResultsChanged() {
-            if (root.selectedSection === "" || (root.selectedSection === "files" && root.sectionIndex >= LauncherSearch.fileResults.length))
+            if (root.selectedSection === "" || (root.selectedSection === "files" && root.sectionIndex >= fileSearch.results.length))
                 root.selectFirstAvailable();
         }
     }
@@ -127,10 +126,6 @@ Item {
         } else if (root.selectedSection === "files" && filesSection && filesSection.visible) {
             targetY = filesSection.y + 24 + root.sectionIndex * 60;
             targetH = 58;
-        } else if (root.selectedSection === "icons" && iconsSection && iconsSection.visible) {
-            const row = Math.floor(root.sectionIndex / 6);
-            targetY = iconsSection.y + 24 + row * 76;
-            targetH = 68;
         } else if (root.selectedSection === "settings" && settingsSection && settingsSection.visible) {
             targetY = settingsSection.y + 24 + root.sectionIndex * 54;
             targetH = 52;
@@ -160,7 +155,7 @@ Item {
         const count = getSectionCount(sec);
         const secIdx = sections.indexOf(sec);
 
-        if (sec === "apps" || sec === "icons") {
+        if (sec === "apps") {
             const cols = 6;
             const nextIdx = root.sectionIndex + cols;
             if (nextIdx < count) {
@@ -204,7 +199,7 @@ Item {
         const sec = root.selectedSection;
         const secIdx = sections.indexOf(sec);
 
-        if (sec === "apps" || sec === "icons") {
+        if (sec === "apps") {
             const cols = 6;
             if (root.sectionIndex >= cols) {
                 root.sectionIndex -= cols;
@@ -213,7 +208,7 @@ Item {
                     const prevSec = sections[secIdx - 1];
                     const prevCount = getSectionCount(prevSec);
                     root.selectedSection = prevSec;
-                    if (prevSec === "apps" || prevSec === "icons") {
+                    if (prevSec === "apps") {
                         const col = root.sectionIndex % 6;
                         const prevRows = Math.ceil(prevCount / 6);
                         const targetIdx = (prevRows - 1) * 6 + col;
@@ -231,7 +226,7 @@ Item {
                     const prevSec = sections[secIdx - 1];
                     const prevCount = getSectionCount(prevSec);
                     root.selectedSection = prevSec;
-                    if (prevSec === "apps" || prevSec === "icons") {
+                    if (prevSec === "apps") {
                         root.sectionIndex = prevCount - 1;
                     } else {
                         root.sectionIndex = prevCount - 1;
@@ -244,7 +239,7 @@ Item {
 
     function navRight() {
         const sec = root.selectedSection;
-        if (sec !== "apps" && sec !== "icons") {
+        if (sec !== "apps") {
             return false;
         }
         const count = getSectionCount(sec);
@@ -257,7 +252,7 @@ Item {
 
     function navLeft() {
         const sec = root.selectedSection;
-        if (sec !== "apps" && sec !== "icons") {
+        if (sec !== "apps") {
             return false;
         }
         if (root.sectionIndex > 0) {
@@ -277,7 +272,6 @@ Item {
     function setSearchingText(text) {
         searchInput.text = text;
         LauncherSearch.query = text;
-        FileSearch.query = text;
     }
 
     function launchSelected() {
@@ -290,11 +284,8 @@ Item {
         } else if (sec === "apps" && idx >= 0 && idx < root.displayedApps.length) {
             const item = root.displayedApps[idx];
             if (item?.execute) item.execute();
-        } else if (sec === "files" && idx >= 0 && idx < LauncherSearch.fileResults.length) {
-            const item = LauncherSearch.fileResults[idx];
-            if (item?.execute) item.execute();
-        } else if (sec === "icons" && idx >= 0 && idx < LauncherSearch.iconResults.length) {
-            const item = LauncherSearch.iconResults[idx];
+        } else if (sec === "files" && idx >= 0 && idx < fileSearch.results.length) {
+            const item = fileSearch.results[idx];
             if (item?.execute) item.execute();
         } else if (sec === "settings" && idx >= 0 && idx < LauncherSearch.settingsResults.length) {
             const item = LauncherSearch.settingsResults[idx];
@@ -304,8 +295,8 @@ Item {
                 Quickshell.clipboardText = LauncherSearch.mathResult.result;
             } else if (root.displayedApps.length > 0) {
                 root.displayedApps[0].execute();
-            } else if (LauncherSearch.fileResults.length > 0) {
-                LauncherSearch.fileResults[0].execute();
+            } else if (fileSearch.results.length > 0) {
+                fileSearch.results[0].execute();
             }
         }
     }
@@ -315,7 +306,6 @@ Item {
             if (root.query.length > 0) {
                 searchInput.text = "";
                 LauncherSearch.query = "";
-                FileSearch.query = "";
                 event.accepted = true;
             } else {
                 GlobalStates.overviewOpen = false;
@@ -417,7 +407,6 @@ Item {
 
                         onTextChanged: {
                             LauncherSearch.query = text;
-                            FileSearch.query = text;
                         }
 
                         onAccepted: root.launchSelected()
@@ -434,7 +423,7 @@ Item {
                                 return;
                             }
                             if (event.key === Qt.Key_Right) {
-                                if (root.selectedSection === "apps" || root.selectedSection === "icons") {
+                                if (root.selectedSection === "apps") {
                                     if (root.navRight()) {
                                         event.accepted = true;
                                         return;
@@ -442,7 +431,7 @@ Item {
                                 }
                             }
                             if (event.key === Qt.Key_Left) {
-                                if (root.selectedSection === "apps" || root.selectedSection === "icons") {
+                                if (root.selectedSection === "apps") {
                                     if (root.navLeft()) {
                                         event.accepted = true;
                                         return;
@@ -466,7 +455,6 @@ Item {
                         onClicked: {
                             searchInput.text = "";
                             LauncherSearch.query = "";
-                            FileSearch.query = "";
                             searchInput.forceActiveFocus();
                         }
 
@@ -751,13 +739,13 @@ Item {
                             id: filesSection
                             width: parent.width
                             spacing: 6
-                            visible: LauncherSearch.fileResults.length > 0 && !root.isSpaceOnly
+                            visible: fileSearch.results.length > 0 && !root.isSpaceOnly
 
                             RowLayout {
                                 width: parent.width
 
                                 StyledText {
-                                    text: Translation.tr("Documents (%1)").arg(LauncherSearch.fileResults.length)
+                                    text: Translation.tr("Documents (%1)").arg(fileSearch.results.length)
                                     font.pixelSize: Appearance.font.pixelSize.smaller
                                     font.weight: Font.DemiBold
                                     color: Appearance.colors.colSubtext
@@ -783,7 +771,7 @@ Item {
                                     spacing: 2
 
                                     Repeater {
-                                        model: LauncherSearch.fileResults
+                                        model: fileSearch.results
 
                                         delegate: Rectangle {
                                             id: fileRow
@@ -880,83 +868,7 @@ Item {
                             }
                         }
 
-                        // --- 4. ICONS (Material Symbols) SECTION ---
-                        Column {
-                            id: iconsSection
-                            width: parent.width
-                            spacing: 6
-                            visible: LauncherSearch.iconResults.length > 0 && !root.isSpaceOnly
-
-                            StyledText {
-                                text: Translation.tr("Icons")
-                                font.pixelSize: Appearance.font.pixelSize.smaller
-                                font.weight: Font.DemiBold
-                                color: Appearance.colors.colSubtext
-                            }
-
-                            Flow {
-                                width: parent.width
-                                spacing: 8
-
-                                Repeater {
-                                    model: LauncherSearch.iconResults
-
-                                    delegate: RippleButton {
-                                        id: iconTile
-                                        required property var modelData
-                                        required property int index
-
-                                        readonly property bool isSelected: root.selectedSection === "icons" && root.sectionIndex === index
-                                        width: Math.floor((contentColumn.width - 40) / 6)
-                                        implicitHeight: 68
-                                        buttonRadius: 12
-                                        colBackground: isSelected ? Appearance.colors.colPrimaryContainer : (iconTile.hovered ? Appearance.colors.colLayer1Hover : Appearance.colors.colLayer1)
-                                        colBackgroundHover: Appearance.colors.colPrimaryContainerHover
-                                        colRipple: Appearance.colors.colPrimaryContainerActive
-
-                                        onHoveredChanged: {
-                                            if (hovered) {
-                                                root.selectedSection = "icons";
-                                                root.sectionIndex = index;
-                                            }
-                                        }
-
-                                        onClicked: {
-                                            iconTile.modelData.execute();
-                                            GlobalStates.overviewOpen = false;
-                                        }
-
-                                        ColumnLayout {
-                                            anchors.centerIn: parent
-                                            spacing: 4
-
-                                            MaterialSymbol {
-                                                Layout.alignment: Qt.AlignHCenter
-                                                iconSize: 26
-                                                text: iconTile.modelData.iconName
-                                                color: iconTile.isSelected ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnLayer0
-                                            }
-
-                                            StyledText {
-                                                Layout.preferredWidth: iconTile.width - 8
-                                                horizontalAlignment: Text.AlignHCenter
-                                                elide: Text.ElideRight
-                                                text: iconTile.modelData.name
-                                                font.pixelSize: Appearance.font.pixelSize.smaller
-                                                font.weight: iconTile.isSelected ? Font.Medium : Font.Normal
-                                                color: iconTile.isSelected ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colSubtext
-                                            }
-                                        }
-
-                                        StyledToolTip {
-                                            text: Translation.tr("Copy '%1'").arg(iconTile.modelData.name)
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        // --- 5. SETTINGS SECTION ---
+                        // --- 4. SETTINGS SECTION ---
                         Column {
                             id: settingsSection
                             width: parent.width

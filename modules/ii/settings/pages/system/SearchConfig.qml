@@ -48,15 +48,6 @@ ContentPage {
                 }
 
                 ConfigSwitch {
-                    buttonIcon: "interests"
-                    text: Translation.tr("Icons (Material Symbols)")
-                    checked: Config.options.search.providers?.icons ?? true
-                    onCheckedChanged: {
-                        Config.options.search.providers.icons = checked;
-                    }
-                }
-
-                ConfigSwitch {
                     buttonIcon: "settings"
                     text: Translation.tr("Settings")
                     checked: Config.options.search.providers?.settings ?? true

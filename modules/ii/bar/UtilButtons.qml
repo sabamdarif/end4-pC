@@ -165,31 +165,6 @@ Item {
         }
 
         Loader {
-            active: Config.options.bar.utilButtons.showKeyboardToggle
-            visible: active
-            sourceComponent: isMaterial ? keyboardM3 : legacyKeyboard
-        }
-        Component {
-            id: keyboardM3
-            UtilButton {
-                iconText: "keyboard"
-                onClicked: GlobalStates.oskOpen = !GlobalStates.oskOpen
-            }
-        }
-        Component {
-            id: legacyKeyboard
-            CircleUtilButton {
-                onClicked: GlobalStates.oskOpen = !GlobalStates.oskOpen
-                MaterialSymbol {
-                    horizontalAlignment: Qt.AlignHCenter
-                    fill: 0; text: "keyboard"
-                    iconSize: Appearance.font.pixelSize.large
-                    color: Appearance.colors.colOnLayer2
-                }
-            }
-        }
-
-        Loader {
             active: Config.options.bar.utilButtons.showWallpaperToggle
             visible: active
             sourceComponent: isMaterial ? wallpaperM3 : legacyWallpaper

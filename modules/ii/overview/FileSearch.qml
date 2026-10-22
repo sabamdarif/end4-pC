@@ -1,13 +1,10 @@
-pragma Singleton
-pragma ComponentBehavior: Bound
-
 import QtQuick
 import Quickshell
 import Quickshell.Io
 import qs.modules.common
 import qs.modules.common.functions
 
-Singleton {
+QtObject {
     id: root
 
     property string query: ""
@@ -85,8 +82,7 @@ Singleton {
         debounceTimer.restart();
     }
 
-    Timer {
-        id: debounceTimer
+    property var debounceTimer: Timer {
         interval: 100
         repeat: false
         onTriggered: root.executeSearch()
@@ -132,8 +128,7 @@ fi
         proc.running = true;
     }
 
-    Process {
-        id: proc
+    property var proc: Process {
         property var buffer: []
 
         stdout: SplitParser {

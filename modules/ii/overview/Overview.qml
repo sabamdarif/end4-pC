@@ -95,26 +95,6 @@ Scope {
         }
     }
 
-    function toggleEmojis() {
-        if (GlobalStates.overviewOpen && overviewScope.dontAutoCancelSearch) {
-            GlobalStates.overviewOpen = false;
-            return;
-        }
-        overviewScope.dontAutoCancelSearch = true;
-        panelWindow.setSearchingText(Config.options.search.prefix.emojis);
-        GlobalStates.overviewOpen = true;
-    }
-
-    function toggleSymbols() {
-        if (GlobalStates.overviewOpen && overviewScope.dontAutoCancelSearch) {
-            GlobalStates.overviewOpen = false;
-            return;
-        }
-        overviewScope.dontAutoCancelSearch = true;
-        panelWindow.setSearchingText(Config.options.search.prefix.symbols);
-        GlobalStates.overviewOpen = true;
-    }
-
     IpcHandler {
         target: "search"
 
@@ -132,12 +112,6 @@ Scope {
         }
         function toggleReleaseInterrupt() {
             GlobalStates.superReleaseMightTrigger = false;
-        }
-        function emojiToggle() {
-            overviewScope.toggleEmojis();
-        }
-        function symbolsToggle() {
-            overviewScope.toggleSymbols();
         }
     }
 }

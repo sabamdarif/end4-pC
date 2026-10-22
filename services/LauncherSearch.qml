@@ -15,14 +15,6 @@ Singleton {
 
     property string query: ""
 
-    onQueryChanged: {
-        if (Config.options.search.providers?.files ?? true) {
-            FileSearch.query = root.query;
-        } else {
-            FileSearch.query = "";
-        }
-    }
-
     // Mirrors the settings nav tree so the two never drift
     readonly property var settingsIndex: SettingsPages.leaves.map(l => ({
         key: l.key,
@@ -116,12 +108,12 @@ Singleton {
         if (root.query === "")
             return [];
         if (root.query === " ") {
-            return AppSearch.list
+            return AppService.list
                 .slice()
                 .sort((a, b) => a.name.localeCompare(b.name))
                 .map(entry => createEntryObject(entry));
         }
-        return AppSearch.fuzzyQuery(root.query.trim()).map(entry => createEntryObject(entry));
+        return AppService.fuzzyQuery(root.query.trim()).map(entry => createEntryObject(entry));
     }
 
     function createEntryObject(entry) {
@@ -141,34 +133,6 @@ Singleton {
                     Quickshell.execDetached(["bash", "-c", `${Config.options.apps.terminal} -e '${StringUtils.shellSingleQuoteEscape(entry.command.join(' '))}'`]);
             }
         };
-    }
-
-    readonly property list<var> fileResults: {
-        if (!(Config.options.search.providers?.files ?? true))
-            return [];
-        return FileSearch.results;
-    }
-
-    readonly property list<var> iconResults: {
-        if (!(Config.options.search.providers?.icons ?? true))
-            return [];
-        const q = root.query.trim();
-        if (q.length === 0 || q === " ")
-            return [];
-        return MaterialSymbolsSearch.fuzzyQuery(q).slice(0, 12).map(entry => {
-            const tabIdx = entry.indexOf("\t");
-            const symName = tabIdx >= 0 ? entry.slice(0, tabIdx) : entry;
-            return {
-                name: symName,
-                iconName: symName,
-                iconType: LauncherSearchResult.IconType.Material,
-                verb: Translation.tr("Copy"),
-                type: Translation.tr("Symbol"),
-                execute: () => {
-                    Quickshell.clipboardText = symName;
-                }
-            };
-        });
     }
 
     readonly property list<var> settingsResults: {
@@ -215,10 +179,6 @@ Singleton {
         }
         for (let i = 0; i < root.appResults.length; i++)
             list.push(root.appResults[i]);
-        for (let i = 0; i < root.fileResults.length; i++)
-            list.push(root.fileResults[i]);
-        for (let i = 0; i < root.iconResults.length; i++)
-            list.push(root.iconResults[i]);
         for (let i = 0; i < root.settingsResults.length; i++)
             list.push(root.settingsResults[i]);
         return list;

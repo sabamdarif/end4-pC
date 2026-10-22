@@ -115,7 +115,7 @@ Item {
                     id: ghostIcon
                     anchors.centerIn: parent
                     source: Quickshell.iconPath(
-                        AppSearch.guessIcon(root._workOrder[root.activeDragVisualIndex] ?? ""),
+                        AppService.guessIcon(root._workOrder[root.activeDragVisualIndex] ?? ""),
                         "image-missing")
                     implicitSize: root.btnSize * 0.65
                     opacity: 0.85
@@ -178,7 +178,7 @@ Item {
                         id: appIcon
                         anchors.centerIn: parent
                         source: Quickshell.iconPath(
-                            AppSearch.guessIcon(slotItem.appId),
+                            AppService.guessIcon(slotItem.appId),
                             "image-missing")
                         implicitSize: 33
                     }
