@@ -34,6 +34,7 @@ Item {
 
     onProviderChanged:   { root.hoveredItem = null; _syncAndFetch() }
     onResolutionChanged: _syncAndFetch()
+    // naive filters client-side from its own colorGroup; wallhaven re-fetches server-side
     onColorGroupChanged: { if (root.provider === "naive") _syncAndFetch() }
 
     function _syncAndFetch() {
@@ -86,6 +87,8 @@ Item {
             if (!OnlineWallpapers.appending) {
                 wallpaperModel.clear()
                 root.hoveredItem = null
+                grid.currentIndex = 0
+                grid.positionViewAtBeginning()
             }
             const startIndex = wallpaperModel.count
             for (const item of OnlineWallpapers.results.slice(startIndex)) {
@@ -289,6 +292,27 @@ Item {
                             text: "image"
                             iconSize: 32
                             color: Appearance.colors.colSubtext
+                        }
+                    }
+
+                    Rectangle {
+                        anchors {
+                            bottom: parent.bottom
+                            left: parent.left
+                            margins: 4
+                        }
+                        visible: (delegateItem.model.resolution ?? "").length > 0
+                        color: Appearance.colors.colScrim
+                        radius: Appearance.rounding.small
+                        implicitWidth: resolutionText.implicitWidth + 8
+                        implicitHeight: resolutionText.implicitHeight + 4
+
+                        StyledText {
+                            id: resolutionText
+                            anchors.centerIn: parent
+                            text: delegateItem.model.resolution ?? ""
+                            font.pixelSize: Appearance.font.pixelSize.smaller * 0.85
+                            color: "white"
                         }
                     }
                 }

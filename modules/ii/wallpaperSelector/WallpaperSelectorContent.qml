@@ -37,6 +37,7 @@ MouseArea {
 
     function switchSource(val) {
         root.source = val;
+        root.showWallhavenSettings = false;
         if (val === "live") {
             GlobalStates.wallpaperSelectorTarget = "live";
             const livePath = Config.options.wallpaperSelector.liveWallpapersPath;
@@ -58,6 +59,30 @@ MouseArea {
     property string selectedResolution: "1080p"
     property string selectedColorGroup: ""
     property bool filterFieldFocused: false
+    property bool showWallhavenSettings: false
+
+    // Wallhaven palette filter: each swatch maps to a group of hex values (no '#')
+    readonly property var wallhavenColorGroups: [
+        { hex: "cc0000", name: Translation.tr("Red"),       q: "660000,990000,cc0000,cc3333" },
+        { hex: "ff6600", name: Translation.tr("Orange"),    q: "ffcc33,ff9900,ff6600" },
+        { hex: "cccc33", name: Translation.tr("Yellow"),    q: "666600,999900,cccc33,ffff00" },
+        { hex: "669900", name: Translation.tr("Green"),     q: "77cc33,669900,336600" },
+        { hex: "66cccc", name: Translation.tr("Cyan"),      q: "66cccc,0099cc" },
+        { hex: "0066cc", name: Translation.tr("Blue"),      q: "0066cc,0099cc,333399" },
+        { hex: "663399", name: Translation.tr("Purple"),    q: "ea4c88,993399,663399,333399" },
+        { hex: "996633", name: Translation.tr("Brown"),     q: "cc6633,996633,663300" },
+        { hex: "999999", name: Translation.tr("Grayscale"), q: "000000,999999,cccccc,ffffff,424153" }
+    ]
+
+    readonly property var naiveColorOptions: [
+        { value: "",       displayName: Translation.tr("All colors"), color: "transparent", rainbow: true },
+        { value: "red",    displayName: Translation.tr("Red"),        color: "#E0483E" },
+        { value: "orange", displayName: Translation.tr("Orange"),     color: "#E08A3E" },
+        { value: "yellow", displayName: Translation.tr("Yellow"),     color: "#E0C93E" },
+        { value: "green",  displayName: Translation.tr("Green"),      color: "#6CBF5C" },
+        { value: "blue",   displayName: Translation.tr("Blue"),       color: "#4C7FE0" },
+        { value: "purple", displayName: Translation.tr("Purple"),     color: "#8A5CE0" }
+    ]
     // Toolbar fields live inside Loaders, so their ids are out of scope here.
     readonly property Item searchField: root.isLocalSource
         ? (localToolbarLoader.item?.searchField ?? null)
@@ -255,6 +280,7 @@ MouseArea {
                     implicitHeight: 56
 
                     RowLayout {
+                        id: titleRow
                         anchors {
                             left: parent.left
                             verticalCenter: parent.verticalCenter
@@ -262,12 +288,17 @@ MouseArea {
                         spacing: 8
 
                         MaterialShapeWrappedMaterialSymbol {
+                            id: titleIcon
                             wrappedShape: MaterialShape.Shape.Gem
                             text: (GlobalStates.wallpaperSelectorTarget === "live" || root.source === "live") ? "video_library" : "image"
                             iconSize: Appearance.font.pixelSize.larger
                         }
 
+                        // The title text yields its space to a wide wallhaven toolbar;
+                        // the icon stays put so the bar never looks empty
                         StyledText {
+                            id: titleText
+                            visible: topBar.titleAndToolbarFit
                             text: (GlobalStates.wallpaperSelectorTarget === "live" || root.source === "live")
                                 ? Translation.tr("Live Wallpaper Selector")
                                 : Translation.tr("Wallpaper Selector")
@@ -275,8 +306,26 @@ MouseArea {
                         }
                     }
 
+                    // True when the full title, toolbar and source picker all fit side by
+                    // side. Uses implicit widths only, so hiding the text can't feed back.
+                    readonly property bool titleAndToolbarFit: {
+                        const titleW = titleIcon.implicitWidth + 8 + titleText.implicitWidth
+                        const needed = titleW + centerToolbar.implicitWidth
+                            + sourceControls.implicitWidth + 48
+                        return width >= needed
+                    }
+
                     Toolbar {
-                        anchors.centerIn: parent
+                        id: centerToolbar
+                        // Size to content, centered in the gap between title and source picker
+                        anchors.verticalCenter: parent.verticalCenter
+                        x: {
+                            const left = titleRow.x + titleRow.width + 16
+                            const right = sourceControls.x - 12
+                            const avail = right - left
+                            if (avail <= 0) return left
+                            return left + Math.max(0, (avail - width) / 2)
+                        }
 
                         Loader {
                             id: localToolbarLoader
@@ -356,20 +405,39 @@ MouseArea {
                                     }
                                 }
                                 Loader {
-                                    active: root.source === "naive"
+                                    active: root.source === "naive" || root.source === "wallhaven"
                                     visible: active
                                     sourceComponent: CustomColorSelectionArray {
-                                        currentValue: root.selectedColorGroup
-                                        options: [
-                                            { value: "",       displayName: Translation.tr("All colors"), color: "transparent", rainbow: true },
-                                            { value: "red",    displayName: Translation.tr("Red"),        color: "#E0483E" },
-                                            { value: "orange", displayName: Translation.tr("Orange"),     color: "#E08A3E" },
-                                            { value: "yellow", displayName: Translation.tr("Yellow"),     color: "#E0C93E" },
-                                            { value: "green",  displayName: Translation.tr("Green"),      color: "#6CBF5C" },
-                                            { value: "blue",   displayName: Translation.tr("Blue"),       color: "#4C7FE0" },
-                                            { value: "purple", displayName: Translation.tr("Purple"),     color: "#8A5CE0" },
-                                        ]
-                                        onSelected: newValue => root.selectedColorGroup = newValue
+                                        // Wallhaven's 10 swatches don't fit at the default swatch size
+                                        swatchSize: root.source === "wallhaven" ? 26 : 40
+                                        spacing: root.source === "wallhaven" ? 6 : 10
+                                        currentValue: root.source === "wallhaven"
+                                            ? OnlineWallpapers.wallhavenColors
+                                            : root.selectedColorGroup
+                                        options: root.source === "wallhaven"
+                                            ? [{ value: "", displayName: Translation.tr("All colors"), color: "transparent", rainbow: true }]
+                                                .concat(root.wallhavenColorGroups.map(g => ({ value: g.q, displayName: g.name, color: "#" + g.hex })))
+                                            : root.naiveColorOptions
+                                        onSelected: newValue => {
+                                            if (root.source === "wallhaven") {
+                                                // setWallhavenColor toggles: picking the active color clears it.
+                                                // Skip only the no-op "All colors" while already clear.
+                                                if (newValue === "" && OnlineWallpapers.wallhavenColors === "") return
+                                                OnlineWallpapers.setWallhavenColor(newValue)
+                                            } else {
+                                                root.selectedColorGroup = newValue
+                                            }
+                                        }
+                                    }
+                                }
+                                IconToolbarButton {
+                                    visible: root.source === "wallhaven"
+                                    implicitWidth: height
+                                    text: "tune"
+                                    toggled: root.showWallhavenSettings
+                                    onClicked: root.showWallhavenSettings = !root.showWallhavenSettings
+                                    StyledToolTip {
+                                        text: Translation.tr("Wallhaven search settings")
                                     }
                                 }
                                 ToolbarTextField {
@@ -377,14 +445,30 @@ MouseArea {
                                     placeholderText: Translation.tr("Search online wallpapers")
                                     clip: true
                                     font.pixelSize: Appearance.font.pixelSize.small
-                                    onTextChanged: OnlineWallpapers.query = text
-                                    onAccepted: OnlineWallpapers.fetch()
-                                    onActiveFocusChanged: root.filterFieldFocused = activeFocus
-                                    Connections {
-                                        target: GlobalStates
-                                        function onWallpaperSelectorOpenChanged() {
-                                            if (!GlobalStates.wallpaperSelectorOpen) onlineSearchField.text = ""
+                                    property bool _ready: false
+                                    Component.onCompleted: Qt.callLater(() => onlineSearchField._ready = true)
+                                    onTextChanged: {
+                                        if (_ready) {
+                                            OnlineWallpapers.query = text
+                                            searchDebounce.restart()
                                         }
+                                    }
+                                    onAccepted: {
+                                        searchDebounce.stop()
+                                        OnlineWallpapers.fetch()
+                                    }
+                                    onActiveFocusChanged: root.filterFieldFocused = activeFocus
+                                    Keys.onPressed: event => {
+                                        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                                            event.accepted = true
+                                            return
+                                        }
+                                        event.accepted = false
+                                    }
+                                    Timer {
+                                        id: searchDebounce
+                                        interval: 500
+                                        onTriggered: OnlineWallpapers.fetch()
                                     }
                                 }
                                 IconToolbarButton {
@@ -397,6 +481,7 @@ MouseArea {
                     }
 
                     RowLayout {
+                        id: sourceControls
                         anchors {
                             right: parent.right
                             rightMargin: 8
@@ -441,6 +526,27 @@ MouseArea {
                     id: gridDisplayRegion
                     Layout.fillWidth: true
                     Layout.fillHeight: true
+
+                    // Settings popup anchors inside the grid region so it dims the grid, not the whole shell
+                    Loader {
+                        id: wallhavenSettingsLoader
+                        anchors.fill: parent
+                        z: 100
+                        active: root.showWallhavenSettings
+                        onLoaded: {
+                            item.show = true
+                            item.forceActiveFocus()
+                        }
+                        sourceComponent: WallhavenSettingsPopup {
+                            onDismiss: {
+                                root.showWallhavenSettings = false
+                                if (dirty) {
+                                    OnlineWallpapers.saveWallhavenConfig()
+                                    OnlineWallpapers.fetch()
+                                }
+                            }
+                        }
+                    }
 
                     Loader {
                         id: gridLoader
@@ -495,6 +601,7 @@ MouseArea {
             } else {
                 Wallpapers.stopPreview();
                 GlobalStates.wallpaperSelectorTarget = "wallpaper";
+                root.showWallhavenSettings = false;
                 root.source = "local";
                 sourceCombo.currentIndex = 0;
             }
