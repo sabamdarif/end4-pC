@@ -28,6 +28,40 @@ Item {
     property string selectedSection: ""
     property int sectionIndex: -1
 
+    // Hover only drives selection after the pointer actually moves, so a
+    // stationary mouse over the opening panel doesn't steal keyboard selection.
+    // The card's resize animation delivers positionChanged with unchanged
+    // coordinates, so arming requires a real position delta.
+    property bool hoverArmed: false
+    property bool hoverSelectionEnabled: false
+    property point lastMousePos: Qt.point(-1, -1)
+
+    function noteMousePosition(x, y) {
+        if (root.lastMousePos.x < 0) {
+            root.lastMousePos = Qt.point(x, y);
+            return;
+        }
+        if (Math.abs(x - root.lastMousePos.x) > 2 || Math.abs(y - root.lastMousePos.y) > 2)
+            root.hoverArmed = true;
+        root.lastMousePos = Qt.point(x, y);
+    }
+
+    function selectWithMouse(section, index) {
+        if (!root.hoverSelectionEnabled) {
+            // First section entered after the pointer moved: arm hover and
+            // select it, so the initial row under the stationary pointer
+            // still ignores the event.
+            if (root.hoverArmed) {
+                root.hoverSelectionEnabled = true;
+                root.selectedSection = section;
+                root.sectionIndex = index;
+            }
+            return;
+        }
+        root.selectedSection = section;
+        root.sectionIndex = index;
+    }
+
     FileSearch {
         id: fileSearch
         query: (Config.options.search.providers?.files ?? true) ? root.query : ""
@@ -107,6 +141,9 @@ Item {
             } else {
                 root.selectedSection = "";
                 root.sectionIndex = -1;
+                root.hoverArmed = false;
+                root.hoverSelectionEnabled = false;
+                root.lastMousePos = Qt.point(-1, -1);
             }
         }
     }
@@ -375,6 +412,8 @@ Item {
         // Catch clicks on the card so backdrop doesn't close it
         MouseArea {
             anchors.fill: parent
+            hoverEnabled: true
+            onPositionChanged: mouse => root.noteMousePosition(mouse.x, mouse.y)
         }
 
         Column {
@@ -606,10 +645,7 @@ Item {
                                         colRipple: Appearance.colors.colPrimaryContainerActive
 
                                         onHoveredChanged: {
-                                            if (hovered) {
-                                                root.selectedSection = "apps";
-                                                root.sectionIndex = index;
-                                            }
+                                            if (hovered) root.selectWithMouse("apps", index);
                                         }
 
                                         onClicked: {
@@ -663,10 +699,7 @@ Item {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
-                                onEntered: {
-                                    root.selectedSection = "math";
-                                    root.sectionIndex = 0;
-                                }
+                                onEntered: root.selectWithMouse("math", 0)
                                 onClicked: {
                                     if (LauncherSearch.mathResult) {
                                         Quickshell.clipboardText = LauncherSearch.mathResult.result;
@@ -790,10 +823,7 @@ Item {
                                                 anchors.fill: parent
                                                 hoverEnabled: true
                                                 cursorShape: Qt.PointingHandCursor
-                                                onEntered: {
-                                                    root.selectedSection = "files";
-                                                    root.sectionIndex = fileRow.index;
-                                                }
+                                                onEntered: root.selectWithMouse("files", fileRow.index)
                                                 onClicked: {
                                                     GlobalStates.overviewOpen = false;
                                                     fileRow.modelData.execute();
@@ -919,10 +949,7 @@ Item {
                                                 anchors.fill: parent
                                                 hoverEnabled: true
                                                 cursorShape: Qt.PointingHandCursor
-                                                onEntered: {
-                                                    root.selectedSection = "settings";
-                                                    root.sectionIndex = settingsRow.index;
-                                                }
+                                                onEntered: root.selectWithMouse("settings", settingsRow.index)
                                                 onClicked: {
                                                     settingsRow.modelData.execute();
                                                 }
