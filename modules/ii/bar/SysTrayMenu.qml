@@ -7,6 +7,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Wayland
 
 PopupWindow {
     id: root
@@ -19,6 +20,39 @@ PopupWindow {
 
     color: "transparent"
     property real padding: Appearance.sizes.elevationMargin
+
+    // niri has no focus-grab protocol, so outside clicks are caught by a
+    // full-screen surface one layer below, same pattern as the dock context menu.
+    // Dismissal runs through GlobalFocusGrab so the tray's own focus state resets too.
+    PanelWindow {
+        id: dismissCatcher
+        visible: root.visible
+        screen: root.QsWindow.window?.screen ?? null
+        color: "transparent"
+
+        WlrLayershell.namespace: "quickshell:trayMenu:dismiss"
+        WlrLayershell.layer: WlrLayer.Top
+        WlrLayershell.exclusiveZone: -1
+        WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+
+        anchors {
+            top: true
+            left: true
+            right: true
+            bottom: true
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.AllButtons
+            onClicked: GlobalFocusGrab.dismiss()
+        }
+    }
+
+    Connections {
+        target: GlobalFocusGrab
+        function onDismissed() { root.close() }
+    }
 
     implicitHeight: {
         let result = 0;
