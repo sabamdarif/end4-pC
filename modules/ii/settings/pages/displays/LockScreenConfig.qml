@@ -54,8 +54,7 @@ ContentPage {
             }
             ConfigSwitch {
                 buttonIcon: "music_note"
-                enabled: Config.options.lock.showToolbars
-                text: Translation.tr("Show media player info")
+                text: Translation.tr("Show media player")
                 checked: Config.options.lock.showMedia
                 onCheckedChanged: { Config.options.lock.showMedia = checked }
             }

@@ -11,6 +11,7 @@ import qs.modules.common.functions
 import qs.modules.common.panels.lock
 import qs.modules.ii.bar as Bar
 import Quickshell
+import Quickshell.Io
 import Quickshell.Services.SystemTray
 
 MouseArea {
@@ -67,7 +68,52 @@ MouseArea {
         return MprisController.activePlayer
     }
 
-    property var    artUrl:      activePlayer?.trackArtUrl ?? ""
+    // Whether a player with a title is currently active and media display is enabled
+    readonly property bool mediaPlayerAvailable: Config.options.lock.showMedia && root.activePlayer !== null && (root.activePlayer.trackTitle ?? "").length > 0
+
+    // Gate that keeps the Loader alive during exit animation
+    property bool mediaLoaderActive: false
+    property MprisPlayer currentLockPlayer: null
+
+    onMediaPlayerAvailableChanged: {
+        if (mediaPlayerAvailable) {
+            currentLockPlayer = root.activePlayer
+            mediaLoaderActive = true
+        } else {
+            if (lockscreenMediaController.item) {
+                entryAnim.stop()
+                mediaExitAnim.restart()
+            } else {
+                mediaLoaderActive = false
+                currentLockPlayer = null
+            }
+        }
+    }
+
+    onActivePlayerChanged: {
+        if (mediaPlayerAvailable && root.activePlayer !== null) {
+            currentLockPlayer = root.activePlayer
+        }
+    }
+
+    // Visualizer data for lockscreen media controls
+    property list<real> visualizerPoints: []
+
+    Process {
+        id: cavaProc
+        running: root.mediaLoaderActive && root.mediaPlayerAvailable
+        onRunningChanged: {
+            if (!cavaProc.running)
+                root.visualizerPoints = [];
+        }
+        command: ["cava", "-p", `${FileUtils.trimFileProtocol(Directories.scriptPath)}/cava/raw_output_config.txt`]
+        stdout: SplitParser {
+            onRead: data => {
+                let points = data.split(";").map(p => parseFloat(p.trim())).filter(p => !isNaN(p));
+                root.visualizerPoints = points;
+            }
+        }
+    }
 
     // Force focus on entry
     function forceFieldFocus() {
@@ -107,6 +153,10 @@ MouseArea {
         forceFieldFocus();
         toolbarScale = 1;
         toolbarOpacity = 1;
+        if (root.mediaPlayerAvailable) {
+            root.currentLockPlayer = root.activePlayer;
+            root.mediaLoaderActive = true;
+        }
     }
 
     // Key presses
@@ -146,52 +196,133 @@ MouseArea {
     //     }
     // }
 
-    // Keep time separate from the login box, as in Noctalia's widget-based lock screen.
+    // Clock and date centered at the top
     Column {
         anchors {
             horizontalCenter: parent.horizontalCenter
             top: parent.top
-            topMargin: Math.max(48, parent.height * 0.1)
+            topMargin: Math.max(36, parent.height * 0.08)
         }
-        spacing: 2
+        spacing: -14
         opacity: root.toolbarOpacity
         scale: root.toolbarScale
 
         StyledText {
             anchors.horizontalCenter: parent.horizontalCenter
-            text: DateTime.time
+            text: DateTime.time.split(":")[0].padStart(2, "0")
             color: Appearance.colors.colPrimary
-            font.pixelSize: Math.min(150, Math.max(78, root.height * 0.14))
+            font.pixelSize: Math.min(130, Math.max(72, root.height * 0.13))
             font.weight: Font.Light
         }
 
         StyledText {
             anchors.horizontalCenter: parent.horizontalCenter
-            text: DateTime.longDate.toUpperCase()
-            color: Appearance.colors.colOnSurface
-            font.pixelSize: Appearance.font.pixelSize.normal
-            font.weight: Font.DemiBold
-            font.letterSpacing: 1.2
+            text: (DateTime.time.split(":")[1] ?? "00").split(" ")[0].padStart(2, "0")
+            color: Appearance.colors.colPrimary
+            font.pixelSize: Math.min(130, Math.max(72, root.height * 0.13))
+            font.weight: Font.Light
         }
 
         StyledText {
             anchors.horizontalCenter: parent.horizontalCenter
-            topPadding: 12
-            text: SystemInfo.username
-            color: Appearance.colors.colOnSurfaceVariant
-            font.pixelSize: Appearance.font.pixelSize.small
+            topPadding: 20
+            text: DateTime.longDate
+            color: Appearance.colors.colPrimary
+            font.pixelSize: Appearance.font.pixelSize.normal
+            font.weight: Font.Medium
         }
     }
 
-    // Noctalia-style login panel: a compact rounded card near the bottom edge.
+    Loader {
+        id: lockscreenMediaController
+        active: root.mediaLoaderActive
+
+        anchors {
+            horizontalCenter: parent.horizontalCenter
+            bottom: mainIsland.top
+            bottomMargin: 15
+        }
+
+        property real mediaScale: 0.85
+        property real mediaOpacity: 0.0
+
+        scale: mediaScale * root.toolbarScale
+        opacity: mediaOpacity * root.toolbarOpacity
+
+        onLoaded: {
+            mediaScale = 0.85
+            mediaOpacity = 0.0
+            entryAnim.restart()
+        }
+
+        ParallelAnimation {
+            id: entryAnim
+            NumberAnimation {
+                target: lockscreenMediaController
+                property: "mediaScale"
+                to: 1.0
+                duration: Appearance.animation.elementMove.duration * 1.2
+                easing.type: Easing.OutBack
+                easing.overshoot: 1.2
+            }
+            NumberAnimation {
+                target: lockscreenMediaController
+                property: "mediaOpacity"
+                to: 1.0
+                duration: Appearance.animation.elementMoveFast.duration
+                easing.type: Easing.OutCubic
+            }
+        }
+
+        SequentialAnimation {
+            id: mediaExitAnim
+            ParallelAnimation {
+                NumberAnimation {
+                    target: lockscreenMediaController
+                    property: "mediaScale"
+                    to: 0.85
+                    duration: Appearance.animation.elementMoveFast.duration
+                    easing.type: Easing.InBack
+                    easing.overshoot: 1.2
+                }
+                NumberAnimation {
+                    target: lockscreenMediaController
+                    property: "mediaOpacity"
+                    to: 0.0
+                    duration: Appearance.animation.elementMoveFast.duration
+                    easing.type: Easing.InCubic
+                }
+            }
+            ScriptAction {
+                script: {
+                    root.mediaLoaderActive = false;
+                    root.currentLockPlayer = null;
+                }
+            }
+        }
+
+        sourceComponent: Player {
+            player: root.currentLockPlayer ?? root.activePlayer
+            visualizerPoints: root.visualizerPoints
+            implicitWidth: Appearance.sizes.mediaControlsWidth
+            implicitHeight: Appearance.sizes.mediaControlsHeight
+            radius: Appearance.rounding.screenRounding - Appearance.sizes.windowGapsOut + 1
+            allowLyrics: false
+        }
+    }
+
+    // Main toolbar: password box
     Toolbar {
         id: mainIsland
         anchors {
             horizontalCenter: parent.horizontalCenter
             bottom: parent.bottom
-            bottomMargin: 140
+            bottomMargin: 24
         }
-        padding: 12
+        Behavior on anchors.bottomMargin {
+            animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
+        }
+        padding: 8
         radius: 12
         colBackground: ColorUtils.transparentize(Appearance.m3colors.m3surfaceContainer, 0.12)
         scale: root.toolbarScale
@@ -319,9 +450,10 @@ MouseArea {
         id: leftIsland
         visible: Config.options.lock.showToolbars
         anchors {
-            horizontalCenter: mainIsland.horizontalCenter
-            bottom: mainIsland.top
-            bottomMargin: 8
+            right: mainIsland.left
+            top: mainIsland.top
+            bottom: mainIsland.bottom
+            rightMargin: 10
         }
         padding: 8
         radius: 12
@@ -333,142 +465,13 @@ MouseArea {
         IconAndTextPair {
             Layout.leftMargin: 8
             icon: "account_circle"
-            visible: !Config.options.lock.showMedia || MprisController.activePlayer === null
             text: SystemInfo.username
-        }
-
-        // Media player info 
-        Loader {
-            Layout.leftMargin: 2
-            Layout.rightMargin: 2
-            Layout.alignment: Qt.AlignVCenter
-            active: MprisController.activePlayer !== null
-            visible: active && Config.options.lock.showMedia
-            
-            sourceComponent: Item {
-                implicitWidth: mediaRow.implicitWidth
-                implicitHeight: mediaRow.implicitHeight
-                
-                readonly property MprisPlayer activePlayer: MprisController.activePlayer
-                readonly property string cleanedTitle: StringUtils.cleanMusicTitle(activePlayer?.trackTitle) || ""
-                
-                Timer {
-                    running: activePlayer?.playbackState == MprisPlaybackState.Playing
-                    interval: Config.options.resources.updateInterval
-                    repeat: true
-                    onTriggered: activePlayer.positionChanged()
-                }
-                
-                RowLayout {
-                    id: mediaRow
-                    spacing: 8
-                    anchors.centerIn: parent
-                    
-                    Rectangle {
-                        id: artRect
-                        implicitWidth: 40
-                        implicitHeight: 40
-                        radius: Appearance.rounding.full
-                        color: Appearance.colors.colPrimaryContainer
-                        Layout.alignment: Qt.AlignVCenter
-                        clip: true 
-
-                        layer.enabled: true
-                        layer.effect: OpacityMask {
-                            maskSource: Rectangle {
-                                width: artRect.width
-                                height: artRect.height
-                                radius: artRect.radius
-                            }
-                        }
-
-                        StyledImage {
-                            anchors.centerIn: parent
-                            width: artRect.width
-                            height: artRect.height
-                            source: root.artUrl
-                            fillMode: Image.PreserveAspectCrop
-                            cache: false
-                            antialiasing: true
-                            sourceSize.width: artRect.width * 2
-                            sourceSize.height: artRect.height * 2
-                            visible: root.artUrl !== ""
-                        }
-
-                        MaterialSymbol {
-                            anchors.centerIn: parent
-                            fill: 1
-                            text: "music_note"
-                            iconSize: Appearance.font.pixelSize.normal
-                            color: Appearance.colors.colOnSecondaryContainer
-                            visible: root.artUrl === ""
-                        }
-                    }
-                    
-                    Column {
-                        Layout.alignment: Qt.AlignVCenter
-                        spacing: -2
-                        
-                        StyledText {
-                            horizontalAlignment: Text.AlignLeft
-                            elide: Text.ElideRight
-                            maximumLineCount: 1
-                            width: Math.min(implicitWidth, 180) 
-                            color: Appearance.colors.colOnSurfaceVariant
-                            text: {
-                                var artist = activePlayer?.trackArtist || " ";
-                                return artist.length > 25 ? artist.substring(0, 25) + "..." : artist;
-                            }
-                            font.pixelSize: Appearance.font.pixelSize.smaller
-                        }
-                        
-                        StyledText {
-                            horizontalAlignment: Text.AlignLeft
-                            elide: Text.ElideRight
-                            maximumLineCount: 1
-                            width: Math.min(implicitWidth, 180) 
-                            color: Appearance.colors.colOnSurfaceVariant
-                            text: {
-                                var title = cleanedTitle;
-                                return title.length > 30 ? title.substring(0, 30) + "..." : title;
-                            }
-                            font.weight: Font.Medium
-                            font.pixelSize: Appearance.font.pixelSize.small
-                        }
-                    }
-                    
-                    ClippedFilledCircularProgress {
-                        id: mediaCircProg
-                        Layout.alignment: Qt.AlignVCenter
-                        lineWidth: Appearance.rounding.unsharpen
-                        value: activePlayer?.position / activePlayer?.length
-                        implicitSize: 24
-                        colPrimary: Appearance.colors.colOnSurfaceVariant
-                        enableAnimation: false
-                        
-                        Item {
-                            anchors.centerIn: parent
-                            width: mediaCircProg.implicitSize
-                            height: mediaCircProg.implicitSize
-                            
-                            MaterialSymbol {
-                                anchors.centerIn: parent
-                                fill: 1
-                                text: "music_note"
-                                iconSize: Appearance.font.pixelSize.normal
-                                color: Appearance.colors.colOnSurfaceVariant
-                            }
-                        }
-                    }
-                }
-            }
         }
 
         // Keyboard layout (Xkb)
         Loader {
             Layout.rightMargin: 8
             Layout.fillHeight: true
-            visible: !Config.options.lock.showMedia || MprisController.activePlayer === null
 
             sourceComponent: Row {
                 spacing: 8
@@ -508,9 +511,10 @@ MouseArea {
         id: rightIsland
         visible: Config.options.lock.showToolbars
         anchors {
-            horizontalCenter: mainIsland.horizontalCenter
-            top: mainIsland.bottom
-            topMargin: 8
+            left: mainIsland.right
+            top: mainIsland.top
+            bottom: mainIsland.bottom
+            leftMargin: 10
         }
         padding: 8
         radius: 12

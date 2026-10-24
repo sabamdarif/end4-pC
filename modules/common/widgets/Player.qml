@@ -29,6 +29,12 @@ Item {
     property int visualizerSmoothing: 2
     property real radius
     property bool showLyrics: false
+    property bool allowLyrics: true
+
+    implicitWidth: Appearance.sizes.mediaControlsWidth
+    implicitHeight: (showLyrics && allowLyrics) ? 290 : Appearance.sizes.mediaControlsHeight
+    width: implicitWidth
+    height: implicitHeight
 
     property string displayedArtFilePath: {
         if (!root.downloaded) return ""
@@ -139,7 +145,7 @@ Item {
             id: layoutLoader
             anchors.fill: parent
 
-            sourceComponent: root.showLyrics ? lyricsComponent : controlsComponent
+            sourceComponent: (root.allowLyrics && root.showLyrics) ? lyricsComponent : controlsComponent
 
             Component {
                 id: controlsComponent
@@ -148,6 +154,7 @@ Item {
                     blendedColors: root.blendedColors
                     displayedArtFilePath: root.displayedArtFilePath
                     radius: root.radius
+                    allowLyrics: root.allowLyrics
                     onToggleLyrics: root.showLyrics = !root.showLyrics
                 }
             }

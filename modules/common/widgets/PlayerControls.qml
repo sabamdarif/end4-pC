@@ -19,6 +19,7 @@ Item {
     required property QtObject blendedColors
     required property string displayedArtFilePath
     required property real radius
+    property bool allowLyrics: true
     signal toggleLyrics()
 
     component TrackChangeButton: RippleButton {
@@ -178,7 +179,7 @@ Item {
 
                     TrackChangeButton {
                         iconName: "lyrics"
-                        visible: !GlobalStates.sidebarRightOpen
+                        visible: root.allowLyrics && !GlobalStates.sidebarRightOpen
                         downAction: () => root.toggleLyrics()
                     }
                 }
@@ -191,7 +192,7 @@ Item {
                     property real size: 44
                     implicitWidth: size
                     implicitHeight: size
-                    downAction: () => root.player.togglePlaying()
+                    downAction: () => root.player?.togglePlaying()
 
                     buttonRadius: root.player?.isPlaying ? Appearance?.rounding.normal : size / 2
                     colBackground: root.player?.isPlaying ? root.blendedColors.colPrimary : root.blendedColors.colSecondaryContainer
