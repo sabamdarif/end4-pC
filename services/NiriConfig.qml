@@ -94,7 +94,13 @@ Singleton {
         if (o.input.mouse.naturalScroll) kdl += "        natural-scroll\n"
         kdl += `        accel-speed ${o.input.mouse.accelSpeed}\n`
         kdl += "    }\n"
-        if (o.input.focusFollowsMouse) kdl += "    focus-follows-mouse\n"
+        // niri has no `focus-follows-mouse false`, so this flag can only be turned
+        // on here; an "on" from an earlier include always stays in force.
+        if (o.input.focusFollowsMouse) {
+            const ffmParam = o.input.focusFollowsMouseMaxScroll !== ""
+                ? ` max-scroll-amount="${root.kdlEscape(o.input.focusFollowsMouseMaxScroll)}"` : ""
+            kdl += `    focus-follows-mouse${ffmParam}\n`
+        }
         kdl += "}\n\n"
 
         kdl += "animations {\n"
@@ -259,6 +265,8 @@ Singleton {
                 property int repeatDelay: 600
                 property int repeatRate: 25
                 property bool focusFollowsMouse: false
+                // Empty string = omit max-scroll-amount entirely
+                property string focusFollowsMouseMaxScroll: ""
                 property JsonObject touchpad: JsonObject {
                     property bool tap: true
                     property bool naturalScroll: true
