@@ -33,22 +33,7 @@ Scope {
 
                 property var brightnessMonitor: Brightness.getMonitorForScreen(barLoader.modelData)
                 
-                Timer {
-                    id: showBarTimer
-                    interval: (Config?.options.bar.autoHide.showWhenPressingSuper.delay ?? 100)
-                    repeat: false
-                    onTriggered: { barRoot.superShow = true }
-                }
-                Connections {
-                    target: GlobalStates
-                    function onSuperDownChanged() {
-                        if (!Config?.options.bar.autoHide.showWhenPressingSuper.enable) return;
-                        if (GlobalStates.superDown) showBarTimer.restart();
-                        else { showBarTimer.stop(); barRoot.superShow = false; }
-                    }
-                }
-                property bool superShow: false
-                property bool mustShow: hoverRegion.containsMouse || superShow
+                property bool mustShow: hoverRegion.containsMouse
                 exclusionMode: ExclusionMode.Ignore
                 exclusiveZone: (Config?.options.bar.autoHide.enable && (!mustShow || !Config?.options.bar.autoHide.pushWindows)) ? 0 :
                     Appearance.sizes.baseVerticalBarWidth + (Config.options.bar.cornerStyle === 1 ? Appearance.sizes.windowGapsOut : 0)

@@ -17,7 +17,6 @@ ButtonMouseArea {
     }
 
     property bool vertical: Config.options.bar.vertical
-    property bool superPressAndHeld: false // Relevant modifications at bottom of file
 
     readonly property string indicatorStyle: {
         const s = Config.options.bar.workspaces.indicatorStyle;
@@ -198,32 +197,6 @@ ButtonMouseArea {
         }
     }
 
-    /////////////////// Super key press handling ///////////////////
-    Timer {
-        id: superPressAndHeldTimer
-        interval: (Config?.options.bar.autoHide.showWhenPressingSuper.delay ?? 100)
-        repeat: false
-        onTriggered: {
-            root.superPressAndHeld = true;
-        }
-    }
-    Connections {
-        target: GlobalStates
-        function onSuperDownChanged() {
-            if (!Config?.options.bar.autoHide.showWhenPressingSuper.enable)
-                return;
-            if (GlobalStates.superDown)
-                superPressAndHeldTimer.restart();
-            else {
-                superPressAndHeldTimer.stop();
-                root.superPressAndHeld = false;
-            }
-        }
-        function onSuperReleaseMightTriggerChanged() {
-            superPressAndHeldTimer.stop();
-        }
-    }
-
     component WorkspaceLayout: Box {
         anchors {
             top: !root.vertical ? parent.top : undefined
@@ -249,8 +222,6 @@ ButtonMouseArea {
         property int wsId: wsModel.getWorkspaceIdAt(index)
         property color contentColor: (wsModel.occupied[wsNum.index] && wsId !== wsModel.fakeWorkspace) ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnLayer1Inactive
         property bool showingNumbers: {
-            if (root.superPressAndHeld)
-                return true;
             if (GlobalStates.screenLocked)
                 return false;
             return root.isNumberStyle;

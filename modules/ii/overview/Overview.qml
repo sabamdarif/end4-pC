@@ -101,17 +101,11 @@ Scope {
         function toggle() {
             GlobalStates.overviewOpen = !GlobalStates.overviewOpen;
         }
-        function workspacesToggle() {
-            GlobalStates.overviewOpen = !GlobalStates.overviewOpen;
-        }
         function close() {
             GlobalStates.overviewOpen = false;
         }
         function open() {
             GlobalStates.overviewOpen = true;
-        }
-        function toggleReleaseInterrupt() {
-            GlobalStates.superReleaseMightTrigger = false;
         }
     }
 }
