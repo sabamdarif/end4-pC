@@ -61,10 +61,6 @@ Singleton {
             ]
         },
         {
-            key: "notifications", name: Translation.tr("Notifications"), icon: "notifications",
-            component: root.page("notifications/PopupsConfig.qml"), children: []
-        },
-        {
             key: "sound", name: Translation.tr("Sound"), icon: "volume_up",
             children: [
                 { key: "volume",        name: Translation.tr("Volume & Limits"), icon: "volume_up",           component: root.page("sound/VolumeConfig.qml") },
@@ -113,6 +109,7 @@ Singleton {
             children: [
                 { key: "dock",          name: Translation.tr("Dock"),                icon: "call_to_action",    component: root.page("panels/DockConfig.qml") },
                 { key: "right-sidebar", name: Translation.tr("Notification Panel"),  icon: "splitscreen_right", component: root.page("panels/RightSidebarConfig.qml") },
+                { key: "notifications", name: Translation.tr("Notifications"),       icon: "notifications",     component: root.page("notifications/PopupsConfig.qml") },
             ]
         },
         {
