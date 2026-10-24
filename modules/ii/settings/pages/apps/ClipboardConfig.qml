@@ -25,7 +25,7 @@ ContentPage {
         for (const entry of list) {
             if (!entry.command.includes("cliphist store")) continue
             found = true
-            let c = entry.command.replace(/\s+-max-items\s+\d+/, "")
+            let c = entry.command.replace(/\s+-max-items\s+\d+/g, "")
             entry.command = c.replace("cliphist store", `cliphist store -max-items ${n}`)
         }
         if (!found) {
@@ -50,6 +50,7 @@ ContentPage {
                 stepSize: 50
                 onValueChanged: {
                     Config.options.cliphist.maxEntries = value
+                    Cliphist.refresh()
                 }
             }
 
@@ -64,8 +65,8 @@ ContentPage {
                 }
                 StyledText {
                     Layout.fillWidth: true
-                    text: Translation.tr("The limit is a flag on the clipboard watcher command, e.g. %1 — it applies through your autostart entry, not live.")
-                        .arg(`wl-paste --watch cliphist store -max-items ${Config.options.cliphist.maxEntries}`)
+                    text: Translation.tr("The shell trims history past the limit on every refresh. The autostart entry also passes it to the watcher (%1), which caps future inserts on its own.")
+                        .arg(`cliphist store -max-items ${Config.options.cliphist.maxEntries}`)
                     font.pixelSize: Appearance.font.pixelSize.smaller
                     color: Appearance.colors.colSubtext
                     wrapMode: Text.Wrap

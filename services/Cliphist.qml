@@ -53,6 +53,29 @@ Singleton {
         readProc.running = true
     }
 
+    // Enforce Config.options.cliphist.maxEntries. The watcher flag only caps
+    // future inserts and cliphist never trims retroactively, so the shell
+    // deletes the oldest entries past the limit itself. deleteEntries triggers a
+    // refresh, so remember the last attempted size to stop retrying if the
+    // delete produced no change.
+    property int lastTrimLength: -1
+    function trimToLimit() {
+        const max = Config.options.cliphist.maxEntries
+        if (max <= 0 || root.entries.length <= max) {
+            root.lastTrimLength = -1
+            return
+        }
+        if (root.entries.length === root.lastTrimLength) return
+        const ids = []
+        for (let i = max; i < root.entries.length; i++) {
+            const match = root.entries[i].match(/^(\d+)\t/)
+            if (match) ids.push(match[1])
+        }
+        if (ids.length === 0) return
+        root.lastTrimLength = root.entries.length
+        batchDeleteProc.deleteEntries(ids)
+    }
+
     function copy(entry) {
         if (root.cliphistBinary.includes("cliphist")) // Classic cliphist
             Quickshell.execDetached(["bash", "-c", `printf '${StringUtils.shellSingleQuoteEscape(entry)}' | ${root.cliphistBinary} decode | wl-copy`]);
@@ -145,6 +168,7 @@ Singleton {
                     }
                     root.incognitoEntryIds = tracked;
                 }
+                root.trimToLimit();
             } else {
                 console.error("[Cliphist] Failed to refresh with code", exitCode, "and status", exitStatus);
             }
