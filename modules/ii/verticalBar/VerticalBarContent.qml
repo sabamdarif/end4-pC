@@ -35,6 +35,51 @@ Item {
     readonly property real centerPillY: centerPill.y
     readonly property real centerPillHeight: centerPill.height
 
+    // Blur reaches exactly the painted bar background, so hidden pills never
+    // blur the wallpaper behind them.
+    readonly property var blurRegion: (Appearance.blurActive && Config.options.bar.showBackground
+        && Config.options.bar.cornerStyle !== 2) ? barBlurRegion : null
+
+    Region {
+        id: barBlurRegion
+
+        // Non-material styles paint one rectangle: the bar, or the center pill
+        Region {
+            item: root.isMaterial ? null : barBackground
+            topLeftRadius: barBackground.topLeftRadius
+            topRightRadius: barBackground.topRightRadius
+            bottomLeftRadius: barBackground.bottomLeftRadius
+            bottomRightRadius: barBackground.bottomRightRadius
+        }
+        Region {
+            item: !root.isMaterial && root.centerOnly ? centerPill : null
+            topLeftRadius: centerPill.topLeftRadius
+            topRightRadius: centerPill.topRightRadius
+            bottomLeftRadius: centerPill.bottomLeftRadius
+            bottomRightRadius: centerPill.bottomRightRadius
+        }
+
+        // M3 style paints one pill per section
+        Region {
+            item: root.isMaterial && topMaterialPill.visible ? topMaterialPill : null
+            topLeftRadius: topMaterialPill.topLeftRadius
+            topRightRadius: topMaterialPill.topRightRadius
+            bottomLeftRadius: topMaterialPill.bottomLeftRadius
+            bottomRightRadius: topMaterialPill.bottomRightRadius
+        }
+        Region {
+            item: root.isMaterial && centerMaterialPill.visible ? centerMaterialPill : null
+            radius: centerMaterialPill.radius
+        }
+        Region {
+            item: root.isMaterial && bottomMaterialPill.visible ? bottomMaterialPill : null
+            topLeftRadius: bottomMaterialPill.topLeftRadius
+            topRightRadius: bottomMaterialPill.topRightRadius
+            bottomLeftRadius: bottomMaterialPill.bottomLeftRadius
+            bottomRightRadius: bottomMaterialPill.bottomRightRadius
+        }
+    }
+
     function shouldPaintMaterialPill(name) {
         if (Config.options.bar.cornerStyle !== 3) return false;
         const blacklist = ["workspaces", "divisor", "powerButton", "media", "docktoPanel"];
@@ -79,7 +124,7 @@ Item {
             margins: Config.options.bar.cornerStyle === 1 ? Appearance.sizes.windowGapsOut : 0
         }
         color: (Config.options.bar.showBackground && Config.options.bar.cornerStyle !== 2 && !root.isMaterial && !root.centerOnly)
-            ? Appearance.colors.colLayer0 : "transparent"
+            ? Appearance.colors.colLayer0Blurred : "transparent"
         radius: Config.options.bar.cornerStyle === 1 ? Appearance.rounding.windowRounding : 0
         border.width: (!root.centerOnly && Config.options.bar.cornerStyle === 1) ? 1 : 0
         border.color: Appearance.colors.colLayer0Border
@@ -93,7 +138,7 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         height: middleCol.implicitHeight + 7
         width: parent.width - (Config.options.bar.cornerStyle === 1 ? Appearance.sizes.windowGapsOut * 2 : 0)
-        color: Appearance.colors.colLayer0
+        color: Appearance.colors.colLayer0Blurred
         radius: Config.options.bar.cornerStyle === 1 ? Appearance.rounding.windowRounding : 0
         border.width: Config.options.bar.cornerStyle === 1 ? 1 : 0
         border.color: Appearance.colors.colLayer0Border
@@ -124,7 +169,7 @@ Item {
                 implicitWidth: topMaterialCol.implicitWidth
                 implicitHeight: topMaterialCol.implicitHeight + 10
                 radius: Appearance.rounding.full
-                color: Appearance.colors.colLayer0
+                color: Appearance.colors.colLayer0Blurred
 
                 ColumnLayout {
                     id: topMaterialCol
@@ -202,7 +247,7 @@ Item {
                 implicitWidth: centerMaterialCol.implicitWidth 
                 implicitHeight: centerMaterialCol.implicitHeight + 10
                 radius: Appearance.rounding.full
-                color: Appearance.colors.colLayer0
+                color: Appearance.colors.colLayer0Blurred
 
                 ColumnLayout {
                     id: centerMaterialCol
@@ -281,7 +326,7 @@ Item {
                 implicitWidth: bottomMaterialCol.implicitWidth
                 implicitHeight: bottomMaterialCol.implicitHeight + 10 
                 radius: Appearance.rounding.full
-                color: Appearance.colors.colLayer0
+                color: Appearance.colors.colLayer0Blurred
 
                 ColumnLayout {
                     id: bottomMaterialCol

@@ -24,6 +24,17 @@ Scope {
         WlrLayershell.keyboardFocus: GlobalStates.overviewOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
         color: "transparent"
 
+        BackgroundEffect.blurRegion: (Appearance.blurActive && GlobalStates.overviewOpen && contentLoader.item && contentLoader.width > 0)
+            ? overviewBlurRegion : null
+        Region {
+            id: overviewBlurRegion
+            x: contentLoader.x
+            y: contentLoader.y
+            width: contentLoader.width
+            height: contentLoader.height
+            radius: 28
+        }
+
         property string pendingSearchText: ""
 
         anchors {
@@ -74,6 +85,8 @@ Scope {
         // Content is destroyed when the overview closes to free memory.
         Loader {
             id: contentLoader
+            width: item ? item.implicitWidth : 0
+            height: item ? item.implicitHeight : 0
             anchors.top: parent.top
             anchors.topMargin: Math.round(parent.height * 0.14)
             anchors.horizontalCenter: parent.horizontalCenter

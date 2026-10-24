@@ -86,6 +86,18 @@ Scope {
             WlrLayershell.namespace: "quickshell:dock"
             color: "transparent"
 
+            // Blur only while the pill is painted; a hidden dock still has a window
+            BackgroundEffect.blurRegion: (Appearance.blurActive && Config.options.dock.showBackground
+                && dockRoot.reveal) ? dockBlurRegion : null
+            Region {
+                id: dockBlurRegion
+                x: Math.round((dockRoot.width - dockVisualBackground.width) / 2)
+                y: Math.round(dockMouseArea.y + Appearance.sizes.elevationMargin)
+                width: Math.round(dockVisualBackground.width)
+                height: Math.round(dockVisualBackground.height)
+                radius: dockVisualBackground.radius
+            }
+
             implicitHeight: (Config.options?.dock.height ?? 70)
                 + Appearance.sizes.elevationMargin
                 + Appearance.sizes.windowGapsOut
@@ -140,7 +152,7 @@ Scope {
                             anchors.topMargin:    Appearance.sizes.elevationMargin
                             anchors.bottomMargin: Appearance.sizes.windowGapsOut
                             color: Config.options.dock.showBackground
-                                   ? Appearance.colors.colLayer0 : "transparent"
+                                   ? Appearance.colors.colLayer0Blurred : "transparent"
                             border.width: Config.options.dock.showBackground ? 1 : 0
                             border.color: Appearance.colors.colLayer0Border
                             radius: Appearance.rounding.normal + 6

@@ -162,6 +162,19 @@ ContentPage {
                         NiriConfig.options.decoration.blur.saturation = newVal
                     }
                 }
+
+                ConfigSpinBox {
+                    enabled: NiriConfig.options.decoration.blur.enable
+                    icon: "opacity"
+                    text: Translation.tr("Panel Opacity (%)")
+                    value: Math.round((Config.options.appearance.transparency.blurOpacity ?? 0.85) * 100)
+                    from: 40; to: 100; stepSize: 5
+                    onValueChanged: {
+                        const newVal = value / 100.0
+                        if (newVal === Config.options.appearance.transparency.blurOpacity) return
+                        Config.options.appearance.transparency.blurOpacity = newVal
+                    }
+                }
             }
         }
     }

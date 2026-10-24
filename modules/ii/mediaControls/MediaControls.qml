@@ -144,6 +144,13 @@ Scope {
                 item: playerColumnLayout
             }
 
+            BackgroundEffect.blurRegion: Appearance.blurActive ? mediaBlurRegion : null
+            Region {
+                id: mediaBlurRegion
+                item: playerColumnLayout
+                radius: root.popupRounding
+            }
+
             Component.onCompleted: {
                 if (!Config.options.bar.media.alwaysVisible)
                     GlobalFocusGrab.addDismissable(panelWindow);

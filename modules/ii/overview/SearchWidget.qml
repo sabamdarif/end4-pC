@@ -393,7 +393,7 @@ Item {
         width: root.panelWidth
         height: root.showResults ? Math.min(root.maxExpandedHeight, Math.max(root.searchBarHeight, contentColumn.implicitHeight + root.searchBarHeight + 38)) : root.searchBarHeight
         radius: 28
-        color: Appearance.colors.colLayer0
+        color: Appearance.colors.colLayer0Blurred
         border.width: 1
         border.color: searchInput.activeFocus ? Appearance.colors.colPrimary : ColorUtils.transparentize(Appearance.colors.colOutline, 0.7)
         clip: true

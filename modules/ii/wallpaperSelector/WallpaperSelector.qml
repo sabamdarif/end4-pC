@@ -66,6 +66,13 @@ Scope {
                 item: content
             }
 
+            BackgroundEffect.blurRegion: Appearance.blurActive ? wallpaperSelectorBlurRegion : null
+            Region {
+                id: wallpaperSelectorBlurRegion
+                item: content.wallpaperGridBackground
+                radius: content.wallpaperGridBackground.radius
+            }
+
             implicitHeight: Appearance.sizes.wallpaperSelectorHeight
             implicitWidth: Appearance.sizes.wallpaperSelectorWidth
 

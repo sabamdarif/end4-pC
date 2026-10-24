@@ -142,7 +142,7 @@ Item {
         anchors.fill: parent
         implicitHeight: parent.height - Appearance.sizes.windowGapsOut * 2
         implicitWidth: sidebarWidth - Appearance.sizes.windowGapsOut * 2
-        color: Appearance.colors.colLayer0
+        color: Appearance.colors.colLayer0Blurred
         border.width: 1
         border.color: Appearance.colors.colLayer0Border
         radius: Appearance.rounding.screenRounding - Appearance.sizes.windowGapsOut + 5

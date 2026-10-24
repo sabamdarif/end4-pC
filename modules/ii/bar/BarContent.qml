@@ -16,8 +16,9 @@ Item {
     readonly property real barPadding: 0
     readonly property bool isMaterial: Config.options.bar.cornerStyle === 3 || Config.options.bar.cornerStyle === 4
     readonly property bool isMaterialHug: Config.options.bar.cornerStyle === 4
-    readonly property color materialPillBgColor: Appearance.colors.colLayer0
+    readonly property color materialPillBgColor: Appearance.colors.colLayer0Blurred
     readonly property real compositorGapsOut: NiriConfig.options.layout.gaps
+    readonly property int hugRadius: Appearance.rounding.screenRounding
     readonly property real centerPillX: centerPill.x
     readonly property real centerPillWidth: centerPill.width
 
@@ -80,11 +81,61 @@ Item {
         id: barBackground
         anchors.fill: parent
         anchors.margins: Config.options.bar.cornerStyle === 1 ? Appearance.sizes.windowGapsOut : 0
-        color: (!centerOnly && Config.options.bar.showBackground && Config.options.bar.cornerStyle !== 2 && !root.isMaterial) 
-            ? Appearance.colors.colLayer0 : "transparent"
+        color: (!centerOnly && Config.options.bar.showBackground && Config.options.bar.cornerStyle !== 2 && !root.isMaterial)
+            ? Appearance.colors.colLayer0Blurred : "transparent"
         radius: Config.options.bar.cornerStyle === 1 ? Appearance.rounding.windowRounding : 0
         border.width: (!centerOnly && Config.options.bar.cornerStyle === 1) ? 1 : 0
         border.color: Appearance.colors.colLayer0Border
+    }
+
+    // Blur reaches exactly the painted bar background, so hidden pills and the
+    // transparent corner cutouts never blur the wallpaper behind them.
+    readonly property var blurRegion: (Appearance.blurActive && Config.options.bar.showBackground
+        && Config.options.bar.cornerStyle !== 2) ? barBlurRegion : null
+
+    Region {
+        id: barBlurRegion
+
+        // Non-material styles paint one rectangle: the whole bar, or the center
+        // pill when only the middle section is shown
+        Region {
+            item: root.isMaterial ? null : (root.centerOnly ? centerPill : barBackground)
+            topLeftRadius: barBackground.visible ? barBackground.topLeftRadius : 0
+            topRightRadius: barBackground.visible ? barBackground.topRightRadius : 0
+            bottomLeftRadius: barBackground.visible ? barBackground.bottomLeftRadius : 0
+            bottomRightRadius: barBackground.visible ? barBackground.bottomRightRadius : 0
+        }
+        Region {
+            item: !root.isMaterial && root.centerOnly ? centerPill : null
+            topLeftRadius: centerPill.topLeftRadius
+            topRightRadius: centerPill.topRightRadius
+            bottomLeftRadius: centerPill.bottomLeftRadius
+            bottomRightRadius: centerPill.bottomRightRadius
+        }
+
+        // M3 styles paint one pill per section, with fillets at the screen edge
+        Region {
+            item: root.isMaterial && leftMaterialPill.visible ? leftMaterialPill : null
+            topLeftRadius: leftMaterialPill.topLeftRadius
+            topRightRadius: leftMaterialPill.topRightRadius
+            bottomLeftRadius: leftMaterialPill.bottomLeftRadius
+            bottomRightRadius: leftMaterialPill.bottomRightRadius
+        }
+        Region {
+            item: root.isMaterial && centerMaterialPill.visible ? centerMaterialPill : null
+            radius: centerMaterialPill.radius
+            topLeftRadius: centerMaterialPill.topLeftRadius
+            topRightRadius: centerMaterialPill.topRightRadius
+            bottomLeftRadius: centerMaterialPill.bottomLeftRadius
+            bottomRightRadius: centerMaterialPill.bottomRightRadius
+        }
+        Region {
+            item: root.isMaterial && rightMaterialPill.visible ? rightMaterialPill : null
+            topLeftRadius: rightMaterialPill.topLeftRadius
+            topRightRadius: rightMaterialPill.topRightRadius
+            bottomLeftRadius: rightMaterialPill.bottomLeftRadius
+            bottomRightRadius: rightMaterialPill.bottomRightRadius
+        }
     }
 
     // center-only
@@ -99,7 +150,7 @@ Item {
         anchors.horizontalCenter: parent.horizontalCenter
         width: middleRow.implicitWidth + 10
         height: parent.height - (Config.options.bar.cornerStyle === 1 ? Appearance.sizes.windowGapsOut * 2 : 0)
-        color: Appearance.colors.colLayer0
+        color: Appearance.colors.colLayer0Blurred
         radius: Config.options.bar.cornerStyle === 1 ? Appearance.rounding.windowRounding : 0
         border.width: Config.options.bar.cornerStyle === 1 ? 1 : 0
         border.color: Appearance.colors.colLayer0Border

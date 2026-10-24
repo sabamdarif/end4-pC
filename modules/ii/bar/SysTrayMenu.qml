@@ -15,6 +15,13 @@ PopupWindow {
     property string trayItemId: ""
     property real popupBackgroundMargin: 0
 
+    BackgroundEffect.blurRegion: (Appearance.blurActive && root.visible) ? trayMenuBlurRegion : null
+    Region {
+        id: trayMenuBlurRegion
+        item: popupBackground
+        radius: popupBackground.radius
+    }
+
     signal menuClosed
     signal menuOpened(qsWindow: var) // Correct type is QsWindow, but QML does not like that
 
@@ -106,7 +113,7 @@ PopupWindow {
                 margins: root.padding
             }
 
-            color: Appearance.colors.colLayer0
+            color: Appearance.colors.colLayer0Blurred
             radius: Appearance.rounding.windowRounding
             border.width: 1
             border.color: Appearance.colors.colLayer0Border

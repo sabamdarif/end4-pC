@@ -192,6 +192,8 @@ MouseArea {
     implicitHeight: mainLayout.implicitHeight
     implicitWidth: mainLayout.implicitWidth
 
+    property alias wallpaperGridBackground: wallpaperGridBackground
+
     StyledRectangularShadow {
         target: wallpaperGridBackground
     }
@@ -204,7 +206,7 @@ MouseArea {
         focus: true
         border.width: 1
         border.color: Appearance.colors.colLayer0Border
-        color: Appearance.colors.colLayer0
+        color: Appearance.colors.colLayer0Blurred
         radius: Appearance.rounding.screenRounding + 5
 
         implicitWidth: gridColumnLayout.implicitWidth

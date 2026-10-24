@@ -144,13 +144,15 @@ Item {
         target: card
     }
 
+    property alias card: card
+
     Rectangle {
         id: card
         anchors {
             fill: parent
             margins: Appearance.sizes.elevationMargin
         }
-        color: Appearance.colors.colLayer0
+        color: Appearance.colors.colLayer0Blurred
         border.width: 1
         border.color: Appearance.colors.colLayer0Border
         radius: Appearance.rounding.screenRounding + 5

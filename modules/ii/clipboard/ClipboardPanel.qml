@@ -24,6 +24,17 @@ Scope {
         WlrLayershell.keyboardFocus: GlobalStates.clipboardOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
         color: "transparent"
 
+        BackgroundEffect.blurRegion: (Appearance.blurActive && GlobalStates.clipboardOpen && contentLoader.item)
+            ? clipboardBlurRegion : null
+        Region {
+            id: clipboardBlurRegion
+            x: Math.round(contentLoader.x + Appearance.sizes.elevationMargin)
+            y: Math.round(contentLoader.y + Appearance.sizes.elevationMargin)
+            width: Math.max(0, contentLoader.width - Appearance.sizes.elevationMargin * 2)
+            height: Math.max(0, contentLoader.height - Appearance.sizes.elevationMargin * 2)
+            radius: Appearance.rounding.screenRounding + 5
+        }
+
         anchors {
             top: true
             bottom: true
@@ -60,11 +71,12 @@ Scope {
         // Content (including decoded history thumbnails) is destroyed on close to free memory.
         Loader {
             id: contentLoader
+            width: Appearance.sizes.clipboardPanelWidth
+            height: Appearance.sizes.clipboardPanelHeight
             anchors.centerIn: parent
             active: GlobalStates.clipboardOpen
             sourceComponent: ClipboardContent {
-                width: Appearance.sizes.clipboardPanelWidth
-                height: Appearance.sizes.clipboardPanelHeight
+                anchors.fill: parent
                 Component.onCompleted: {
                     Cliphist.refresh();
                     reset();

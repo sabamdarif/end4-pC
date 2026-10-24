@@ -101,6 +101,7 @@ Singleton {
                     property bool automatic: true
                     property real backgroundTransparency: 0.11
                     property real contentTransparency: 0.57
+                    property real blurOpacity: 0.85 // Panel alpha while niri blur is enabled
                 }
                 property JsonObject wallpaperTheming: JsonObject {
                     property bool enableAppsAndShell: true

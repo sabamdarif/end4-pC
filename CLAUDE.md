@@ -114,6 +114,23 @@ reuses it for the launcher's `settings:` search, so neither keeps its own page l
 
 Dynamic lists commonly use `Rectangle`, `ColumnLayout`, and `Repeater`. `GroupedList` is mainly for static children.
 
+### Compositor blur
+
+niri blurs a layer surface only when the surface asks for it through
+`ext-background-effect-v1` and is translucent; the generated `blur {}` block in
+`qssettings/shell.kdl` only sets strength. Both halves are shell-side:
+
+- `Appearance.blurActive` follows `NiriConfig.options.decoration.blur.enable`.
+- `Appearance.panelOpacity` and `colLayer0Blurred`/`colLayer1Blurred` make panel
+  backgrounds translucent while blur is on and restore full opacity when it is off.
+  `Config.options.appearance.transparency.blurOpacity` is the panel alpha.
+- A window opts in with `BackgroundEffect.blurRegion: <region>`. Build the region
+  from the painted background item, not the window, so transparent areas and
+  hidden pills never blur the wallpaper behind them.
+
+`BackgroundEffect` comes from `Quickshell.Wayland`; a window only needs that one
+binding because Quickshell re-publishes the region when the surface remaps.
+
 ### Sidebar dialogs
 
 Every sheet the right sidebar opens is a `DialogSheet` (`modules/common/widgets/`), so

@@ -90,7 +90,7 @@ Item {
         id: background
         anchors.fill: parent
         anchors.margins: Appearance.sizes.elevationMargin
-        color: ColorUtils.applyAlpha(blendedColors.colLayer0, 1)
+        color: ColorUtils.applyAlpha(blendedColors.colLayer0, Appearance.blurActive ? Appearance.panelOpacity : 1)
         radius: root.radius
 
         layer.enabled: true

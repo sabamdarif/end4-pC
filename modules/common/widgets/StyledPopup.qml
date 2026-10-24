@@ -76,6 +76,13 @@ LazyLoader {
         WlrLayershell.namespace: "quickshell:popup"
         WlrLayershell.layer: WlrLayer.Overlay
 
+        BackgroundEffect.blurRegion: Appearance.blurActive ? popupBlurRegion : null
+        Region {
+            id: popupBlurRegion
+            item: popupBackground
+            radius: popupBackground.radius
+        }
+
         StyledRectangularShadow {
             target: popupBackground
         }
@@ -95,7 +102,7 @@ LazyLoader {
             implicitWidth: contentLoader.implicitWidth + margin * 2
             implicitHeight: contentLoader.implicitHeight + margin * 2
 
-            color: Appearance.colors.colLayer1Base
+            color: Appearance.colors.colLayer1Blurred
             radius: Appearance.rounding.normal + 4
             border.width: 1
             border.color: Appearance.colors.colLayer0Border
