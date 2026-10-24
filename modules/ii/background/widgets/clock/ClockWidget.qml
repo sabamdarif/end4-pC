@@ -17,7 +17,7 @@ AbstractBackgroundWidget {
     implicitWidth: contentColumn.implicitWidth
 
     readonly property string clockStyle: GlobalStates.screenLocked ? Config.options.background.widgets.clock.styleLocked : Config.options.background.widgets.clock.style
-    readonly property bool forceCenter: (GlobalStates.screenLocked && Config.options.lock.centerClock)
+    readonly property bool forceCenter: GlobalStates.screenLocked
     readonly property bool shouldShow: (!Config.options.background.widgets.clock.showOnlyWhenLocked || GlobalStates.screenLocked)
     readonly property string customClockColorKey: Config.options.background.widgets.clock.color ?? ""
     readonly property color resolvedClockColor: {
@@ -105,7 +105,7 @@ AbstractBackgroundWidget {
             id: statusTextBg
             anchors.centerIn: parent
             clip: true
-            opacity: (safetyStatusText.shown || lockStatusText.shown) ? 1 : 0
+            opacity: safetyStatusText.shown ? 1 : 0
             visible: opacity > 0
             implicitHeight: statusTextRow.implicitHeight + 5 * 2
             implicitWidth: statusTextRow.implicitWidth + 5 * 2
@@ -135,12 +135,6 @@ AbstractBackgroundWidget {
                     shown: root.wallpaperSafetyTriggered
                     statusIcon: "hide_image"
                     statusText: Translation.tr("Wallpaper safety enforced")
-                }
-                ClockStatusText {
-                    id: lockStatusText
-                    shown: GlobalStates.screenLocked && Config.options.lock.showLockedText
-                    statusIcon: "lock"
-                    statusText: Translation.tr("Locked")
                 }
                 Item {
                     Layout.fillWidth: root.textHorizontalAlignment !== Text.AlignRight

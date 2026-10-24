@@ -50,13 +50,8 @@ Singleton {
         enabled: root.idleTimeoutSeconds > 0
         respectInhibitors: true
         onIsIdleChanged: {
-            if (isIdle && !GlobalStates.screenLocked) {
-                if (Config.options.lock.useSwaylock) {
-                    Quickshell.execDetached(["bash", "-c", "pidof swaylock || swaylock"]);
-                } else {
-                    GlobalStates.screenLocked = true;
-                }
-            }
+            if (isIdle && !GlobalStates.screenLocked)
+                GlobalStates.screenLocked = true;
         }
     }
 
@@ -67,8 +62,20 @@ Singleton {
         triggeredOnStart: true
         onTriggered: {
             root.nowSeconds = Math.floor(Date.now() / 1000);
-            if (root.nowSeconds >= root.inhibitUntil) root.toggleInhibit(false);
+            if (root.nowSeconds >= root.inhibitUntil) root.setInhibit(false);
         }
+    }
+
+    // Sleep the machine a while after the screen locks. Kept off while
+    // keep-awake is on, and stopped when the screen unlocks.
+    Timer {
+        id: suspendAfterLockTimer
+        interval: Math.max(5, Config.options.lock.suspendDelaySec) * 1000
+        running: GlobalStates.screenLocked
+            && Config.options.lock.suspendOnLock
+            && !root.inhibit
+        repeat: false
+        onTriggered: Session.suspend()
     }
 
     Connections {
@@ -79,14 +86,20 @@ Singleton {
                 Persistent.states.idle.inhibitUntil = 0;
                 return;
             }
-            const until = Persistent.states.idle.inhibitUntil;
             root.nowSeconds = Math.floor(Date.now() / 1000);
-            if (Persistent.states.idle.inhibit && (until <= 0 || root.nowSeconds < until)) {
-                root.inhibit = true;
-            } else {
-                root.toggleInhibit(false);
-            }
+            const until = Persistent.states.idle.inhibitUntil;
+            const alive = Persistent.states.idle.inhibit && (until <= 0 || root.nowSeconds < until);
+            root.setInhibit(alive);
+            if (!alive) Persistent.states.idle.inhibitUntil = 0;
         }
+    }
+
+    // Writes the on/off state without recomputing the deadline, so expiry never
+    // resurrects a finished timed inhibit.
+    function setInhibit(enable) {
+        root.inhibit = enable;
+        Persistent.states.idle.inhibit = enable;
+        if (!enable) Persistent.states.idle.inhibitUntil = 0;
     }
 
     // `minutes` also becomes the remembered duration; -1 reuses the remembered one.
@@ -95,9 +108,8 @@ Singleton {
         if (minutes >= 0) Persistent.states.idle.durationMinutes = minutes;
         const duration = (minutes >= 0) ? minutes : root.inhibitDurationMinutes;
         root.nowSeconds = Math.floor(Date.now() / 1000);
-        Persistent.states.idle.inhibitUntil = (enable && duration > 0) ? root.nowSeconds + duration * 60 : 0;
-        root.inhibit = enable;
-        Persistent.states.idle.inhibit = enable;
+        if (enable) Persistent.states.idle.inhibitUntil = (duration > 0) ? root.nowSeconds + duration * 60 : 0;
+        root.setInhibit(enable);
     }
 
     IdleInhibitor {

@@ -157,7 +157,8 @@ Singleton {
             }
 
             property JsonObject cliphist: JsonObject {
-                // Applied via `cliphist store -max-items N` in the autostart entry
+                // Enforced by services/Cliphist.qml on every refresh; also applied
+                // via `cliphist store -max-items N` when the watcher is in autostart.
                 property int maxEntries: 750
             }
 
@@ -496,20 +497,20 @@ Singleton {
             }
 
             property JsonObject lock: JsonObject {
-                property bool useSwaylock: false
                 property bool launchOnStartup: false
                 property string idleTimeout: "5 minutes"
                 property bool showWidgets: false
                 property bool showMedia: true
                 property bool showToolbars: true
+                // Put the machine to sleep a short while after the screen locks
+                property bool suspendOnLock: false
+                property int suspendDelaySec: 60
                 property JsonObject blur: JsonObject {
                     property bool enable: true
                     property real radius: 100
                     property real extraZoom: 1.1
                     property int size: 20
                 }
-                property bool centerClock: true
-                property bool showLockedText: true
                 property JsonObject security: JsonObject {
                     property bool unlockKeyring: true
                     property bool requirePasswordToPower: false

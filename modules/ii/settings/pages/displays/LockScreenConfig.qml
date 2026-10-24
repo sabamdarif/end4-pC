@@ -16,12 +16,6 @@ ContentPage {
 
         GroupedList {
             ConfigSwitch {
-                buttonIcon: "water_drop"
-                text: Translation.tr("Use Swaylock (instead of Quickshell)")
-                checked: Config.options.lock.useSwaylock
-                onCheckedChanged: { Config.options.lock.useSwaylock = checked }
-            }
-            ConfigSwitch {
                 buttonIcon: "account_circle"
                 text: Translation.tr("Launch on startup")
                 checked: Config.options.lock.launchOnStartup
@@ -39,6 +33,20 @@ ContentPage {
                 ]
                 currentValue: Config.options.lock.idleTimeout
                 onSelected: (value) => { Config.options.lock.idleTimeout = value; }
+            }
+            ConfigSwitch {
+                buttonIcon: "bedtime"
+                text: Translation.tr("Suspend after lock")
+                checked: Config.options.lock.suspendOnLock
+                onCheckedChanged: { Config.options.lock.suspendOnLock = checked }
+            }
+            ConfigSpinBox {
+                icon: "timer"
+                text: Translation.tr("Suspend delay (seconds)")
+                value: Config.options.lock.suspendDelaySec
+                from: 5; to: 600; stepSize: 5
+                enabled: Config.options.lock.suspendOnLock
+                onValueChanged: { Config.options.lock.suspendDelaySec = value }
             }
             ConfigSwitch {
                 buttonIcon: "widgets"
@@ -81,18 +89,6 @@ ContentPage {
         ContentSubsection {
             title: Translation.tr("Style: General")
             GroupedList {
-                ConfigSwitch {
-                    buttonIcon: "center_focus_weak"
-                    text: Translation.tr("Center clock")
-                    checked: Config.options.lock.centerClock
-                    onCheckedChanged: { Config.options.lock.centerClock = checked }
-                }
-                ConfigSwitch {
-                    buttonIcon: "info"
-                    text: Translation.tr('Show "Locked" text')
-                    checked: Config.options.lock.showLockedText
-                    onCheckedChanged: { Config.options.lock.showLockedText = checked }
-                }
                 ConfigSwitch {
                     buttonIcon: "shapes"
                     text: Translation.tr("Use varying shapes for password characters")
