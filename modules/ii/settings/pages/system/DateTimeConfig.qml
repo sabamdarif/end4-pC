@@ -10,6 +10,13 @@ ContentPage {
     id: page
     forceWidth: true
 
+    // Show each date format as a live sample so the dropdown needs no explanation
+    readonly property var dateFormatPresets: [
+        "ddd, dd/MM", "dddd, dd MMMM", "dd/MM/yyyy",
+        "MM/dd/yyyy", "yyyy-MM-dd", "dd MMM yyyy"
+    ].map(f => ({ displayName: `${Qt.formatDateTime(previewCard.now, f)}  ·  ${f}`, value: f }))
+    readonly property bool dateFormatIsPreset: dateFormatPresets.some(p => p.value === Config.options.time.dateFormat)
+
     ContentSection {
         icon: "nest_clock_farsight_analog"
         shape: MaterialShape.Shape.Bun
@@ -109,26 +116,30 @@ ContentPage {
                     Config.options.time.secondPrecision = checked;
                 }
             }
-            ConfigTextArea {
-                Layout.fillWidth: true
-                buttonIcon: "scoreboard"
-                text: Translation.tr("Clock String Format")
-                placeholderText: Translation.tr("Clock String Format")
-                value: Config.options.time.format
-                onValueChanged: {
-                    Config.options.time.format = value;
-                }
-            }
 
-            ConfigTextArea {
+            // GroupedList's Repeater ignores `visible`, so the custom-format
+            // fallback lives outside the list instead of as a hidden row.
+            ConfigComboBox {
                 Layout.fillWidth: true
                 buttonIcon: "calendar_month"
-                text: Translation.tr("Date String Format")
-                placeholderText: Translation.tr("Date String Format")
-                value: Config.options.time.dateFormat
-                onValueChanged: {
+                text: Translation.tr("Date format")
+                model: page.dateFormatPresets
+                currentValue: Config.options.time.dateFormat
+                onSelected: (value) => {
                     Config.options.time.dateFormat = value;
                 }
+            }
+        }
+
+        ConfigTextArea {
+            visible: !page.dateFormatIsPreset
+            Layout.fillWidth: true
+            buttonIcon: "calendar_month"
+            text: Translation.tr("Date format (custom)")
+            placeholderText: Translation.tr("e.g. ddd, dd/MM")
+            Component.onCompleted: value = Config.options.time.dateFormat
+            onValueChanged: {
+                Config.options.time.dateFormat = value;
             }
         }
     }
