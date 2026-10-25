@@ -18,6 +18,9 @@ Item {
     property real previewCellAspectRatio: 4 / 3
     property var hoveredItem: null
     property string lastError: ""
+    property string downloadingKey: ""
+    property real downloadProgress: 0.0
+    property bool isDownloading: downloadProc.running || resetTimer.running
 
     signal wallpaperSelected(string path)
     signal updateThumbnailsRequested()
@@ -53,6 +56,7 @@ Item {
     // Applied wallpapers go to the cache (kept while in the last-5 recents);
     // explicit downloads (right-click) go to the local wallpaper collection.
     function download(item, applyAfter) {
+        if (root.isDownloading) return
         const urlLower = item.full.toLowerCase().split("?")[0]
         const ext = urlLower.includes(".png") ? "png"
             : urlLower.includes(".webp") ? "webp"
@@ -62,10 +66,14 @@ Item {
             ? Wallpapers.onlineCacheDir
             : `${Directories.pictures.toString().replace("file://", "")}/Wallpapers`
         const fullPath = `${dir}/${fileName}`
+        root.downloadingKey = `${item.provider}-${item.id}`
+        root.downloadProgress = 0.0
         downloadProc.filePath = fullPath
         downloadProc.applyAfter = applyAfter
-        downloadProc.command = ["bash", "-c",
-            `mkdir -p '${dir}' && curl -L --silent '${item.full}' -o '${fullPath}'`
+        downloadProc.command = [
+            "python3", "-u",
+            Quickshell.shellPath("scripts/images/download_wallpaper.py"),
+            item.full, fullPath
         ]
         downloadProc.running = true
     }
@@ -107,11 +115,17 @@ Item {
         property bool applyAfter: false
 
         stdout: SplitParser {
-            onRead: data => console.log("[download]", data)
+            onRead: data => {
+                const val = parseFloat(data.trim())
+                if (!isNaN(val)) {
+                    root.downloadProgress = Math.max(0, Math.min(100, val))
+                }
+            }
         }
 
         onExited: (exitCode) => {
             if (exitCode === 0) {
+                root.downloadProgress = 100
                 if (applyAfter) {
                     root.wallpaperSelected(filePath)
                 } else {
@@ -122,11 +136,23 @@ Item {
                     applyAfter ? Translation.tr("Wallpaper applied") : Translation.tr("Download complete"),
                     filePath, "-a", "Shell"
                 ])
+                resetTimer.restart()
             } else {
+                root.downloadingKey = ""
+                root.downloadProgress = 0
                 Quickshell.execDetached(["notify-send",
                     Translation.tr("Download failed"), filePath, "-a", "Shell"
                 ])
             }
+        }
+    }
+
+    Timer {
+        id: resetTimer
+        interval: 600
+        onTriggered: {
+            root.downloadingKey = ""
+            root.downloadProgress = 0
         }
     }
 
@@ -247,9 +273,15 @@ Item {
                 id: delegateItem
                 required property var model
                 required property int index
+                readonly property string itemKey: `${delegateItem.model.provider}-${delegateItem.model.id}`
+                readonly property bool isCurrentDownloading: root.isDownloading && root.downloadingKey === delegateItem.itemKey
 
                 width: grid.cellWidth
                 height: grid.cellHeight
+                scale: delegateItem.isCurrentDownloading ? 0.97 : 1.0
+                Behavior on scale {
+                    animation: Appearance.animation.clickBounce.numberAnimation.createObject(this)
+                }
 
                 Image {
                     id: thumb
@@ -295,13 +327,20 @@ Item {
                         }
                     }
 
+                    WaterWaveProgress {
+                        id: waveOverlay
+                        anchors.fill: parent
+                        running: delegateItem.isCurrentDownloading
+                        progress: root.downloadProgress
+                    }
+
                     Rectangle {
                         anchors {
                             bottom: parent.bottom
                             left: parent.left
                             margins: 4
                         }
-                        visible: (delegateItem.model.resolution ?? "").length > 0
+                        visible: !waveOverlay.running && (delegateItem.model.resolution ?? "").length > 0
                         color: Appearance.colors.colScrim
                         radius: Appearance.rounding.small
                         implicitWidth: resolutionText.implicitWidth + 8
@@ -327,6 +366,7 @@ Item {
                         root.forceActiveFocus()
                     }
                     onClicked: event => {
+                        if (root.isDownloading) return
                         root.download(delegateItem.model, event.button === Qt.LeftButton)
                     }
                 }
