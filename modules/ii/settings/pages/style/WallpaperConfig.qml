@@ -324,5 +324,86 @@ ContentPage {
                 }
             }
         }
+
+        ContentSubsection {
+            title: Translation.tr("Slideshow")
+            Layout.fillWidth: true
+
+            GroupedList {
+                ConfigSwitch {
+                    Layout.fillWidth: true
+                    buttonIcon: "timer"
+                    text: Translation.tr("Change wallpaper automatically")
+                    checked: Config.options.wallpaperSelector.changeInterval > 0
+                    onCheckedChanged: {
+                        if (checked && Config.options.wallpaperSelector.changeInterval <= 0) {
+                            Config.options.wallpaperSelector.changeInterval = 300000;
+                        } else if (!checked) {
+                            Config.options.wallpaperSelector.changeInterval = 0;
+                        }
+                    }
+                }
+                ConfigSpinBox {
+                    visible: Config.options.wallpaperSelector.changeInterval > 0
+                    Layout.fillWidth: true
+                    icon: "timelapse"
+                    text: Translation.tr("Change interval (min)")
+                    value: Math.max(1, Math.round(Config.options.wallpaperSelector.changeInterval / 60000))
+                    from: 1
+                    to: 1440
+                    stepSize: 5
+                    onValueChanged: {
+                        Config.options.wallpaperSelector.changeInterval = value * 60000;
+                    }
+                }
+            }
+        }
+
+        ContentSubsection {
+            title: Translation.tr("Selector behavior")
+            Layout.fillWidth: true
+
+            GroupedList {
+                ConfigSpinBox {
+                    Layout.fillWidth: true
+                    icon: "grid_on"
+                    text: Translation.tr("Columns in grid view")
+                    value: Config.options.wallpaperSelector.columns
+                    from: 3
+                    to: 10
+                    stepSize: 1
+                    onValueChanged: {
+                        Config.options.wallpaperSelector.columns = value;
+                    }
+                }
+                ConfigSwitch {
+                    Layout.fillWidth: true
+                    buttonIcon: "blur_on"
+                    text: Translation.tr("Show blur background")
+                    checked: Config.options.wallpaperSelector.showBlurBackground
+                    onCheckedChanged: {
+                        Config.options.wallpaperSelector.showBlurBackground = checked;
+                    }
+                }
+                ConfigSwitch {
+                    Layout.fillWidth: true
+                    buttonIcon: "done"
+                    text: Translation.tr("Close after selection")
+                    checked: Config.options.wallpaperSelector.closeAfterSelection
+                    onCheckedChanged: {
+                        Config.options.wallpaperSelector.closeAfterSelection = checked;
+                    }
+                }
+                ConfigSwitch {
+                    Layout.fillWidth: true
+                    buttonIcon: "ad"
+                    text: Translation.tr("Use system file picker")
+                    checked: Config.options.wallpaperSelector.useSystemFileDialog
+                    onCheckedChanged: {
+                        Config.options.wallpaperSelector.useSystemFileDialog = checked;
+                    }
+                }
+            }
+        }
     }
 }

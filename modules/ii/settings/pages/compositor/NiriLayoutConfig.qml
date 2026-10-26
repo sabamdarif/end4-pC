@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
@@ -8,6 +9,25 @@ import qs.modules.common.widgets
 ContentPage {
     id: page
     forceWidth: true
+
+    property bool focusFollowsMouseOwnedByConfig: false
+
+    Process {
+        id: ffmProbeProc
+        command: ["sh", "-c", `grep -hE '^[ \\t]*focus-follows-mouse' "$HOME/.config/niri/config.kdl" "$HOME/.config/niri/config.d"/*.kdl 2>/dev/null | grep -v '^[ \\t]*//' | tail -1`]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const line = text.trim()
+                page.focusFollowsMouseOwnedByConfig = line !== ""
+                if (line === "") return
+                const m = line.match(/max-scroll-amount\s*=\s*"([^"]*)"/)
+                if (m) NiriConfig.options.input.focusFollowsMouseMaxScroll = m[1]
+                NiriConfig.options.input.focusFollowsMouse = true
+            }
+        }
+    }
+
+    Component.onCompleted: ffmProbeProc.running = true
 
     NiriIncludeNotice {}
 
@@ -55,6 +75,37 @@ ContentPage {
                     { displayName: "⅔", icon: "crop_landscape", value: 0.66667 },
                 ]
             }
+        }
+    }
+
+    ContentSection {
+        icon: "mouse"
+        shape: MaterialShape.Shape.Pentagon
+        title: Translation.tr("Focus")
+
+        GroupedList {
+            ConfigSwitch {
+                buttonIcon: "mouse"
+                text: Translation.tr("Focus follows mouse")
+                enabled: !page.focusFollowsMouseOwnedByConfig
+                checked: NiriConfig.options.input.focusFollowsMouse
+                onCheckedChanged: {
+                    if (checked === NiriConfig.options.input.focusFollowsMouse) return
+                    NiriConfig.options.input.focusFollowsMouse = checked
+                }
+            }
+        }
+
+        StyledText {
+            visible: page.focusFollowsMouseOwnedByConfig
+            Layout.fillWidth: true
+            Layout.leftMargin: 16
+            Layout.rightMargin: 16
+            Layout.bottomMargin: 8
+            text: Translation.tr("Focus follows mouse is enabled in your own niri config (config.d). niri cannot turn that flag off from another file, so remove the line there to manage it here.")
+            font.pixelSize: Appearance.font.pixelSize.smaller
+            color: Appearance.colors.colSubtext
+            wrapMode: Text.Wrap
         }
     }
 }

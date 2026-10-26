@@ -123,6 +123,7 @@ ContentPage {
         }
 
         ConfigTextArea {
+            id: customKbField
             visible: !page.layoutIsPreset
             Layout.fillWidth: true
             buttonIcon: "keyboard"
@@ -136,7 +137,7 @@ ContentPage {
                 interval: 1000
                 repeat: false
                 onTriggered: {
-                    NiriConfig.options.input.kbLayout = value
+                    NiriConfig.options.input.kbLayout = customKbField.value
                 }
             }
         }

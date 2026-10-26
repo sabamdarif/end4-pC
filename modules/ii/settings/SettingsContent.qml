@@ -67,7 +67,10 @@ Item {
 
     // Group and leaf names come from the registry, so results exist before a page
     // has ever been built. Section titles need the page loaded, so they fill in
-    // as pages are visited (Loader.onLoaded re-runs this).
+    // Group and leaf names come from the registry, so results exist before a page
+    // has ever been built. Section titles need the page loaded, so they fill in
+    // as pages are visited (Loader.onLoaded re-runs this). Registered SettingRows
+    // are searched dynamically from SettingsSearchIndex.
     function updateSettingsSearch() {
         const query = settingsSearchQuery.toLowerCase().trim()
         if (query === "") {
@@ -80,7 +83,7 @@ Item {
         for (let i = 0; i < SettingsPages.leaves.length; i++) {
             const leaf = SettingsPages.leaves[i]
             if (leaf.name.toLowerCase().includes(query) || leaf.groupName.toLowerCase().includes(query)) {
-                results.push({ leafKey: leaf.key, pageName: leaf.name, groupName: leaf.groupName, sectionName: "", icon: leaf.icon })
+                results.push({ leafKey: leaf.key, pageName: leaf.name, groupName: leaf.groupName, sectionName: "", rowId: "", isWip: false, icon: leaf.icon })
             }
 
             const loader = pagesRepeater.itemAt(i)
@@ -91,10 +94,27 @@ Item {
                 const sectionName = sectionNames[s]
                 if (!sectionName.toLowerCase().includes(query)) continue
                 if (sectionName.toLowerCase() === leaf.name.toLowerCase()) continue
-                results.push({ leafKey: leaf.key, pageName: leaf.name, groupName: leaf.groupName, sectionName: sectionName, icon: leaf.icon })
+                results.push({ leafKey: leaf.key, pageName: leaf.name, groupName: leaf.groupName, sectionName: sectionName, rowId: "", isWip: false, icon: leaf.icon })
             }
         }
-        settingsSearchResults = results.slice(0, 12)
+
+        // Search registered SettingRows
+        const rowMatches = SettingsSearchIndex.search(query)
+        for (let r = 0; r < rowMatches.length; r++) {
+            const rm = rowMatches[r]
+            const pageObj = SettingsPages.leaves.find(l => l.key === rm.pageKey)
+            results.push({
+                leafKey: rm.pageKey,
+                pageName: pageObj ? pageObj.name : rm.pageKey,
+                groupName: SettingsPages.groupOf(rm.pageKey),
+                sectionName: rm.label,
+                rowId: rm.rowId,
+                isWip: rm.isWip === true,
+                icon: "tune"
+            })
+        }
+
+        settingsSearchResults = results.slice(0, 15)
         settingsSearchIndex = Math.min(settingsSearchIndex, Math.max(0, settingsSearchResults.length - 1))
     }
 
@@ -102,11 +122,12 @@ Item {
         if (!result) return
         root.selectLeaf(result.leafKey)
         settingsSearchQuery = ""
-        if (result.sectionName === "") return
+        const target = (result.rowId && result.rowId !== "") ? result.rowId : result.sectionName
+        if (!target || target === "") return
 
         const loader = pagesRepeater.itemAt(SettingsPages.leafIndex(result.leafKey))
         if (loader && loader.item && typeof loader.item.goTo === "function") {
-            Qt.callLater(() => loader.item.goTo(result.sectionName))
+            Qt.callLater(() => loader.item.goTo(target))
         }
     }
 
@@ -121,9 +142,17 @@ Item {
         function onSettingsPageChanged() {
             if (GlobalStates.settingsPage === "") return
 
-            const parts = GlobalStates.settingsPage.split(":");
-            const target = parts[0];
-            let searchTerm = parts.length > 1 ? parts[1] : "";
+            let target = GlobalStates.settingsPage
+            let searchTerm = ""
+            if (target.includes("#")) {
+                const hashParts = target.split("#")
+                target = hashParts[0]
+                searchTerm = hashParts[1]
+            } else if (target.includes(":")) {
+                const colonParts = target.split(":")
+                target = colonParts[0]
+                searchTerm = colonParts[1]
+            }
 
             const legacyBarTargets = {
                 "bar-workspaces": "Workspaces",
@@ -136,10 +165,10 @@ Item {
 
             // Prefer the stable key; fall back to display names so an old-style
             // link ("Desktop") still lands somewhere sensible.
-            let leafKey = SettingsPages.leafIndex(target) >= 0 ? target : ""
+            let leafKey = SettingsPages.resolveKey(target)
             if (target in legacyBarTargets) {
-                leafKey = "bar-layout";
-                if (searchTerm === "") searchTerm = legacyBarTargets[target];
+                leafKey = "bar"
+                if (searchTerm === "") searchTerm = legacyBarTargets[target]
             } else if (leafKey === "") {
                 const byName = SettingsPages.leaves.find(l => l.name.toLowerCase() === target.toLowerCase())
                     ?? SettingsPages.leaves.find(l => l.groupName.toLowerCase() === target.toLowerCase())
@@ -153,11 +182,13 @@ Item {
                     if (loader && loader.item && typeof loader.item.goTo === "function") {
                         loader.item.goTo(searchTerm);
                     } else if (loader) {
-                        loader.onLoaded.connect(function() {
+                        const handler = function() {
                             if (loader.item && typeof loader.item.goTo === "function") {
                                 loader.item.goTo(searchTerm);
                             }
-                        });
+                            loader.onLoaded.disconnect(handler);
+                        };
+                        loader.onLoaded.connect(handler);
                     }
                 }
             }
@@ -180,7 +211,7 @@ Item {
                 id: navRailWrapper
                 Layout.fillHeight: true
                 Layout.margins: 0
-                implicitWidth: navRail.expanded ? 250 : 56
+                implicitWidth: navRail.expanded ? 290 : 56
                 color: Appearance.m3colors.m3surfaceContainerLow
                 radius: Appearance.rounding.normal
 
@@ -205,7 +236,7 @@ Item {
                         MouseArea {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: root.showingProfile = !root.showingProfile
+                            onClicked: root.selectLeaf("users")
                         }
 
                         RowLayout {
@@ -380,12 +411,34 @@ Item {
                                             ColumnLayout {
                                                 spacing: 0
                                                 Layout.fillWidth: true
-                                                StyledText {
+                                                RowLayout {
                                                     Layout.fillWidth: true
-                                                    text: modelData.sectionName === "" ? modelData.pageName : modelData.sectionName
-                                                    color: Appearance.colors.colOnLayer1
-                                                    font.pixelSize: Appearance.font.pixelSize.small
-                                                    elide: Text.ElideRight
+                                                    spacing: 6
+
+                                                    StyledText {
+                                                        Layout.fillWidth: true
+                                                        text: modelData.sectionName === "" ? modelData.pageName : modelData.sectionName
+                                                        color: Appearance.colors.colOnLayer1
+                                                        font.pixelSize: Appearance.font.pixelSize.small
+                                                        elide: Text.ElideRight
+                                                    }
+
+                                                    Rectangle {
+                                                        visible: modelData.isWip === true
+                                                        radius: Appearance.rounding.unsharpen
+                                                        color: Appearance.colors.colSecondaryContainer
+                                                        implicitWidth: wipBadgeLabel.implicitWidth + 8
+                                                        implicitHeight: wipBadgeLabel.implicitHeight + 4
+
+                                                        StyledText {
+                                                            id: wipBadgeLabel
+                                                            anchors.centerIn: parent
+                                                            text: Translation.tr("WIP")
+                                                            font.pixelSize: Appearance.font.pixelSize.smallest
+                                                            font.weight: Font.Bold
+                                                            color: Appearance.colors.colOnSecondaryContainer
+                                                        }
+                                                    }
                                                 }
                                                 StyledText {
                                                     Layout.fillWidth: true
@@ -415,28 +468,68 @@ Item {
                         }
                     }
 
-                    FloatingActionButton {
-                        id: fab
-                        baseSize: 42
+                    RippleButton {
+                        id: configButton
+                        implicitHeight: 40
+                        buttonRadius: Appearance.rounding.small
+                        Layout.fillWidth: navRail.expanded
+                        Layout.alignment: navRail.expanded ? Qt.AlignVCenter : Qt.AlignHCenter
+                        Layout.preferredWidth: navRail.expanded ? -1 : 40
+                        Layout.leftMargin: navRail.expanded ? 6 : 0
+                        Layout.rightMargin: navRail.expanded ? 6 : 0
+
                         property bool justCopied: false
-                        iconText: justCopied ? "check" : "edit"
-                        buttonText: justCopied ? Translation.tr("Path copied") : Translation.tr("Config file")
-                        expanded: navRail.expanded
-                        downAction: () => {
+                        colBackground: Appearance.colors.colPrimaryContainer
+                        colBackgroundHover: Appearance.colors.colPrimaryContainerHover
+                        colRipple: Appearance.colors.colPrimaryContainerActive
+
+                        onClicked: {
                             Qt.openUrlExternally(`${Directories.config}/illogical-impulse/config.json`);
                         }
-                        altAction: () => {
-                            Quickshell.clipboardText = CF.FileUtils.trimFileProtocol(`${Directories.config}/illogical-impulse/config.json`);
-                            fab.justCopied = true;
-                            revertTextTimer.restart()
+
+                        MouseArea {
+                            anchors.fill: parent
+                            acceptedButtons: Qt.RightButton
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                Quickshell.clipboardText = CF.FileUtils.trimFileProtocol(`${Directories.config}/illogical-impulse/config.json`);
+                                configButton.justCopied = true;
+                                revertTextTimer.restart()
+                            }
                         }
+
                         Timer {
                             id: revertTextTimer
                             interval: 1500
-                            onTriggered: fab.justCopied = false
+                            onTriggered: configButton.justCopied = false
                         }
+
                         StyledToolTip {
-                            text: Translation.tr("Open the shell config file\nAlternatively right-click to copy path")
+                            text: Translation.tr("Open ~/.config/illogical-impulse/config.json\nRight-click to copy path")
+                        }
+
+                        contentItem: RowLayout {
+                            spacing: 8
+
+                            Item { Layout.fillWidth: true }
+
+                            MaterialSymbol {
+                                text: configButton.justCopied ? "check" : "edit"
+                                iconSize: 20
+                                color: Appearance.colors.colOnPrimaryContainer
+                                Layout.alignment: Qt.AlignVCenter
+                            }
+
+                            StyledText {
+                                visible: navRail.expanded
+                                text: configButton.justCopied ? Translation.tr("Path copied") : "config.json"
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                font.weight: Font.Medium
+                                color: Appearance.colors.colOnPrimaryContainer
+                                Layout.alignment: Qt.AlignVCenter
+                            }
+
+                            Item { Layout.fillWidth: true }
                         }
                     }
 

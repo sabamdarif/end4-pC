@@ -5,11 +5,13 @@ import qs.modules.common.widgets
 
 Loader {
     id: root
-    required property string icon
+    property string icon: ""
     property real iconSize: Appearance.font.pixelSize.larger
+    property color color: Appearance.colors.colOnSecondaryContainer
+    property bool toggled: false
     Layout.alignment: Qt.AlignVCenter
 
-    active: root.icon && root.icon.length > 0
+    active: root.icon !== undefined && root.icon !== ""
     visible: active
 
     sourceComponent: Item {
@@ -20,7 +22,7 @@ Loader {
             anchors.centerIn: parent
 
             iconSize: root.iconSize
-            color: root.toggled ? Appearance.colors.colOnPrimary : Appearance.colors.colOnSecondaryContainer
+            color: root.color
             text: root.icon
         }
     }

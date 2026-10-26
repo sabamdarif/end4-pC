@@ -42,7 +42,7 @@ Singleton {
 
             let currentPage = pendingPages.shift();
             let fullPath = FileUtils.trimFileProtocol(String(currentPage.path));
-            let rawCommand = "grep -oP \"title:\\s*Translation.tr\\(['\\\"].*?['\\\"]\\)\" " + fullPath + " | sed -E \"s/title:\\s*Translation.tr\\(['\\\"](.*)['\\\"]\\)/\\1/g\" | tr '\\n' ' '";
+            let rawCommand = "grep -oP \"(title|label):\\s*Translation.tr\\(['\\\"].*?['\\\"]\\)\" " + fullPath + " | sed -E \"s/(title|label):\\s*Translation.tr\\(['\\\"](.*)['\\\"]\\)/\\2/g\" | tr '\\n' ' '";
 
             command = ["bash", "-c", rawCommand];
             keywordHarvester.currentPageName = currentPage.key;
