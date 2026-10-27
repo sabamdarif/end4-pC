@@ -16,6 +16,7 @@ ComboBox {
     property color colBackgroundHover: Appearance.colors.colSecondaryContainerHover
     property color colBackgroundActive: Appearance.colors.colSecondaryContainerActive
     property string searchText: ""
+    property bool previewFont: false
 
     property int visibleCount: {
         if (!root.searchText || root.searchText.length === 0) 
@@ -89,6 +90,13 @@ ComboBox {
                 Layout.alignment: Qt.AlignVCenter
                 color: Appearance.colors.colOnSecondaryContainer
                 text: root.displayText
+                font.family: {
+                    if (root.previewFont && root.currentIndex >= 0 && root.model && root.model[root.currentIndex]) {
+                        const item = root.model[root.currentIndex];
+                        return (typeof item === 'object') ? (item.value ?? item[root.textRole] ?? "") : String(item);
+                    }
+                    return Appearance.font.family.main;
+                }
                 elide: Text.ElideRight
                 verticalAlignment: Text.AlignVCenter
             }
@@ -107,6 +115,12 @@ ComboBox {
 
         required property var model
         required property int index
+
+        onClicked: {
+            root.currentIndex = itemDelegate.index
+            root.activated(itemDelegate.index)
+            root.popup.close()
+        }
 
         property color color: {
             if (root.currentIndex === itemDelegate.index) {
@@ -163,6 +177,12 @@ ComboBox {
                 Layout.preferredHeight: Appearance.font.pixelSize.larger
                 color: itemDelegate.colText
                 text: itemDelegate.model[root.textRole]
+                font.family: {
+                    if (root.previewFont) {
+                        return itemDelegate.model?.value ?? itemDelegate.model[root.textRole] ?? Appearance.font.family.main;
+                    }
+                    return Appearance.font.family.main;
+                }
                 elide: Text.ElideRight
                 verticalAlignment: Text.AlignVCenter
             }
@@ -171,20 +191,24 @@ ComboBox {
 
     popup: Popup {
         y: root.height + 4
-        width: root.width
+        x: root.width - width
+        width: Math.max(root.width, 300)
         clip: true
         height: Math.min(
-            searchField.implicitHeight + 20 + (visibleCount * 42) + topPadding + bottomPadding,
-            320
+            searchField.implicitHeight + 8 + 4 + (Math.max(visibleCount, 1) * 42) + topPadding + bottomPadding,
+            340
         )
         padding: 8
 
         onVisibleChanged: {
             if (visible) {
-                searchField.forceActiveFocus()
+                searchField.forceActiveFocus();
+                if (root.currentIndex >= 0) {
+                    listView.positionViewAtIndex(root.currentIndex, ListView.Center);
+                }
             } else {
-                root.searchText = ""
-                searchField.text = ""
+                root.searchText = "";
+                searchField.text = "";
             }
         }
 
@@ -239,7 +263,7 @@ ComboBox {
                     TextField {
                         id: searchField
                         Layout.fillWidth: true
-                        placeholderText: "Search..."
+                        placeholderText: Translation.tr("Search...")
                         color: Appearance.colors.colOnLayer1
                         background: null
                         font.family: Appearance.font.family.main
@@ -248,9 +272,19 @@ ComboBox {
                         Keys.onDownPressed: listView.incrementCurrentIndex()
                         Keys.onUpPressed: listView.decrementCurrentIndex()
                         Keys.onReturnPressed: {
-                            if (listView.currentIndex >= 0) {
-                                root.currentIndex = listView.currentIndex
-                                root.popup.close()
+                            let targetIndex = -1;
+                            if (root.searchText.length > 0) {
+                                targetIndex = (root.model ?? []).findIndex(item => {
+                                    const display = typeof item === "object" ? (item[root.textRole] ?? "") : String(item);
+                                    return display.toLowerCase().includes(root.searchText.toLowerCase());
+                                });
+                            } else if (listView.currentIndex >= 0) {
+                                targetIndex = listView.currentIndex;
+                            }
+                            if (targetIndex >= 0) {
+                                root.currentIndex = targetIndex;
+                                root.activated(targetIndex);
+                                root.popup.close();
                             }
                         }
                     }
@@ -273,10 +307,19 @@ ComboBox {
                 }
             }
 
+            StyledText {
+                visible: root.visibleCount === 0
+                Layout.fillWidth: true
+                Layout.margins: 12
+                horizontalAlignment: Text.AlignHCenter
+                color: Appearance.colors.colSubtext
+                text: Translation.tr("No results")
+            }
+
             StyledListView {
                 id: listView
                 Layout.fillWidth: true
-                Layout.preferredHeight: Math.min(contentHeight, 320 - searchField.implicitHeight - 8 - 46)
+                Layout.fillHeight: true
                 clip: true
                 spacing: 2
                 model: root.popup.visible ? root.delegateModel : null

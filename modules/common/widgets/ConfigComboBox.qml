@@ -13,10 +13,12 @@ RowLayout {
     property var model: []
     property string textRole: "displayName"
     property var currentValue: undefined
+    property bool searchable: false
+    property bool previewFont: false
 
     property real fieldWidth: 220
 
-    property alias comboBox: comboBox
+    property alias comboBox: comboLoader.item
 
     signal selected(var newValue)
 
@@ -50,22 +52,64 @@ RowLayout {
         }
     }
 
-    StyledComboBox {
-        id: comboBox
+    Loader {
+        id: comboLoader
         Layout.fillWidth: false
         Layout.preferredWidth: root.fieldWidth
         Layout.alignment: Qt.AlignVCenter
-        enabled: root.enabled
-        textRole: root.textRole
-        model: root.model
+        sourceComponent: root.searchable ? searchComboComponent : regularComboComponent
+    }
 
-        currentIndex: {
-            const index = root.model.findIndex(item => item.value === root.currentValue);
-            return index !== -1 ? index : 0;
+    Component {
+        id: regularComboComponent
+        StyledComboBox {
+            enabled: root.enabled
+            textRole: root.textRole
+            model: root.model
+
+            currentIndex: {
+                if (!root.model) return 0;
+                const index = root.model.findIndex(item => {
+                    if (typeof item === "object" && item !== null) {
+                        return item.value === root.currentValue;
+                    }
+                    return item === root.currentValue;
+                });
+                return index !== -1 ? index : 0;
+            }
+
+            onActivated: index => {
+                const item = model[index];
+                const val = (typeof item === "object" && item !== null && item.value !== undefined) ? item.value : item;
+                root.selected(val);
+            }
         }
+    }
 
-        onActivated: index => {
-            root.selected(comboBox.model[index].value);
+    Component {
+        id: searchComboComponent
+        StyledComboBoxSearch {
+            enabled: root.enabled
+            textRole: root.textRole
+            model: root.model
+            previewFont: root.previewFont
+
+            currentIndex: {
+                if (!root.model) return 0;
+                const index = root.model.findIndex(item => {
+                    if (typeof item === "object" && item !== null) {
+                        return item.value === root.currentValue;
+                    }
+                    return item === root.currentValue;
+                });
+                return index !== -1 ? index : 0;
+            }
+
+            onActivated: index => {
+                const item = model[index];
+                const val = (typeof item === "object" && item !== null && item.value !== undefined) ? item.value : item;
+                root.selected(val);
+            }
         }
     }
 }
