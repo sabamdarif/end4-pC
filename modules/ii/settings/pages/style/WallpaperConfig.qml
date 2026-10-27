@@ -144,7 +144,6 @@ ContentPage {
                 Layout.fillWidth: true
                 buttonIcon: "texture"
                 text: Translation.tr("Transitions")
-                fieldWidth: 50
                 model: [
                     { displayName: Translation.tr("None"), icon: "block", value: "" },
                     { displayName: Translation.tr("Circle"), icon: "circle", value: "circleSelect" },

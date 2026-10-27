@@ -52,6 +52,7 @@ RowLayout {
 
     StyledComboBox {
         id: comboBox
+        Layout.fillWidth: false
         Layout.preferredWidth: root.fieldWidth
         Layout.alignment: Qt.AlignVCenter
         enabled: root.enabled

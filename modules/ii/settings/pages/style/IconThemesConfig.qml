@@ -25,7 +25,6 @@ ContentPage {
             ConfigComboBox {
                 buttonIcon: "brush"
                 text: Translation.tr("GTK theme")
-                description: Translation.tr("Base widget theme; colors come from wallpaper theming")
                 model: SystemTheming.gtkThemes.map(t => ({ displayName: t, value: t }))
                 currentValue: SystemTheming.currentGtkTheme
                 onSelected: newValue => SystemTheming.applyGtkTheme(newValue)
@@ -33,7 +32,6 @@ ContentPage {
             ConfigComboBox {
                 buttonIcon: "format_paint"
                 text: Translation.tr("Qt / Kvantum theme")
-                description: Translation.tr("Qt widget and style engine integration")
                 enabled: false
                 model: [{ displayName: Translation.tr("Default (WIP)"), value: "" }]
                 currentValue: ""

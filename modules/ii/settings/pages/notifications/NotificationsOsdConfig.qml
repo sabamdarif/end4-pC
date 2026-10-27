@@ -19,7 +19,6 @@ ContentPage {
                 text: Translation.tr("Popup position")
                 buttonIcon: "my_location"
                 currentValue: Config.options.notifications.position
-                fieldWidth: 50
                 onSelected: newValue => {
                     Config.options.notifications.position = newValue;
                 }
