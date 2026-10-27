@@ -11,6 +11,10 @@ ContentPage {
     id: page
     forceWidth: true
 
+    property int lastSlideshowInterval: Config.options.wallpaperSelector.changeInterval > 0
+        ? Config.options.wallpaperSelector.changeInterval
+        : 300000
+
     function displayPathFor(path) {
         return /\.(mp4|webm|mkv|avi|mov)$/i.test(path)
             ? Config.options.background.thumbnailPath
@@ -224,6 +228,9 @@ ContentPage {
                 function onLiveWallpapersPathChanged() {
                     liveWallpapersPathField.value = Config.options.wallpaperSelector.liveWallpapersPath
                 }
+                function onChangeIntervalChanged() {
+                    slideshowSwitch.checked = Qt.binding(() => Config.options.wallpaperSelector.changeInterval > 0)
+                }
             }
         }
 
@@ -331,29 +338,39 @@ ContentPage {
 
             GroupedList {
                 ConfigSwitch {
+                    id: slideshowSwitch
                     Layout.fillWidth: true
                     buttonIcon: "timer"
                     text: Translation.tr("Change wallpaper automatically")
                     checked: Config.options.wallpaperSelector.changeInterval > 0
                     onCheckedChanged: {
-                        if (checked && Config.options.wallpaperSelector.changeInterval <= 0) {
-                            Config.options.wallpaperSelector.changeInterval = 300000;
-                        } else if (!checked) {
-                            Config.options.wallpaperSelector.changeInterval = 0;
+                        if (checked) {
+                            if (Config.options.wallpaperSelector.changeInterval <= 0) {
+                                Config.options.wallpaperSelector.changeInterval = page.lastSlideshowInterval;
+                            }
+                        } else {
+                            if (Config.options.wallpaperSelector.changeInterval > 0) {
+                                Config.options.wallpaperSelector.changeInterval = 0;
+                            }
                         }
                     }
                 }
+
                 ConfigSpinBox {
-                    visible: Config.options.wallpaperSelector.changeInterval > 0
+                    enabled: slideshowSwitch.checked
                     Layout.fillWidth: true
                     icon: "timelapse"
                     text: Translation.tr("Change interval (min)")
-                    value: Math.max(1, Math.round(Config.options.wallpaperSelector.changeInterval / 60000))
+                    value: Math.max(1, Math.round((Config.options.wallpaperSelector.changeInterval > 0 ? Config.options.wallpaperSelector.changeInterval : page.lastSlideshowInterval) / 60000))
                     from: 1
                     to: 1440
                     stepSize: 5
                     onValueChanged: {
-                        Config.options.wallpaperSelector.changeInterval = value * 60000;
+                        if (slideshowSwitch.checked) {
+                            const newInterval = value * 60000;
+                            page.lastSlideshowInterval = newInterval;
+                            Config.options.wallpaperSelector.changeInterval = newInterval;
+                        }
                     }
                 }
             }
