@@ -19,7 +19,7 @@ ContentPage {
                 id: mainFontField
                 Layout.fillWidth: true
                 buttonIcon: "font_download"
-                text: Translation.tr("Font family name (e.g., Google Sans Flex)")
+                text: Translation.tr("Font family name")
                 value: Config.options.appearance.fonts.main
                 onValueChanged: {
                     mainFontDebounceTimer.restart();
@@ -79,7 +79,7 @@ ContentPage {
                 id: monospaceFontField
                 Layout.fillWidth: true
                 buttonIcon: "space_bar"
-                text: Translation.tr("Monospace font name (e.g., JetBrains Mono NF)")
+                text: Translation.tr("Monospace font name")
                 value: Config.options.appearance.fonts.monospace
                 onValueChanged: {
                     monospaceFontDebounceTimer.restart();
@@ -99,7 +99,7 @@ ContentPage {
                 id: iconNerdFontField
                 Layout.fillWidth: true
                 buttonIcon: "emoticon"
-                text: Translation.tr("Nerd Fonts Icons (e.g., JetBrains Mono NF)")
+                text: Translation.tr("Nerd Fonts Icons")
                 value: Config.options.appearance.fonts.iconNerd
                 onValueChanged: {
                     iconNerdFontDebounceTimer.restart();
@@ -119,7 +119,7 @@ ContentPage {
                 id: readingFontField
                 Layout.fillWidth: true
                 buttonIcon: "book_ribbon"
-                text: Translation.tr("Reading font name (e.g., Readex Pro)")
+                text: Translation.tr("Reading font name")
                 value: Config.options.appearance.fonts.reading
                 onValueChanged: {
                     readingFontDebounceTimer.restart();
@@ -139,7 +139,7 @@ ContentPage {
                 id: expressiveFontField
                 Layout.fillWidth: true
                 buttonIcon: "mood_heart"
-                text: Translation.tr("Expressive font name (e.g., Space Grotesk)")
+                text: Translation.tr("Expressive font name")
                 value: Config.options.appearance.fonts.expressive
                 onValueChanged: {
                     expressiveFontDebounceTimer.restart();
