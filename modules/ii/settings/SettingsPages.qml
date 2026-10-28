@@ -35,7 +35,8 @@ Singleton {
         "input-device": "sound",
         "volume": "sound",
         "system-sounds": "sound",
-        "presets": "users"
+        "presets": "users",
+        "gallery": "about"
     })
 
     readonly property var groups: [
@@ -133,7 +134,6 @@ Singleton {
                 { key: "date-time", name: Translation.tr("Date and Time"),       icon: "nest_clock_farsight_analog", component: root.page("system/DateTimeConfig.qml") },
                 { key: "weather",   name: Translation.tr("Weather"),             icon: "flare",                 component: root.page("system/WeatherConfig.qml") },
                 { key: "about",     name: Translation.tr("About"),               icon: "info",                  component: root.page("About.qml") },
-                { key: "gallery",   name: Translation.tr("Component Gallery"),   icon: "palette",               component: root.page("dev/ComponentGallery.qml") },
             ]
         },
     ]
