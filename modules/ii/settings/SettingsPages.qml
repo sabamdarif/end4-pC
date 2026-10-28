@@ -34,7 +34,8 @@ Singleton {
         "output-device": "sound",
         "input-device": "sound",
         "volume": "sound",
-        "system-sounds": "sound"
+        "system-sounds": "sound",
+        "presets": "users"
     })
 
     readonly property var groups: [
@@ -127,7 +128,6 @@ Singleton {
             key: "system", name: Translation.tr("System"), icon: "settings",
             children: [
                 { key: "users",     name: Translation.tr("Users"),               icon: "person",                component: root.page("Profile.qml") },
-                { key: "presets",   name: Translation.tr("Presets"),             icon: "tune",                  component: root.page("Profile.qml") },
                 { key: "updates",   name: Translation.tr("Updates and Storage"), icon: "deployed_code_update",  component: root.page("system/UpdatesConfig.qml") },
                 { key: "battery",   name: Translation.tr("Battery"),             icon: "battery_android_frame_full", component: root.page("system/BatteryConfig.qml") },
                 { key: "date-time", name: Translation.tr("Date and Time"),       icon: "nest_clock_farsight_analog", component: root.page("system/DateTimeConfig.qml") },
