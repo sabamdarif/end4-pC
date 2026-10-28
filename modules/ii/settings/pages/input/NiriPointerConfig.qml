@@ -101,5 +101,42 @@ ContentPage {
                 }
             }
         }
+
+        ContentSubsection {
+            title: Translation.tr("Shell UI Scrolling")
+            GroupedList {
+                ConfigSwitch {
+                    buttonIcon: "fast_forward"
+                    text: Translation.tr("Fast touchpad scrolling")
+                    description: Translation.tr("Accelerate scrolling in shell panels and lists")
+                    checked: Config.options.interactions.scrolling.fasterTouchpadScroll
+                    onCheckedChanged: {
+                        Config.options.interactions.scrolling.fasterTouchpadScroll = checked
+                    }
+                }
+
+                ConfigSlider {
+                    buttonIcon: "swipe"
+                    text: Translation.tr("Touchpad speed")
+                    from: 20
+                    to: 300
+                    value: Config.options.interactions.scrolling.touchpadScrollFactor
+                    onValueChanged: {
+                        Config.options.interactions.scrolling.touchpadScrollFactor = Math.round(value)
+                    }
+                }
+
+                ConfigSlider {
+                    buttonIcon: "mouse"
+                    text: Translation.tr("Mouse wheel speed")
+                    from: 10
+                    to: 200
+                    value: Config.options.interactions.scrolling.mouseScrollFactor
+                    onValueChanged: {
+                        Config.options.interactions.scrolling.mouseScrollFactor = Math.round(value)
+                    }
+                }
+            }
+        }
     }
 }

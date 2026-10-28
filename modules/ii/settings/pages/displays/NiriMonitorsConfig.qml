@@ -133,4 +133,59 @@ ContentPage {
             }
         }
     }
+
+    ContentSection {
+        icon: "nightlight"
+        shape: MaterialShape.Shape.Sunny
+        title: Translation.tr("Night Light & Eye Protection")
+
+        GroupedList {
+            ConfigSwitch {
+                buttonIcon: "check"
+                text: Translation.tr("Night Light")
+                description: Translation.tr("Warmer colors reduce eye strain at night")
+                checked: Wlsunset.temperatureActive
+                onCheckedChanged: {
+                    if (checked !== Wlsunset.temperatureActive) {
+                        Wlsunset.toggleTemperature(checked)
+                    }
+                }
+            }
+
+            ConfigSwitch {
+                buttonIcon: "night_sight_auto"
+                text: Translation.tr("Automatic schedule")
+                description: Translation.tr("Turn on automatically based on time")
+                checked: Config.options.light.night.automatic
+                onCheckedChanged: {
+                    Config.options.light.night.automatic = checked
+                }
+            }
+
+            ConfigSlider {
+                buttonIcon: "thermostat"
+                text: Translation.tr("Temperature")
+                from: 6500
+                to: 1200
+                usePercentTooltip: false
+                value: Config.options.light.night.colorTemperature
+                stopIndicatorValues: [5000, 1200]
+                onValueChanged: {
+                    Config.options.light.night.colorTemperature = Math.round(value)
+                }
+            }
+
+            ConfigSlider {
+                buttonIcon: "brightness_medium"
+                text: Translation.tr("Gamma")
+                from: Wlsunset.gammaLowerLimit
+                to: 100
+                usePercentTooltip: true
+                value: Wlsunset.gamma
+                onValueChanged: {
+                    Wlsunset.setGamma(Math.round(value))
+                }
+            }
+        }
+    }
 }

@@ -13,8 +13,8 @@ ContentPage {
 
     function autostartList() {
         return (NiriConfig.options.autostart ?? []).map(e => ({
-            command: e?.command ?? "",
-            enabled: e?.enabled ?? true
+            command: (e && e.command) ? e.command : "",
+            enabled: (e && e.enabled !== undefined) ? e.enabled : true
         }))
     }
 
@@ -117,6 +117,63 @@ ContentPage {
                     visible: wipeRow.confirming
                     buttonText: Translation.tr("Cancel")
                     onClicked: wipeRow.confirming = false
+                }
+            }
+
+            ConfigSwitch {
+                buttonIcon: "close"
+                text: Translation.tr("Close after copying")
+                description: Translation.tr("Dismiss clipboard popups after selecting an entry")
+                checked: Config.options.clipboard.closeOnCopy
+                onCheckedChanged: {
+                    Config.options.clipboard.closeOnCopy = checked
+                }
+            }
+
+            ConfigSwitch {
+                buttonIcon: "pin"
+                text: Translation.tr("Show index numbers")
+                description: Translation.tr("Show 1-9 keyboard shortcut badges")
+                checked: Config.options.clipboard.showIndexNumbers
+                onCheckedChanged: {
+                    Config.options.clipboard.showIndexNumbers = checked
+                }
+            }
+
+            ConfigSpinBox {
+                icon: "photo_size_select_actual"
+                text: Translation.tr("Image preview height")
+                value: Config.options.clipboard.imagePreviewHeight
+                from: 50
+                to: 300
+                stepSize: 10
+                onValueChanged: {
+                    Config.options.clipboard.imagePreviewHeight = value
+                }
+            }
+        }
+
+        ContentSubsection {
+            title: Translation.tr("Work Safety (NSFW Shield)")
+            GroupedList {
+                ConfigSwitch {
+                    buttonIcon: "shield"
+                    text: Translation.tr("Safe mode for clipboard")
+                    description: Translation.tr("Blur sensitive images in clipboard history when on office or school networks")
+                    checked: Config.options.workSafety.enable.clipboard
+                    onCheckedChanged: {
+                        Config.options.workSafety.enable.clipboard = checked
+                    }
+                }
+
+                ConfigSwitch {
+                    buttonIcon: "wallpaper"
+                    text: Translation.tr("Safe mode for wallpapers")
+                    description: Translation.tr("Mask potentially sensitive wallpapers on work or public networks")
+                    checked: Config.options.workSafety.enable.wallpaper
+                    onCheckedChanged: {
+                        Config.options.workSafety.enable.wallpaper = checked
+                    }
                 }
             }
         }

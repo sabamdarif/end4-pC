@@ -421,5 +421,137 @@ ContentPage {
                 }
             }
         }
+
+        ContentSubsection {
+            title: Translation.tr("Wallhaven online search")
+            Layout.fillWidth: true
+
+            GroupedList {
+                ConfigTextArea {
+                    id: wallhavenApiKeyField
+                    Layout.fillWidth: true
+                    buttonIcon: "key"
+                    text: Translation.tr("Wallhaven API key")
+                    placeholderText: Translation.tr("Optional, required for NSFW")
+                    value: OnlineWallpapers.wallhavenApiKey
+                    onValueChanged: wallhavenApiKeyTimer.restart()
+                    Timer {
+                        id: wallhavenApiKeyTimer
+                        interval: 1000
+                        onTriggered: {
+                            const trimmed = wallhavenApiKeyField.value.trim()
+                            KeyringStorage.setNestedField(["apiKeys", "wallhaven"], trimmed)
+                            Config.options.wallpaperSelector.wallhavenApiKey = trimmed
+                        }
+                    }
+                }
+
+                ConfigComboBox {
+                    buttonIcon: "sort"
+                    text: Translation.tr("Sort by")
+                    model: [
+                        { displayName: Translation.tr("Relevance"), value: "relevance" },
+                        { displayName: Translation.tr("Date Added"), value: "date_added" },
+                        { displayName: Translation.tr("Top List"), value: "toplist" },
+                        { displayName: Translation.tr("Hot"), value: "hot" },
+                        { displayName: Translation.tr("Views"), value: "views" },
+                        { displayName: Translation.tr("Favorites"), value: "favorites" },
+                        { displayName: Translation.tr("Random"), value: "random" }
+                    ]
+                    currentValue: OnlineWallpapers.wallhavenSorting
+                    onSelected: newValue => {
+                        OnlineWallpapers.wallhavenSorting = newValue
+                        OnlineWallpapers.saveWallhavenConfig()
+                    }
+                }
+
+                ConfigComboBox {
+                    buttonIcon: "swap_vert"
+                    text: Translation.tr("Order")
+                    model: [
+                        { displayName: Translation.tr("Descending"), value: "desc" },
+                        { displayName: Translation.tr("Ascending"), value: "asc" }
+                    ]
+                    currentValue: OnlineWallpapers.wallhavenOrder
+                    onSelected: newValue => {
+                        OnlineWallpapers.wallhavenOrder = newValue
+                        OnlineWallpapers.saveWallhavenConfig()
+                    }
+                }
+
+                ConfigSwitch {
+                    buttonIcon: "image"
+                    text: Translation.tr("General category")
+                    checked: OnlineWallpapers.wallhavenCategories.charAt(0) === "1"
+                    onCheckedChanged: {
+                        const c = OnlineWallpapers.wallhavenCategories
+                        const next = (checked ? "1" : "0") + c.substring(1)
+                        OnlineWallpapers.wallhavenCategories = next
+                        OnlineWallpapers.saveWallhavenConfig()
+                    }
+                }
+
+                ConfigSwitch {
+                    buttonIcon: "animation"
+                    text: Translation.tr("Anime category")
+                    checked: OnlineWallpapers.wallhavenCategories.charAt(1) === "1"
+                    onCheckedChanged: {
+                        const c = OnlineWallpapers.wallhavenCategories
+                        const next = c.charAt(0) + (checked ? "1" : "0") + c.charAt(2)
+                        OnlineWallpapers.wallhavenCategories = next
+                        OnlineWallpapers.saveWallhavenConfig()
+                    }
+                }
+
+                ConfigSwitch {
+                    buttonIcon: "person"
+                    text: Translation.tr("People category")
+                    checked: OnlineWallpapers.wallhavenCategories.charAt(2) === "1"
+                    onCheckedChanged: {
+                        const c = OnlineWallpapers.wallhavenCategories
+                        const next = c.substring(0, 2) + (checked ? "1" : "0")
+                        OnlineWallpapers.wallhavenCategories = next
+                        OnlineWallpapers.saveWallhavenConfig()
+                    }
+                }
+
+                ConfigSwitch {
+                    buttonIcon: "shield"
+                    text: Translation.tr("SFW (Safe for work)")
+                    checked: OnlineWallpapers.wallhavenPurity.charAt(0) === "1"
+                    onCheckedChanged: {
+                        const p = OnlineWallpapers.wallhavenPurity
+                        const next = (checked ? "1" : "0") + p.substring(1)
+                        OnlineWallpapers.wallhavenPurity = next
+                        OnlineWallpapers.saveWallhavenConfig()
+                    }
+                }
+
+                ConfigSwitch {
+                    buttonIcon: "warning"
+                    text: Translation.tr("Sketchy content")
+                    checked: OnlineWallpapers.wallhavenPurity.charAt(1) === "1"
+                    onCheckedChanged: {
+                        const p = OnlineWallpapers.wallhavenPurity
+                        const next = p.charAt(0) + (checked ? "1" : "0") + p.charAt(2)
+                        OnlineWallpapers.wallhavenPurity = next
+                        OnlineWallpapers.saveWallhavenConfig()
+                    }
+                }
+
+                ConfigSwitch {
+                    buttonIcon: "no_adult_content"
+                    text: Translation.tr("NSFW content")
+                    description: Translation.tr("Requires a valid Wallhaven API key")
+                    checked: OnlineWallpapers.wallhavenPurity.charAt(2) === "1"
+                    onCheckedChanged: {
+                        const p = OnlineWallpapers.wallhavenPurity
+                        const next = p.substring(0, 2) + (checked ? "1" : "0")
+                        OnlineWallpapers.wallhavenPurity = next
+                        OnlineWallpapers.saveWallhavenConfig()
+                    }
+                }
+            }
+        }
     }
 }
