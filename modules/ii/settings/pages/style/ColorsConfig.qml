@@ -11,6 +11,15 @@ ContentPage {
     forceWidth: true
     baseWidth: 720
 
+    function saveScheme() {
+        const name = customSchemeNameField.value.trim();
+        if (name === "") return;
+        if (SystemTheming.saveCustomScheme(name, customSchemeType.pendingValue, customSchemeAccentField.value)) {
+            customSchemeNameField.value = "";
+            customSchemeAccentField.value = "";
+        }
+    }
+
     component SmallLightDarkPreferenceButton: RippleButton {
         id: smallLightDarkPreferenceButton
         required property bool dark
@@ -232,67 +241,130 @@ ContentPage {
         ContentSubsection {
             title: Translation.tr("Saved matugen schemes")
 
-            ConfigTextArea {
-                id: customSchemeNameField
-                Layout.fillWidth: true
-                buttonIcon: "bookmark_add"
-                text: Translation.tr("Scheme name")
-                placeholderText: Translation.tr("e.g. Soft night")
-                confirmButtonVisible: true
-                confirmButtonIcon: "save"
-                onConfirmClicked: {
-                    if (SystemTheming.saveCustomScheme(value, customSchemeType.pendingValue, customSchemeAccentField.value)) {
-                        value = ""
-                        customSchemeAccentField.value = ""
+            GroupedList {
+                ConfigTextArea {
+                    id: customSchemeNameField
+                    buttonIcon: "bookmark_add"
+                    text: Translation.tr("Scheme name")
+                    placeholderText: Translation.tr("e.g. Soft night")
+                    textArea.Keys.onReturnPressed: (event) => {
+                        page.saveScheme();
+                        event.accepted = true;
+                    }
+                }
+
+                ConfigComboBox {
+                    id: customSchemeType
+                    property string pendingValue: Config.options.appearance.palette.type
+                    buttonIcon: "palette"
+                    text: Translation.tr("Scheme type")
+                    model: SystemTheming.matugenSchemeOptions
+                    currentValue: pendingValue
+                    onSelected: newValue => pendingValue = newValue
+                }
+
+                ConfigTextArea {
+                    id: customSchemeAccentField
+                    buttonIcon: "colorize"
+                    text: Translation.tr("Accent color")
+                    description: Translation.tr("Optional six-digit hex color, for example #89b4fa")
+                    placeholderText: Translation.tr("Leave empty to use the wallpaper")
+                    value: ""
+                    textArea.Keys.onReturnPressed: (event) => {
+                        page.saveScheme();
+                        event.accepted = true;
+                    }
+                }
+
+                RowLayout {
+                    spacing: 10
+                    Layout.leftMargin: 8
+                    Layout.rightMargin: 8
+
+                    MaterialSymbol {
+                        text: "bookmark_add"
+                        iconSize: Appearance.font.pixelSize.larger
+                        color: Appearance.colors.colOnSecondaryContainer
+                        opacity: customSchemeNameField.value.trim().length > 0 ? 1 : 0.4
+                    }
+
+                    StyledText {
+                        Layout.fillWidth: true
+                        text: Translation.tr("Save as new custom scheme")
+                        color: Appearance.colors.colOnSecondaryContainer
+                        opacity: customSchemeNameField.value.trim().length > 0 ? 1 : 0.4
+                    }
+
+                    RippleButtonWithIcon {
+                        Layout.preferredHeight: 36
+                        buttonRadius: Appearance.rounding.small
+                        materialIcon: "save"
+                        mainText: Translation.tr("Save")
+                        enabled: customSchemeNameField.value.trim().length > 0
+                        opacity: enabled ? 1 : 0.4
+                        onClicked: page.saveScheme()
                     }
                 }
             }
 
-            ConfigComboBox {
-                id: customSchemeType
-                Layout.fillWidth: true
-                property string pendingValue: Config.options.appearance.palette.type
-                buttonIcon: "palette"
-                text: Translation.tr("Scheme type")
-                model: SystemTheming.matugenSchemeOptions
-                currentValue: pendingValue
-                onSelected: newValue => pendingValue = newValue
-            }
-
-            ConfigTextArea {
-                id: customSchemeAccentField
-                Layout.fillWidth: true
-                buttonIcon: "colorize"
-                text: Translation.tr("Accent color")
-                description: Translation.tr("Optional six-digit hex color, for example #89b4fa")
-                placeholderText: Translation.tr("Leave empty to use the wallpaper")
-                value: ""
+            ContentSubsectionLabel {
+                visible: Config.options.appearance.palette.customSchemes.length > 0
+                Layout.topMargin: 8
+                text: Translation.tr("Saved schemes")
             }
 
             Rectangle {
                 Layout.fillWidth: true
                 visible: Config.options.appearance.palette.customSchemes.length > 0
-                implicitHeight: savedSchemesColumn.implicitHeight + 28
+                implicitHeight: savedSchemesColumn.implicitHeight + 24
                 radius: Appearance.rounding.normal
                 color: Appearance.colors.colLayer1
 
                 ColumnLayout {
                     id: savedSchemesColumn
-                    anchors { fill: parent; margins: 14 }
-                    spacing: 4
+                    anchors { fill: parent; margins: 12 }
+                    spacing: 8
 
                     Repeater {
                         model: Config.options.appearance.palette.customSchemes
-                        delegate: ConfigRow {
+                        delegate: RowLayout {
                             required property var modelData
                             Layout.fillWidth: true
-                            uniform: true
+                            spacing: 10
 
-                            StyledText {
+                            MaterialSymbol {
+                                text: "palette"
+                                iconSize: Appearance.font.pixelSize.larger
+                                color: (modelData.accentColor && modelData.accentColor !== "")
+                                    ? modelData.accentColor
+                                    : Appearance.colors.colPrimary
+                            }
+
+                            ColumnLayout {
                                 Layout.fillWidth: true
-                                text: modelData.name
-                                color: Appearance.colors.colOnLayer1
-                                elide: Text.ElideRight
+                                spacing: 2
+
+                                StyledText {
+                                    Layout.fillWidth: true
+                                    text: modelData.name
+                                    font.weight: Font.Medium
+                                    color: Appearance.colors.colOnLayer1
+                                    elide: Text.ElideRight
+                                }
+
+                                StyledText {
+                                    Layout.fillWidth: true
+                                    text: {
+                                        const typeOption = SystemTheming.matugenSchemeOptions.find(o => o.value === modelData.type);
+                                        const typeName = typeOption ? typeOption.displayName : (modelData.type ?? "auto");
+                                        return (modelData.accentColor && modelData.accentColor !== "")
+                                            ? `${typeName} • ${modelData.accentColor}`
+                                            : `${typeName} • ${Translation.tr("Wallpaper")}`;
+                                    }
+                                    font.pixelSize: Appearance.font.pixelSize.smaller
+                                    color: Appearance.colors.colSubtext
+                                    elide: Text.ElideRight
+                                }
                             }
 
                             RippleButtonWithIcon {
