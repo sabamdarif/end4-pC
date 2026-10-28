@@ -31,6 +31,7 @@ SettingRow {
             id: textInput
             anchors.fill: parent
             anchors.margins: 6
+            verticalAlignment: TextInput.AlignVCenter
             color: Appearance.colors.colOnLayer2
             font.pixelSize: Appearance.font.pixelSize.smaller
             onEditingFinished: root.textModified(text)
