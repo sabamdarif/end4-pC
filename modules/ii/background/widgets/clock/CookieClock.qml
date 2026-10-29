@@ -35,8 +35,9 @@ Item {
     implicitHeight: implicitSize
 
     property bool useSineCookie: Config.options.background.widgets.clock.cookie.useSineCookie
-    StyledDropShadow {
-        target: root.useSineCookie ? sineCookieLoader : roundedPolygonCookieLoader
+    Item {
+        id: cookieContainer
+        anchors.fill: parent
 
         RotationAnimation on rotation {
             running: Config.options.background.widgets.clock.cookie.constantlyRotate
@@ -46,27 +47,54 @@ Item {
             from: 360
             to: 0
         }
-    }
-    Loader {
-        id: sineCookieLoader
-        z: 0
-        visible: false // The DropShadow already draws it
-        active: root.useSineCookie
-        sourceComponent: SineCookie {
-            implicitSize: root.implicitSize
-            sides: Config.options.background.widgets.clock.cookie.sides
-            color: root.colBackground
+
+        StyledDropShadow {
+            target: cookieShapes
+            visible: !Config.options.background.widgets.glass.enable && Config.options.background.widgets.shadow
         }
-    }
-    Loader {
-        id: roundedPolygonCookieLoader
-        z: 0
-        visible: false // The DropShadow already draws it
-        active: !root.useSineCookie
-        sourceComponent: MaterialCookie {
-            implicitSize: root.implicitSize
-            sides: Config.options.background.widgets.clock.cookie.sides
-            color: root.colBackground
+
+        Item {
+            id: cookieShapes
+            anchors.fill: parent
+            opacity: Config.options.background.widgets.glass.enable ? 0 : 1
+
+            Loader {
+                id: sineCookieLoader
+                anchors.fill: parent
+                z: 0
+                active: root.useSineCookie
+                sourceComponent: SineCookie {
+                    implicitSize: root.implicitSize
+                    sides: Config.options.background.widgets.clock.cookie.sides
+                    color: root.colBackground
+                }
+            }
+            Loader {
+                id: roundedPolygonCookieLoader
+                anchors.fill: parent
+                z: 0
+                active: !root.useSineCookie
+                sourceComponent: MaterialCookie {
+                    implicitSize: root.implicitSize
+                    sides: Config.options.background.widgets.clock.cookie.sides
+                    color: root.colBackground
+                }
+            }
+        }
+
+        WindowGlass {
+            id: cookieGlass
+            anchors.fill: parent
+            cardRadius: 0
+            tint: root.colBackground
+            visible: false
+        }
+        OpacityMask {
+            anchors.fill: parent
+            source: cookieGlass
+            maskSource: root.useSineCookie ? sineCookieLoader.item : roundedPolygonCookieLoader.item
+            z: 0
+            visible: Config.options.background.widgets.glass.enable
         }
     }
 

@@ -67,7 +67,7 @@ Item {
             case "privacyIndicator":
                 return Appearance.colors.colErrorContainer;
             case "systemIcons":
-                return Appearance.colors.colPrimary; 
+                return Appearance.colors.colPrimaryContainer;
             default:
                 return Appearance.colors.colPrimaryContainer;
         }
@@ -86,6 +86,13 @@ Item {
         radius: Config.options.bar.cornerStyle === 1 ? Appearance.rounding.windowRounding : 0
         border.width: (!centerOnly && Config.options.bar.cornerStyle === 1) ? 1 : 0
         border.color: Appearance.colors.colLayer0Border
+    }
+
+    WindowGlass {
+        anchors.fill: barBackground
+        glassEnabled: barBackground.color.a > 0
+        cardRadius: barBackground.radius
+        tint: barBackground.color
     }
 
     // Blur reaches exactly the painted bar background, so hidden pills and the
@@ -145,6 +152,16 @@ Item {
 
     Rectangle {
         id: centerPill
+        WindowGlass {
+            anchors.fill: parent
+            glassEnabled: (parent?.color.a ?? 0) > 0
+            cardRadius: parent?.radius ?? 0
+            topLeftRadius: parent && parent.topLeftRadius >= 0 ? parent.topLeftRadius : cardRadius
+            topRightRadius: parent && parent.topRightRadius >= 0 ? parent.topRightRadius : cardRadius
+            bottomLeftRadius: parent && parent.bottomLeftRadius >= 0 ? parent.bottomLeftRadius : cardRadius
+            bottomRightRadius: parent && parent.bottomRightRadius >= 0 ? parent.bottomRightRadius : cardRadius
+            tint: parent?.color ?? 'transparent'
+        }
         visible: centerOnly && Config.options.bar.showBackground && Config.options.bar.cornerStyle !== 2
         anchors.verticalCenter: parent.verticalCenter
         anchors.horizontalCenter: parent.horizontalCenter
@@ -177,6 +194,16 @@ Item {
             // Material pill wrapper
             Rectangle {
                 id: leftMaterialPill
+                WindowGlass {
+                    anchors.fill: parent
+                    glassEnabled: (parent?.color.a ?? 0) > 0
+                    cardRadius: parent?.radius ?? 0
+                    topLeftRadius: parent && parent.topLeftRadius >= 0 ? parent.topLeftRadius : cardRadius
+                    topRightRadius: parent && parent.topRightRadius >= 0 ? parent.topRightRadius : cardRadius
+                    bottomLeftRadius: parent && parent.bottomLeftRadius >= 0 ? parent.bottomLeftRadius : cardRadius
+                    bottomRightRadius: parent && parent.bottomRightRadius >= 0 ? parent.bottomRightRadius : cardRadius
+                    tint: parent?.color ?? 'transparent'
+                }
                 visible: root.isMaterial && root.effectiveLeftLayout.length > 0
                 anchors.left: root.isMaterialHug ? parent.left : undefined
                 anchors.top: (root.isMaterialHug && !Config.options.bar.bottom) ? parent.top : undefined
@@ -226,6 +253,7 @@ Item {
 
             RoundCorner {
                 id: leftRightOutwardCorner
+                glass: true
                 visible: root.isMaterialHug && root.effectiveLeftLayout.length > 0
                 anchors.left: leftMaterialPill.right
                 anchors.top: !Config.options.bar.bottom ? parent.top : undefined
@@ -291,6 +319,7 @@ Item {
 
             RoundCorner {
                 id: centerLeftOutwardCorner
+                glass: true
                 visible: root.isMaterialHug && root.effectiveMiddleLayout.length > 0
                 anchors.right: centerMaterialPill.left
                 anchors.top: !Config.options.bar.bottom ? parent.top : undefined
@@ -303,6 +332,16 @@ Item {
             // Material pill wrapper
             Rectangle {
                 id: centerMaterialPill
+                WindowGlass {
+                    anchors.fill: parent
+                    glassEnabled: (parent?.color.a ?? 0) > 0
+                    cardRadius: parent?.radius ?? 0
+                    topLeftRadius: parent && parent.topLeftRadius >= 0 ? parent.topLeftRadius : cardRadius
+                    topRightRadius: parent && parent.topRightRadius >= 0 ? parent.topRightRadius : cardRadius
+                    bottomLeftRadius: parent && parent.bottomLeftRadius >= 0 ? parent.bottomLeftRadius : cardRadius
+                    bottomRightRadius: parent && parent.bottomRightRadius >= 0 ? parent.bottomRightRadius : cardRadius
+                    tint: parent?.color ?? 'transparent'
+                }
                 visible: root.isMaterial && root.effectiveMiddleLayout.length > 0
                 anchors.centerIn: parent
                 implicitWidth: centerMaterialRow.implicitWidth + (root.isMaterialHug ? 16 : 10)
@@ -349,6 +388,7 @@ Item {
 
             RoundCorner {
                 id: centerRightOutwardCorner
+                glass: true
                 visible: root.isMaterialHug && root.effectiveMiddleLayout.length > 0
                 anchors.left: centerMaterialPill.right
                 anchors.top: !Config.options.bar.bottom ? parent.top : undefined
@@ -414,6 +454,7 @@ Item {
 
             RoundCorner {
                 id: rightLeftOutwardCorner
+                glass: true
                 visible: root.isMaterialHug && root.effectiveRightLayout.length > 0
                 anchors.right: rightMaterialPill.left
                 anchors.top: !Config.options.bar.bottom ? parent.top : undefined
@@ -426,6 +467,16 @@ Item {
             // Material pill wrapper
             Rectangle {
                 id: rightMaterialPill
+                WindowGlass {
+                    anchors.fill: parent
+                    glassEnabled: (parent?.color.a ?? 0) > 0
+                    cardRadius: parent?.radius ?? 0
+                    topLeftRadius: parent && parent.topLeftRadius >= 0 ? parent.topLeftRadius : cardRadius
+                    topRightRadius: parent && parent.topRightRadius >= 0 ? parent.topRightRadius : cardRadius
+                    bottomLeftRadius: parent && parent.bottomLeftRadius >= 0 ? parent.bottomLeftRadius : cardRadius
+                    bottomRightRadius: parent && parent.bottomRightRadius >= 0 ? parent.bottomRightRadius : cardRadius
+                    tint: parent?.color ?? 'transparent'
+                }
                 visible: root.isMaterial && root.effectiveRightLayout.length > 0
                 anchors.right: root.isMaterialHug ? parent.right : undefined
                 anchors.top: (root.isMaterialHug && !Config.options.bar.bottom) ? parent.top : undefined

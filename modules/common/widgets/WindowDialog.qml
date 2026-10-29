@@ -42,11 +42,23 @@ Rectangle {
         onPressed: root.dismiss()
     }
 
+    StyledRectangularShadow {
+        target: dialogBackground
+        visible: root.show && dialogBackground.implicitHeight > 0
+    }
+
     Rectangle {
         id: dialogBackground
+        WindowGlass {
+            anchors.fill: parent
+            cardRadius: parent?.radius ?? 0
+            tint: parent?.color ?? 'transparent'
+        }
         anchors.horizontalCenter: parent.horizontalCenter
         radius: Appearance.rounding.large
-        color: Appearance.m3colors.m3surfaceContainerHigh // Use opaque version of layer3
+        color: Appearance.colors.colLayer1Blurred
+        border.width: 1
+        border.color: Appearance.colors.colLayer0Border
         
         property real targetY: root.height / 2 - root.backgroundHeight / 2
         y: root.show ? targetY : (targetY - root.backgroundAnimationMovementDistance)

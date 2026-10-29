@@ -130,6 +130,16 @@ ContentPage {
             }
 
             ConfigSwitch {
+                buttonIcon: "water_drop"
+                text: Translation.tr("Glassy UI")
+                checked: Config.options.background.widgets.glass.enable
+                onCheckedChanged: {
+                    if (checked === Config.options.background.widgets.glass.enable) return
+                    Config.options.background.widgets.glass.enable = checked
+                }
+            }
+
+            ConfigSwitch {
                 buttonIcon: "blur_on"
                 text: Translation.tr("Blur")
                 checked: NiriConfig.options.decoration.blur.enable

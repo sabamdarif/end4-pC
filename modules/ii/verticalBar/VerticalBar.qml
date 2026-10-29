@@ -56,6 +56,18 @@ Scope {
 
                 MouseArea {
                     id: hoverRegion
+                    Binding {
+                        target: GlassLayers
+                        property: "barZone"
+                        value: Math.max(0, barRoot.exclusiveZone)
+                        restoreMode: Binding.RestoreBinding
+                    }
+                    Binding {
+                        target: GlassLayers
+                        property: "barEdge"
+                        value: Config.options.bar.bottom ? "right" : "left"
+                        restoreMode: Binding.RestoreBinding
+                    }
                     hoverEnabled: true
                     anchors.fill: parent
 
@@ -70,6 +82,7 @@ Scope {
 
                     RoundCorner {
                         id: topPillCorner
+                        glass: true
                         visible: barContent.centerOnly && showBarBackground && Config.options.bar.cornerStyle === 0
                         y: barContent.centerPillY - implicitSize
                         implicitSize: Appearance.rounding.screenRounding
@@ -98,6 +111,7 @@ Scope {
 
                     RoundCorner {
                         id: bottomPillCorner
+                        glass: true
                         visible: barContent.centerOnly && showBarBackground && Config.options.bar.cornerStyle === 0
                         y: barContent.centerPillY + barContent.centerPillHeight
                         implicitSize: Appearance.rounding.screenRounding
@@ -194,6 +208,7 @@ Scope {
                             implicitHeight: Appearance.rounding.screenRounding
                             RoundCorner {
                                 id: topCorner
+                                glass: true
                                 anchors { left: parent.left; right: parent.right; top: parent.top }
                                 implicitSize: Appearance.rounding.screenRounding
                                 color: showBarBackground ? Appearance.colors.colLayer0Blurred : "transparent"
@@ -206,6 +221,7 @@ Scope {
                             }
                             RoundCorner {
                                 id: bottomCorner
+                                glass: true
                                 anchors {
                                     bottom: parent.bottom
                                     left: !Config.options.bar.bottom ? parent.left : undefined

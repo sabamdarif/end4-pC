@@ -129,6 +129,12 @@ Scope {
                         color: Appearance.colors.colLayer0
                         clip: true
 
+                        WindowGlass {
+                            anchors.fill: parent
+                            cardRadius: parent.radius
+                            tint: parent.color
+                        }
+
                         Carousel {
                             anchors.fill: parent
                             anchors.margins: 10
@@ -147,6 +153,7 @@ Scope {
                         Layout.fillWidth: true
                         itemVerticalPadding: 16
                         bgcolor: Appearance.colors.colLayer0
+                        glass: true
 
                         // Wallpapers
                         RippleButton {

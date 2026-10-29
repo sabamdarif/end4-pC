@@ -49,6 +49,11 @@ AbstractBackgroundWidget {
 
     Rectangle {
         id: card
+        WindowGlass {
+            anchors.fill: parent
+            cardRadius: parent?.radius ?? 0
+            tint: parent?.color ?? 'transparent'
+        }
         implicitWidth: root.widgetWidth
         implicitHeight: root.cardHeight
         radius: Appearance.rounding?.verylarge ?? 30

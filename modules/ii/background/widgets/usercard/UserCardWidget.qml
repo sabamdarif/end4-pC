@@ -128,6 +128,11 @@ AbstractBackgroundWidget {
 
         Rectangle {
             id: contentBox
+            WindowGlass {
+                anchors.fill: parent
+                cardRadius: parent?.radius ?? 0
+                tint: parent?.color ?? 'transparent'
+            }
             x: root.blurMargin
             y: root.avatarSize / 2 + root.blurMargin + 30
             width: 240

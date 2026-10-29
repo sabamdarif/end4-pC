@@ -174,6 +174,9 @@ Singleton {
                 property bool showGrid: true
                 property bool showSnapLines: true
                 property JsonObject widgets: JsonObject {
+                    property JsonObject glass: JsonObject {
+                        property bool enable: true
+                    }
                     property JsonObject clock: JsonObject {
                         property bool enable: true
                         property bool showOnlyWhenLocked: false

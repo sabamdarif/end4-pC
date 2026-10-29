@@ -87,6 +87,11 @@ AbstractBackgroundWidget {
 
     Rectangle {
         id: card
+        WindowGlass {
+            anchors.fill: parent
+            cardRadius: parent?.radius ?? 0
+            tint: parent?.color ?? 'transparent'
+        }
         implicitWidth: root.widgetWidth
         implicitHeight: root.widgetHeight + (root.showLyrics ? 264 : 0)
         radius: Appearance.rounding?.verylarge ?? 30
@@ -112,7 +117,7 @@ AbstractBackgroundWidget {
                     anchors.top: parent.top
                     anchors.bottom: parent.bottom
                     width: root.widgetHeight
-                    color: Appearance.colors.colSurfaceContainerLow
+                    color: (Config.options.background?.widgets?.glass?.enable ?? false) ? "transparent" : Appearance.colors.colSurfaceContainerLow
                     topLeftRadius: card.radius
                     bottomLeftRadius: card.radius
                     topRightRadius: 0

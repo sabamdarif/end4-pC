@@ -13,18 +13,27 @@ Item {
     property bool scaleIcon: false
     property alias from: valueProgressBar.from
     property alias to: valueProgressBar.to
+    property alias backgroundItem: valueIndicator
 
     implicitWidth: Appearance.sizes.osdWidth + 4 * Appearance.sizes.elevationMargin + 80
     implicitHeight: valueIndicator.implicitHeight + 2 * Appearance.sizes.elevationMargin
 
     Rectangle {
         id: valueIndicator
+        WindowGlass {
+            anchors.fill: parent
+            glassEnabled: (parent?.color.a ?? 0) > 0
+            cardRadius: parent?.radius ?? 0
+            tint: parent?.color ?? 'transparent'
+        }
         anchors {
             fill: parent
             margins: Appearance.sizes.elevationMargin
         }
         radius: Appearance.rounding.full
-        color: Appearance.colors.colLayer0
+        color: Appearance.colors.colLayer0Blurred
+        border.width: 1
+        border.color: Appearance.colors.colLayer0Border
         implicitWidth: valueRow.implicitWidth
         implicitHeight: valueRow.implicitHeight
 

@@ -390,6 +390,12 @@ Item {
 
     Rectangle {
         id: card
+        WindowGlass {
+            anchors.fill: parent
+            glassEnabled: (parent?.color.a ?? 0) > 0
+            cardRadius: parent?.radius ?? 0
+            tint: parent?.color ?? 'transparent'
+        }
         width: root.panelWidth
         height: root.showResults ? Math.min(root.maxExpandedHeight, Math.max(root.searchBarHeight, contentColumn.implicitHeight + root.searchBarHeight + 38)) : root.searchBarHeight
         radius: 28

@@ -46,7 +46,7 @@ Item {
             MaterialSymbol {
                 text: Audio.sink?.audio?.muted ? "volume_off" : "volume_up"
                 iconSize: Appearance.font.pixelSize.larger
-                color: root.isMaterial ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer1
+                color: root.isMaterial ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnLayer1
             }
         }
         Revealer {
@@ -54,7 +54,7 @@ Item {
             MaterialSymbol {
                 text: "mic_off"
                 iconSize: Appearance.font.pixelSize.larger
-                color: root.isMaterial ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer1
+                color: root.isMaterial ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnLayer1
             }
         }
         Revealer {
@@ -62,7 +62,7 @@ Item {
             MaterialSymbol {
                 text: Config.options.light.night.automatic ? "night_sight_auto" : "bedtime"
                 iconSize: Appearance.font.pixelSize.larger
-                color: root.isMaterial ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer1
+                color: root.isMaterial ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnLayer1
             }
         }
         Revealer {
@@ -70,24 +70,24 @@ Item {
             MaterialSymbol {
                 text: "coffee"
                 iconSize: Appearance.font.pixelSize.larger
-                color: root.isMaterial ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer1
+                color: root.isMaterial ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnLayer1
             }
         }
         Loader {
             source: "XkbIndicator.qml"
-            onLoaded: item.color = root.isMaterial ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer1
+            onLoaded: item.color = root.isMaterial ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnLayer1
         }
         MaterialSymbol {
             visible: root.hasToggle("network")
             text: Network.materialSymbol
             iconSize: Appearance.font.pixelSize.larger
-            color: root.isMaterial ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer1
+            color: root.isMaterial ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnLayer1
         }
         MaterialSymbol {
             visible: BluetoothStatus.available && root.hasToggle("bluetooth")
             text: BluetoothStatus.connected ? "bluetooth_connected" : BluetoothStatus.enabled ? "bluetooth" : "bluetooth_disabled"
             iconSize: Appearance.font.pixelSize.larger
-            color: root.isMaterial ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer1
+            color: root.isMaterial ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnLayer1
         }
         Loader {
             id: notifLoader

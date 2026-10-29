@@ -98,7 +98,7 @@ Item {
             case "resources":
                 return Appearance.colors.colTertiaryContainer;
             case "systemIcons":
-                return Appearance.colors.colPrimary; 
+                return Appearance.colors.colPrimaryContainer;
             default:
                 return Appearance.colors.colPrimaryContainer;
         }
@@ -130,9 +130,26 @@ Item {
         border.color: Appearance.colors.colLayer0Border
     }
 
+    WindowGlass {
+        anchors.fill: barBackground
+        glassEnabled: barBackground.color.a > 0
+        cardRadius: barBackground.radius
+        tint: barBackground.color
+    }
+
     // centerOnly
     Rectangle {
         id: centerPill
+        WindowGlass {
+            anchors.fill: parent
+            glassEnabled: (parent?.color.a ?? 0) > 0
+            cardRadius: parent?.radius ?? 0
+            topLeftRadius: parent && parent.topLeftRadius >= 0 ? parent.topLeftRadius : cardRadius
+            topRightRadius: parent && parent.topRightRadius >= 0 ? parent.topRightRadius : cardRadius
+            bottomLeftRadius: parent && parent.bottomLeftRadius >= 0 ? parent.bottomLeftRadius : cardRadius
+            bottomRightRadius: parent && parent.bottomRightRadius >= 0 ? parent.bottomRightRadius : cardRadius
+            tint: parent?.color ?? 'transparent'
+        }
         visible: root.centerOnly && Config.options.bar.showBackground && Config.options.bar.cornerStyle !== 2
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.verticalCenter: parent.verticalCenter
@@ -164,6 +181,16 @@ Item {
 
             Rectangle {
                 id: topMaterialPill
+                WindowGlass {
+                    anchors.fill: parent
+                    glassEnabled: (parent?.color.a ?? 0) > 0
+                    cardRadius: parent?.radius ?? 0
+                    topLeftRadius: parent && parent.topLeftRadius >= 0 ? parent.topLeftRadius : cardRadius
+                    topRightRadius: parent && parent.topRightRadius >= 0 ? parent.topRightRadius : cardRadius
+                    bottomLeftRadius: parent && parent.bottomLeftRadius >= 0 ? parent.bottomLeftRadius : cardRadius
+                    bottomRightRadius: parent && parent.bottomRightRadius >= 0 ? parent.bottomRightRadius : cardRadius
+                    tint: parent?.color ?? 'transparent'
+                }
                 visible: root.isMaterial
                 anchors.centerIn: parent
                 implicitWidth: topMaterialCol.implicitWidth
@@ -242,6 +269,16 @@ Item {
 
             Rectangle {
                 id: centerMaterialPill
+                WindowGlass {
+                    anchors.fill: parent
+                    glassEnabled: (parent?.color.a ?? 0) > 0
+                    cardRadius: parent?.radius ?? 0
+                    topLeftRadius: parent && parent.topLeftRadius >= 0 ? parent.topLeftRadius : cardRadius
+                    topRightRadius: parent && parent.topRightRadius >= 0 ? parent.topRightRadius : cardRadius
+                    bottomLeftRadius: parent && parent.bottomLeftRadius >= 0 ? parent.bottomLeftRadius : cardRadius
+                    bottomRightRadius: parent && parent.bottomRightRadius >= 0 ? parent.bottomRightRadius : cardRadius
+                    tint: parent?.color ?? 'transparent'
+                }
                 visible: root.isMaterial
                 anchors.centerIn: parent
                 implicitWidth: centerMaterialCol.implicitWidth 
@@ -321,6 +358,16 @@ Item {
 
             Rectangle {
                 id: bottomMaterialPill
+                WindowGlass {
+                    anchors.fill: parent
+                    glassEnabled: (parent?.color.a ?? 0) > 0
+                    cardRadius: parent?.radius ?? 0
+                    topLeftRadius: parent && parent.topLeftRadius >= 0 ? parent.topLeftRadius : cardRadius
+                    topRightRadius: parent && parent.topRightRadius >= 0 ? parent.topRightRadius : cardRadius
+                    bottomLeftRadius: parent && parent.bottomLeftRadius >= 0 ? parent.bottomLeftRadius : cardRadius
+                    bottomRightRadius: parent && parent.bottomRightRadius >= 0 ? parent.bottomRightRadius : cardRadius
+                    tint: parent?.color ?? 'transparent'
+                }
                 visible: root.isMaterial
                 anchors.centerIn: parent
                 implicitWidth: bottomMaterialCol.implicitWidth

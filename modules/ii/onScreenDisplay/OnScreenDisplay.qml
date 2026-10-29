@@ -160,6 +160,13 @@ Scope {
                 item: osdValuesWrapper
             }
 
+            BackgroundEffect.blurRegion: (Appearance.blurActive && GlobalStates.osdVolumeOpen) ? osdBlurRegion : null
+            Region {
+                id: osdBlurRegion
+                item: osdIndicatorLoader.item?.backgroundItem ?? osdValuesWrapper
+                radius: osdIndicatorLoader.item?.backgroundItem?.radius ?? Appearance.rounding.full
+            }
+
             exclusionMode: ExclusionMode.Ignore
             exclusiveZone: 0
             margins {

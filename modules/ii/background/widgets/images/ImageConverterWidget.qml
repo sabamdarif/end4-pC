@@ -143,6 +143,11 @@ AbstractBackgroundWidget {
 
     Rectangle {
         id: contentItem
+        WindowGlass {
+            anchors.fill: parent
+            cardRadius: parent?.radius ?? 0
+            tint: parent?.color ?? 'transparent'
+        }
         color: Appearance.colors.colPrimaryContainer
         radius: Appearance.rounding?.verylarge ?? 30
         implicitWidth: 276

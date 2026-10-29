@@ -119,6 +119,11 @@ AbstractBackgroundWidget {
 
     Rectangle {
         id: card
+        WindowGlass {
+            anchors.fill: parent
+            cardRadius: parent?.radius ?? 0
+            tint: parent?.color ?? 'transparent'
+        }
         implicitWidth: root.widgetWidth
         implicitHeight: root.sizeMode === "1x1" ? root.cardHeight
                       : root.sizeMode === "1x2" ? root.cardHeight

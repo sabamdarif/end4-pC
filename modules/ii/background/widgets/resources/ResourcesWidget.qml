@@ -28,6 +28,11 @@ AbstractBackgroundWidget {
 
     component StatCard: Rectangle {
         id: statCard
+        WindowGlass {
+            anchors.fill: parent
+            cardRadius: parent?.radius ?? 0
+            tint: parent?.color ?? 'transparent'
+        }
         property string icon: ""
         property string value: ""
         property string label: ""

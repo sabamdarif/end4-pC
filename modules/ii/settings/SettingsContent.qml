@@ -212,8 +212,15 @@ Item {
                 Layout.fillHeight: true
                 Layout.margins: 0
                 implicitWidth: navRail.expanded ? 290 : 56
-                color: Appearance.m3colors.m3surfaceContainerLow
+                color: (Config.options.background?.widgets?.glass?.enable ?? false) ? "transparent" : Appearance.colors.colLayer1
                 radius: Appearance.rounding.normal
+
+                WindowGlass {
+                    anchors.fill: parent
+                    glassEnabled: (Config.options.background?.widgets?.glass?.enable ?? false)
+                    cardRadius: parent.radius
+                    tint: Appearance.colors.colLayer1
+                }
 
                 Behavior on implicitWidth {
                     animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)

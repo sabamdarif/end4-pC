@@ -54,11 +54,16 @@ Item {
     // Dialog card
     Rectangle {
         id: dialogCard
+        WindowGlass {
+            anchors.fill: parent
+            cardRadius: parent?.radius ?? 0
+            tint: parent?.color ?? 'transparent'
+        }
         anchors.centerIn: parent
         width: Math.min(parent.width - 40, 420)
         implicitHeight: cardLayout.implicitHeight + 36
         radius: Appearance.rounding.large
-        color: Appearance.colors.colLayer2
+        color: Appearance.colors.colLayer1Blurred
         border.color: Appearance.colors.colLayer0Border
         border.width: 1
 

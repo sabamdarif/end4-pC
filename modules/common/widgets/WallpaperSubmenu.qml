@@ -47,6 +47,12 @@ Item {
             radius: Appearance.rounding.verylarge
             color: Appearance.colors.colLayer0
 
+            WindowGlass {
+                anchors.fill: parent
+                cardRadius: parent.radius
+                tint: parent.color
+            }
+
             RippleButton {
                 id: changeWallpaperRow
                 property bool hasPath: (Config.options.wallpaperSelector.userPath ?? "").trim().length > 0
@@ -79,6 +85,12 @@ Item {
             implicitHeight: schemeGrid.implicitHeight + 20
             radius: Appearance.rounding.verylarge
             color: Appearance.colors.colLayer0
+
+            WindowGlass {
+                anchors.fill: parent
+                cardRadius: parent.radius
+                tint: parent.color
+            }
 
             GridLayout {
                 id: schemeGrid
@@ -174,6 +186,12 @@ Item {
             radius: Appearance.rounding.verylarge
             color: Appearance.colors.colLayer0
 
+            WindowGlass {
+                anchors.fill: parent
+                cardRadius: parent.radius
+                tint: parent.color
+            }
+
             ColumnLayout {
                 id: centeredCol
                 anchors { fill: parent; margins: 8 }
@@ -241,6 +259,12 @@ Item {
             radius: Appearance.rounding.verylarge
             color: Appearance.colors.colLayer0
             clip: true
+
+            WindowGlass {
+                anchors.fill: parent
+                cardRadius: parent.radius
+                tint: parent.color
+            }
 
             StyledListView {
                 id: transList

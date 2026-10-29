@@ -44,6 +44,11 @@ Scope {
             minimumSize: Qt.size(600, 400)
             visible: true
 
+            WindowGlass {
+                anchors.fill: parent
+                tint: Appearance.colors.colLayer0
+            }
+
             function hide() {
                 GlobalStates.settingsOpen = false;
             }

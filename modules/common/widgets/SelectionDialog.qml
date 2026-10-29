@@ -32,7 +32,14 @@ Item {
 
     Rectangle { // The dialog
         id: dialog
-        color: Appearance.m3colors.m3surfaceContainerHigh
+        WindowGlass {
+            anchors.fill: parent
+            cardRadius: parent?.radius ?? 0
+            tint: parent?.color ?? 'transparent'
+        }
+        color: Appearance.colors.colLayer1Blurred
+        border.width: 1
+        border.color: Appearance.colors.colLayer0Border
         radius: Appearance.rounding.normal
         anchors.fill: parent
         anchors.margins: dialogMargin

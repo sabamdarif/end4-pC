@@ -84,6 +84,18 @@ Scope {
             anchors { bottom: true; left: true; right: true }
             implicitWidth: dockBackground.implicitWidth
             WlrLayershell.namespace: "quickshell:dock"
+            Binding {
+                target: GlassLayers
+                property: "dockZone"
+                value: Math.max(0, dockRoot.exclusiveZone)
+                restoreMode: Binding.RestoreBinding
+            }
+            Binding {
+                target: GlassLayers
+                property: "dockEdge"
+                value: "bottom"
+                restoreMode: Binding.RestoreBinding
+            }
             color: "transparent"
 
             // Blur only while the pill is painted; a hidden dock still has a window
@@ -147,6 +159,12 @@ Scope {
 
                         Rectangle {
                             id: dockVisualBackground
+                            WindowGlass {
+                                anchors.fill: parent
+                                glassEnabled: (parent?.color.a ?? 0) > 0
+                                cardRadius: parent?.radius ?? 0
+                                tint: parent?.color ?? 'transparent'
+                            }
                             property real margin: Appearance.sizes.elevationMargin
                             anchors.fill: parent
                             anchors.topMargin:    Appearance.sizes.elevationMargin

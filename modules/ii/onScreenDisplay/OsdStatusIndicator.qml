@@ -12,18 +12,25 @@ Item {
     required property string title
     property string activeText: Translation.tr("ON")
     property string inactiveText: Translation.tr("OFF")
+    property alias backgroundItem: statusIndicator
 
     implicitWidth: Appearance.sizes.osdWidth + 4 * Appearance.sizes.elevationMargin
     implicitHeight: 48 + 2 * Appearance.sizes.elevationMargin
 
     Rectangle {
         id: statusIndicator
+        WindowGlass {
+            anchors.fill: parent
+            glassEnabled: (parent?.color.a ?? 0) > 0
+            cardRadius: parent?.radius ?? 0
+            tint: parent?.color ?? 'transparent'
+        }
         anchors {
             fill: parent
             margins: Appearance.sizes.elevationMargin
         }
         radius: Appearance.rounding.full
-        color: Appearance.colors.colLayer0
+        color: Appearance.colors.colLayer0Blurred
         border.width: 1
         border.color: Appearance.colors.colLayer0Border
 
