@@ -9,8 +9,8 @@ Item {
     property real topRightRadius: cardRadius
     property real bottomRightRadius: cardRadius
     property real bottomLeftRadius: cardRadius
-    property color tint: "white"
-    property real tintOpacity: 0.3
+    property color tint: Appearance.colors.colLayer0Base
+    property real tintOpacity: Appearance.m3colors.darkmode ? 0.35 : 0.82
     readonly property real rimWidth: 4
     readonly property real pull: 0
     readonly property real split: 0
@@ -49,7 +49,12 @@ Item {
         property real haze: root.haze
         property real vividness: root.vividness
         property real sheen: root.sheen
-        property color wash: Qt.rgba(root.tint.r, root.tint.g, root.tint.b, root.tintOpacity)
+        property color wash: {
+            const base = (root.tint === "transparent" || (root.tint.a !== undefined && root.tint.a <= 0))
+                ? Appearance.colors.colLayer0Base
+                : root.tint;
+            return Qt.rgba(base.r, base.g, base.b, root.tintOpacity);
+        }
 
         fragmentShader: Qt.resolvedUrl("shaders/frostedLens.frag.qsb")
     }

@@ -13,7 +13,14 @@ Item {
     property real bottomLeftRadius: cardRadius
     property color tint: "transparent"
     property bool glassEnabled: true
-    property real tintStrength: 0.3
+    property real tintStrength: Appearance.m3colors.darkmode ? 0.35 : 0.82
+
+    readonly property color effectiveTint: {
+        if (root.tint !== "transparent" && root.tint.a > 0) {
+            return root.tint;
+        }
+        return Appearance.colors.colLayer0Base;
+    }
 
     readonly property var win: QsWindow.window
     readonly property var scr: win?.screen ?? (Quickshell.screens.length > 0 ? Quickshell.screens[0] : null)
@@ -177,7 +184,7 @@ Item {
                 topRightRadius: root.topRightRadius
                 bottomRightRadius: root.bottomRightRadius
                 bottomLeftRadius: root.bottomLeftRadius
-                tint: root.tint
+                tint: root.effectiveTint
                 tintOpacity: root.tintStrength
                 trackX: wallpaperImage.x
                 trackY: wallpaperImage.y
