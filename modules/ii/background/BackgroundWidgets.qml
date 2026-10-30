@@ -15,6 +15,9 @@ import qs.modules.ii.background.widgets.visualizer
 import qs.modules.ii.background.widgets.weather
 import qs.modules.ii.background.widgets.worldclock
 import qs.modules.ii.background.widgets.customtext
+import qs.modules.ii.background.widgets.github
+import qs.modules.ii.background.widgets.screentime
+import qs.modules.ii.background.widgets.ducky
 
 // The desktop widgets, kept out of Background.qml so their type trees are
 // compiled on the QML worker thread instead of ahead of the wallpaper.
@@ -186,6 +189,42 @@ WidgetCanvas {
             && (Config.options.background.screenList.length === 0
                 || Config.options.background.screenList.includes(root.panel.screen.name))
         sourceComponent: UserCardWidget {
+            screenWidth: root.panel.screen.width
+            screenHeight: root.panel.screen.height
+            scaledScreenWidth: root.panel.screen.width
+            scaledScreenHeight: root.panel.screen.height
+            wallpaperScale: 1
+        }
+    }
+    FadeLoader {
+        shown: Config.options.background.widgets.github.enable
+            && (Config.options.background.screenList.length === 0
+                || Config.options.background.screenList.includes(root.panel.screen.name))
+        sourceComponent: GithubWidget {
+            screenWidth: root.panel.screen.width
+            screenHeight: root.panel.screen.height
+            scaledScreenWidth: root.panel.screen.width
+            scaledScreenHeight: root.panel.screen.height
+            wallpaperScale: 1
+        }
+    }
+    FadeLoader {
+        shown: Config.options.background.widgets.screentime.enable
+            && (Config.options.background.screenList.length === 0
+                || Config.options.background.screenList.includes(root.panel.screen.name))
+        sourceComponent: ScreenTimeWidget {
+            screenWidth: root.panel.screen.width
+            screenHeight: root.panel.screen.height
+            scaledScreenWidth: root.panel.screen.width
+            scaledScreenHeight: root.panel.screen.height
+            wallpaperScale: 1
+        }
+    }
+    FadeLoader {
+        shown: Config.options.background.widgets.ducky.enable
+            && (Config.options.background.screenList.length === 0
+                || Config.options.background.screenList.includes(root.panel.screen.name))
+        sourceComponent: DuckyWidget {
             screenWidth: root.panel.screen.width
             screenHeight: root.panel.screen.height
             scaledScreenWidth: root.panel.screen.width

@@ -93,6 +93,10 @@ Singleton {
                 property bool enable: false
             }
 
+            property JsonObject ducky: JsonObject {
+                property int petCount: 0
+            }
+
             property JsonObject overlay: JsonObject {
                 property list<string> open: ["crosshair", "recorder", "volumeMixer", "resources"]
                 property JsonObject crosshair: JsonObject {

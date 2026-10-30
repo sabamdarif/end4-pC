@@ -320,6 +320,33 @@ Singleton {
                         property string alignment: "center" // "left", "center", "right"
                         property bool shadow: true
                     }
+
+                    property JsonObject github: JsonObject {
+                        property bool enable: false
+                        property string username: ""
+                        property string placementStrategy: "free"
+                        property real x: 100
+                        property real y: 500
+                        property real z: 0
+                    }
+
+                    property JsonObject screentime: JsonObject {
+                        property bool enable: false
+                        property string sizeMode: "2x2"
+                        property string placementStrategy: "free"
+                        property real x: 200
+                        property real y: 200
+                        property real z: 0
+                    }
+
+                    property JsonObject ducky: JsonObject {
+                        property bool enable: false
+                        property string sizeMode: "2x2"
+                        property string placementStrategy: "free"
+                        property real x: 500
+                        property real y: 200
+                        property real z: 0
+                    }
                 }
                 property list<string> screenList: [] 
                 property string wallpaperPath: ""

@@ -23,6 +23,10 @@ Item {
         { key: "worldClock",  icon: "public",             name: Translation.tr("World Clock") },
         { key: "userCard",    icon: "person",             name: Translation.tr("User Card") },
         { key: "notes",       icon: "note_stack_add",     name: Translation.tr("Notes") },
+        { key: "customText",  icon: "text_fields",        name: Translation.tr("Text") },
+        { key: "github",      icon: "code",               name: Translation.tr("GitHub Heatmap") },
+        { key: "screentime",  icon: "schedule",           name: Translation.tr("Screen Time") },
+        { key: "ducky",       icon: "pets",               name: Translation.tr("Buffer Ducky") },
     ]
 
     Rectangle {

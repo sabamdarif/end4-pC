@@ -34,54 +34,82 @@ ContentPage {
             Repeater {
                 model: [
                     {
+                        key: "weather",
                         icon: "weather_mix",
                         name: Translation.tr("Weather"),
                         enabled: Config.options.background.widgets.weather.enable
                     },
                     {
+                        key: "images",
                         icon: "image",
                         name: Translation.tr("Image converter"),
                         enabled: Config.options.background.widgets.images.enable
                     },
                     {
+                        key: "media",
                         icon: "music_note",
                         name: Translation.tr("Media Player"),
                         enabled: Config.options.background.widgets.media.enable
                     },
                     {
+                        key: "resources",
                         icon: "memory",
                         name: Translation.tr("Resources"),
                         enabled: Config.options.background.widgets.resources.enable
                     },
                     {
+                        key: "visualizer",
                         icon: "graphic_eq",
                         name: Translation.tr("Visualizer"),
                         enabled: Config.options.background.widgets.visualizer.enable
                     },
                     {
+                        key: "calendar",
                         icon: "calendar_month",
                         name: Translation.tr("Calendar"),
                         enabled: Config.options.background.widgets.calendar.enable
                     },
                     {
+                        key: "worldClock",
                         icon: "public",
                         name: Translation.tr("World Clock"),
                         enabled: Config.options.background.widgets.worldClock.enable
                     },
                     {
+                        key: "userCard",
                         icon: "person",
                         name: Translation.tr("User Card"),
                         enabled: Config.options.background.widgets.userCard.enable
                     },
                     {
+                        key: "notes",
                         icon: "note_stack_add",
                         name: Translation.tr("Notes"),
                         enabled: Config.options.background.widgets.notes.enable
                     },
                     {
+                        key: "customText",
                         icon: "text_fields",
                         name: Translation.tr("Text"),
                         enabled: Config.options.background.widgets.customText.enable
+                    },
+                    {
+                        key: "github",
+                        icon: "code",
+                        name: Translation.tr("GitHub Heatmap"),
+                        enabled: Config.options.background.widgets.github.enable
+                    },
+                    {
+                        key: "screentime",
+                        icon: "schedule",
+                        name: Translation.tr("Screen Time"),
+                        enabled: Config.options.background.widgets.screentime.enable
+                    },
+                    {
+                        key: "ducky",
+                        icon: "pets",
+                        name: Translation.tr("Buffer Ducky"),
+                        enabled: Config.options.background.widgets.ducky.enable
                     }
                 ]
                 delegate: Rectangle {
@@ -111,26 +139,8 @@ ContentPage {
                                 Layout.fillWidth: false
                                 checked: modelData.enabled
                                 onCheckedChanged: {
-                                    if (modelData.icon === "weather_mix")
-                                        Config.options.background.widgets.weather.enable = checked
-                                    else if (modelData.icon === "image")
-                                        Config.options.background.widgets.images.enable = checked
-                                    else if (modelData.icon === "music_note")
-                                        Config.options.background.widgets.media.enable = checked
-                                    else if (modelData.icon === "memory")
-                                        Config.options.background.widgets.resources.enable = checked
-                                    else if (modelData.icon === "graphic_eq")
-                                        Config.options.background.widgets.visualizer.enable = checked
-                                    else if (modelData.icon === "calendar_month")
-                                        Config.options.background.widgets.calendar.enable = checked
-                                    else if (modelData.icon === "public")
-                                        Config.options.background.widgets.worldClock.enable = checked
-                                    else if (modelData.icon === "person")
-                                        Config.options.background.widgets.userCard.enable = checked
-                                    else if (modelData.icon === "note_stack_add")
-                                        Config.options.background.widgets.notes.enable = checked
-                                    else if (modelData.icon === "text_fields")
-                                        Config.options.background.widgets.customText.enable = checked
+                                    if (modelData.key && Config.options.background.widgets[modelData.key])
+                                        Config.options.background.widgets[modelData.key].enable = checked
                                 }
                             }
                         }
@@ -447,6 +457,69 @@ ContentPage {
                     onSelected: newValue => {
                         settingsCustomText.entry.color = newValue
                         customTextAutoColorSwitch.checked = false
+                    }
+                }
+            }
+        }
+
+        ContentSection {
+            id: settingsGithub
+            icon: "code"
+            shape: MaterialShape.Shape.Cookie4Sided
+            title: Translation.tr("GitHub Heatmap")
+            visible: Config.options.background.widgets.github.enable
+
+            GroupedList {
+                RowLayout {
+                    Layout.fillWidth: true
+                    Layout.margins: 10
+                    spacing: 12
+
+                    MaterialSymbol {
+                        text: "account_circle"
+                        iconSize: Appearance.font.pixelSize.normal + 6
+                        color: Appearance.colors.colPrimary
+                    }
+
+                    ColumnLayout {
+                        spacing: 2
+                        Layout.fillWidth: true
+
+                        StyledText {
+                            text: Translation.tr("GitHub Username")
+                            font.pixelSize: Appearance.font.pixelSize.normal
+                            font.weight: Font.DemiBold
+                            color: Appearance.colors.colOnLayer1
+                        }
+
+                        StyledText {
+                            text: Translation.tr("Username for heatmaps and contribution stats")
+                            font.pixelSize: Appearance.font.pixelSize.small
+                            color: Appearance.colors.colSubtext
+                        }
+                    }
+
+                    Rectangle {
+                        implicitWidth: 170
+                        implicitHeight: 32
+                        radius: 8
+                        color: Appearance.colors.colLayer0
+                        border.width: 1
+                        border.color: Appearance.colors.colLayer0Border
+
+                        StyledTextInput {
+                            anchors {
+                                fill: parent
+                                leftMargin: 10
+                                rightMargin: 10
+                                topMargin: 4
+                                bottomMargin: 4
+                            }
+                            text: Config.options.background.widgets.github.username || ""
+                            onEditingFinished: {
+                                Config.options.background.widgets.github.username = text.trim();
+                            }
+                        }
                     }
                 }
             }
