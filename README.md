@@ -78,6 +78,63 @@ Mod+Escape { spawn "qs" "-c" "end4-pC" "ipc" "call" "settings" "toggle"; }
 
 > **Note:** Settings is an overlay panel, not a regular window — `Mod + Q` won't close it. Use the same keybind to toggle it or press `Escape`.
 
+---
+
+## 📦 Runtime dependencies
+
+> [!NOTE]
+> The install steps above only assume [niri](https://github.com/YaLTeR/niri) and quickshell. Everything in the tables below is a program the shell itself spawns at runtime; Arch package names are given. Packages marked (AUR) are not in the official repositories.
+
+Only the core list is needed for the shell to start and work. Feature-gated packages are only spawned when you actually use that feature, so install them as needed.
+
+### Core
+
+| Programs | Arch package | Used for |
+| --- | --- | --- |
+| `niri msg` | niri | compositor control: workspaces, windows, outputs, keybinds, event stream |
+| `systemctl`, `loginctl`, `busctl`, `hostnamectl` | systemd | suspend, reboot, lock session, system info |
+| `pkexec` | polkit | admin actions (user management, per-host daemon toggles) |
+| `nmcli` | networkmanager | Wi-Fi and ethernet state |
+| `curl` | curl | public IP, weather, media cover art, online wallpapers |
+| `jq` | jq | JSON parsing |
+| `gsettings`, `gio` | glib2 | sound, GTK, icon and cursor themes; trash operations (trash needs `gvfs`) |
+| `xdg-open`, `xdg-mime`, `xdg-settings` | xdg-utils | opening files and links, default app handling |
+| `wl-copy`, `wl-paste` | wl-clipboard | clipboard panel |
+| `cliphist` | cliphist | clipboard history |
+| `notify-send` | libnotify | system notifications |
+| `magick`, `convert`, `identify` | imagemagick | thumbnails, image cropping and conversion |
+| `ffmpeg` | ffmpeg | video thumbnails, live wallpaper processing |
+| `python3` | python | helper scripts (screen time, keybind list, autostart entries, lyrics) |
+| `bash`, `pkill`, `pidof`, `killall`, `kill`, `free`, `lscpu`, `nice` | bash, procps-ng, psmisc, util-linux | console snippets, process checks, system info |
+| `cat`, `grep`, `sed`, `awk`, `find`, `xargs`, `df`, `stat`, `touch`, `file`, `which` | coreutils, grep, sed, gawk, findutils, file, which | shell snippets for system info and config checks |
+| `sensors` | lm_sensors | CPU and GPU temperatures |
+| `secret-tool` | libsecret | keyring storage on lock screens (needs `gnome-keyring`) |
+
+### Feature-gated
+
+| Feature | Programs | Arch packages |
+| --- | --- | --- |
+| Screenshot and OCR | `grim`, `slurp`, `tesseract`, `satty` or `swappy` | grim, slurp, tesseract, tesseract-data-eng, satty, swappy |
+| Screen recording | `wf-recorder`, `pactl` | wf-recorder, libpulse |
+| Audio visualizer | `cava` | cava |
+| System sound fallbacks | `paplay`, `pw-play`, `canberra-gtk-play` (first available wins) | libpulse, pipewire-audio, libcanberra |
+| Mic mute quick toggle | `wpctl` | wireplumber |
+| Brightness control | `brightnessctl`, `ddcutil` | brightnessctl, ddcutil |
+| Night light | `wlsunset` | wlsunset |
+| Live wallpaper | `mpvpaper`, `socat`, `swaybg` | mpvpaper, socat, swaybg |
+| Theming from wallpaper | `matugen` plus Python `PIL` / `materialyoucolor` / `numpy` / `cv2` | matugen, python-pillow, python-numpy, python-opencv, python-materialyoucolor (AUR) |
+| File pickers | `kdialog` or `yad` | kdialog, yad |
+| File search | `fd` | fd |
+| GPU detection (System info) | `glxinfo`, `lspci` | mesa-utils, pciutils |
+| FPS limiter overlay | `mangohud` | mangohud |
+| Fingerprint availability | `fprintd-list` | fprintd |
+| Keyboard layout test | `wtype` | wtype |
+| Update checks | `checkupdates`, `paru` or `yay`, `flatpak` | pacman-contrib, paru or yay, flatpak |
+| Cloudflare WARP toggle | `warp-cli` | cloudflare-warp-bin (AUR) |
+| Optional wallpaper upscale | `upscayl` | upscayl-bin (AUR) |
+
+A few programs are user-configurable app defaults in the settings rather than hardcoded dependencies: `kitty`, `fish`, `dolphin`, `pavucontrol` (or `pavucontrol-qt`), `plasma-systemmonitor` and the `kcmshell6` Plasma settings modules (packages `kitty`, `fish`, `dolphin`, `pavucontrol`, `pavucontrol-qt`, `plasma-systemmonitor`, `kcmutils`), which open system monitors, mixer, user and Bluetooth settings. Gnome keyring sync (`gnome-keyring`) and `gvfs` are strictly optional.
+
 ## 🙏 Credits
 
 Huge thanks to the people who made this possible:
