@@ -14,11 +14,6 @@ Item {
         return Translation.tr("Copy region (LMB) or annotate (RMB)");
     case RegionSelection.SnipAction.Search:
         return Translation.tr("Search with Google Lens");
-    case RegionSelection.SnipAction.CharRecognition:
-        return Translation.tr("Recognize text");
-    case RegionSelection.SnipAction.Record:
-    case RegionSelection.SnipAction.RecordWithSound:
-        return Translation.tr("Record region");
     }
     property string materialSymbol: switch (root.action) {
     case RegionSelection.SnipAction.Copy:
@@ -26,11 +21,6 @@ Item {
         return "content_cut";
     case RegionSelection.SnipAction.Search:
         return "image_search";
-    case RegionSelection.SnipAction.CharRecognition:
-        return "document_scanner";
-    case RegionSelection.SnipAction.Record:
-    case RegionSelection.SnipAction.RecordWithSound:
-        return "videocam";
     default:
         return "";
     }

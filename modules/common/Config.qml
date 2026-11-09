@@ -419,8 +419,6 @@ Singleton {
                     property bool showWallpaperToggle: false
                     property bool showDarkModeToggle: true
                     property bool showPerformanceProfileToggle: false
-                    property bool showScreenRecord: true
-                    property bool isRecording: false
                 }
 
                 property JsonObject workspaces: JsonObject {

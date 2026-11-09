@@ -114,8 +114,8 @@ Only the core list is needed for the shell to start and work. Feature-gated pack
 
 | Feature | Programs | Arch packages |
 | --- | --- | --- |
-| Screenshot and OCR | `grim`, `slurp`, `tesseract`, `satty` or `swappy` | grim, slurp, tesseract, tesseract-data-eng, satty, swappy |
-| Screen recording | `wf-recorder`, `pactl` | wf-recorder, libpulse |
+| Screenshot | `grim`, `satty` | grim, satty |
+| Color picker | `slurp` | slurp |
 | Audio visualizer | `cava` | cava |
 | System sound fallbacks | `paplay`, `pw-play`, `canberra-gtk-play` (first available wins) | libpulse, pipewire-audio, libcanberra |
 | Mic mute quick toggle | `wpctl` | wireplumber |

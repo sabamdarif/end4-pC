@@ -385,15 +385,6 @@ ContentPage {
                     onCheckedChanged: { Config.options.bar.utilButtons.showPerformanceProfileToggle = checked }
                 }
                 ConfigSwitch {
-                    buttonIcon: "screen_record"
-                    text: Translation.tr("Record Screen")
-                    checked: Config.options.bar.utilButtons.showScreenRecord
-                    onCheckedChanged: { Config.options.bar.utilButtons.showScreenRecord = checked }
-                }
-            }
-            ConfigRow {
-                uniform: true
-                ConfigSwitch {
                     buttonIcon: "imagesmode"
                     text: Translation.tr("Wallpapers Toggle")
                     checked: Config.options.bar.utilButtons.showWallpaperToggle

@@ -28,12 +28,10 @@ PanelWindow {
 
     // Modes
     // TODO: Ask: sidebar AI
-    enum SnipAction { Copy, Edit, Search, CharRecognition, Record, RecordWithSound } 
+    enum SnipAction { Copy, Edit, Search }
     enum SelectionMode { RectCorners, Circle }
-    enum Phase { Select, Post }
     property var action: RegionSelection.SnipAction.Copy
     property var selectionMode: RegionSelection.SelectionMode.RectCorners
-    property var phase: RegionSelection.Phase.Select
     signal dismiss()
 
     // Styles
@@ -120,37 +118,7 @@ PanelWindow {
         screenshotPath: root.screenshotPath
         onExited: (exitCode, exitStatus) => {
             if (root.enableContentRegions) imageDetectionProcess.running = true;
-            root.preparationDone = !checkRecordingProc.running;
-        }
-    }
-    property bool isRecording: root.action === RegionSelection.SnipAction.Record || root.action === RegionSelection.SnipAction.RecordWithSound
-    property bool recordingShouldStop: false
-    Process {
-        id: checkRecordingProc
-        running: isRecording
-        command: ["pidof", "wf-recorder"]
-        onExited: (exitCode, exitStatus) => {
-            root.preparationDone = !screenshotProc.running
-            root.recordingShouldStop = (exitCode === 0);
-        }
-    }
-    property bool preparationDone: false
-    onPreparationDoneChanged: {
-        if (!preparationDone) return;
-        if (root.isRecording && root.recordingShouldStop) {
-            Quickshell.execDetached([Directories.recordScriptPath]);
-            root.dismiss();
-            return;
-        }
-        root.visible = true;
-    }
-
-    Connections {
-        target: Persistent.states.record
-        function onEnableChanged() {
-            if (!Persistent.states.record.enable && root.isRecording) {
-                root.dismiss();
-            }
+            root.visible = true;
         }
     }
 
@@ -177,12 +145,6 @@ PanelWindow {
                 return ScreenshotAction.Action.Edit;
             case RegionSelection.SnipAction.Search:
                 return ScreenshotAction.Action.Search;
-            case RegionSelection.SnipAction.CharRecognition:
-                return ScreenshotAction.Action.CharRecognition;
-            case RegionSelection.SnipAction.Record:
-                return ScreenshotAction.Action.Record;
-            case RegionSelection.SnipAction.RecordWithSound:
-                return ScreenshotAction.Action.RecordWithSound;
             default:
                 console.warn("[Region Selector] Unknown snip action, skipping snip.");
                 root.dismiss();
@@ -223,27 +185,17 @@ PanelWindow {
         )
         if (!command) return;
         Quickshell.execDetached(command);
-        if (root.action == RegionSelection.SnipAction.Record || root.action == RegionSelection.SnipAction.RecordWithSound) {
-            root.phase = RegionSelection.Phase.Post
-            root.selectionMode = RegionSelection.SelectionMode.RectCorners
-        } else {
-            root.dismiss();
-        }
+        root.dismiss();
     }
 
-    // Only clickable in Selection phase
     mask: Region {
-        item: switch(root.phase) {
-            case RegionSelection.Phase.Select: return mouseArea;
-            case RegionSelection.Phase.Post: return null;
-        }
+        item: mouseArea
     }
 
     ScreencopyView { // For freezing
         anchors.fill: parent
         live: false
         captureSource: root.screen
-        visible: root.phase === RegionSelection.Phase.Select
 
         focus: root.visible
         Keys.onPressed: (event) => { // Esc to close
@@ -314,7 +266,6 @@ PanelWindow {
                 mouseY: mouseArea.mouseY
                 color: root.selectionBorderColor
                 overlayColor: root.overlayColor
-                breathingBorderOnly: root.phase === RegionSelection.Phase.Post
             }
         }
 
@@ -332,7 +283,6 @@ PanelWindow {
         // The thing to the bottom-right with an icon
         CursorGuide {
             z: 9999
-            visible: root.phase === RegionSelection.Phase.Select
             x: root.dragging ? root.regionX + root.regionWidth : mouseArea.mouseX
             y: root.dragging ? root.regionY + root.regionHeight : mouseArea.mouseY
             action: root.action
@@ -342,13 +292,7 @@ PanelWindow {
         // Content regions
         Repeater {
             model: ScriptModel {
-                values: {
-                    if (root.phase === RegionSelection.Phase.Select && root.enableContentRegions) {
-                        return root.imageRegions
-                    } else {
-                        return []
-                    }
-                }
+                values: root.enableContentRegions ? root.imageRegions : []
             }
             delegate: TargetRegion {
                 z: 4
@@ -371,7 +315,6 @@ PanelWindow {
         Row {
             id: regionSelectionControls
             z: 10
-            visible: root.phase === RegionSelection.Phase.Select
             anchors {
                 horizontalCenter: parent.horizontalCenter
                 bottom: parent.bottom

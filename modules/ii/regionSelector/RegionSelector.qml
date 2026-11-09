@@ -33,27 +33,21 @@ Scope {
         }
     }
 
-    function captureCommand(area = false) {
+    function captureCommand() {
         const saveDir = StringUtils.shellSingleQuoteEscape(Directories.screenshots)
-        const grimArgs = area ? `-g "$(slurp)"` : ""
         return `set -o pipefail && mkdir -p '${saveDir}' && filePath='${saveDir}/screenshot-'$(date '+%Y-%m-%d_%H.%M.%S').png && \
-            grim -t png ${grimArgs} "$filePath" && \
+            grim -t png "$filePath" && \
             if command -v satty >/dev/null 2>&1; then satty --filename "$filePath" --output-filename "$filePath"; \
-            elif command -v swappy >/dev/null 2>&1; then swappy -f "$filePath" -o "$filePath"; \
-            else notify-send "Screenshot editor unavailable" "Install satty or swappy to annotate screenshots" -a "Screenshot" -i "dialog-warning"; fi && \
+            else notify-send "Screenshot editor unavailable" "Install satty to annotate screenshots" -a "Screenshot" -i "dialog-warning"; fi && \
             wl-copy < "$filePath" && \
             notify-send "Screenshot Saved" "Saved to $filePath" -a "Screenshot" -i "image-x-generic"`
     }
 
     function screenshot() {
-        Quickshell.execDetached(["bash", "-c", root.captureCommand(false)]);
+        Quickshell.execDetached(["bash", "-c", root.captureCommand()]);
     }
 
     function areaScreenshot() {
-        if (Persistent.states.record.enable) {
-            Quickshell.execDetached(["bash", "-c", root.captureCommand(true)]);
-            return;
-        }
         root.action = RegionSelection.SnipAction.Edit
         root.selectionMode = RegionSelection.SelectionMode.RectCorners
         GlobalStates.regionSelectorOpen = true
@@ -69,32 +63,6 @@ Scope {
         GlobalStates.regionSelectorOpen = true
     }
 
-    function ocr() {
-        root.action = RegionSelection.SnipAction.CharRecognition
-        root.selectionMode = RegionSelection.SelectionMode.RectCorners
-        GlobalStates.regionSelectorOpen = true
-    }
-
-    function record() {
-        if (Persistent.states.record.enable) {
-            Quickshell.execDetached([Directories.recordScriptPath]);
-            return;
-        }
-        root.action = RegionSelection.SnipAction.Record
-        root.selectionMode = RegionSelection.SelectionMode.RectCorners
-        GlobalStates.regionSelectorOpen = true
-    }
-
-    function recordWithSound() {
-        if (Persistent.states.record.enable) {
-            Quickshell.execDetached([Directories.recordScriptPath]);
-            return;
-        }
-        root.action = RegionSelection.SnipAction.RecordWithSound
-        root.selectionMode = RegionSelection.SelectionMode.RectCorners
-        GlobalStates.regionSelectorOpen = true
-    }
-
     IpcHandler {
         target: "region"
 
@@ -106,15 +74,6 @@ Scope {
         }
         function search() {
             root.search()
-        }
-        function ocr() {
-            root.ocr()
-        }
-        function record() {
-            root.record()
-        }
-        function recordWithSound() {
-            root.recordWithSound()
         }
     }
 }
