@@ -33,7 +33,9 @@ Singleton {
     }
     property real autoContentTransparency: 0.9
     property real backgroundTransparency: Config?.options.appearance.transparency.enable ? Config?.options.appearance.transparency.automatic ? autoBackgroundTransparency : Config?.options.appearance.transparency.backgroundTransparency : 0
-    property real contentTransparency: Math.max(glassContentTransparency, Config?.options.appearance.transparency.automatic ? autoContentTransparency : Config?.options.appearance.transparency.contentTransparency)
+    property real contentTransparency: Config?.options.appearance.transparency.enable
+        ? Math.max(glassContentTransparency, Config?.options.appearance.transparency.automatic ? autoContentTransparency : Config?.options.appearance.transparency.contentTransparency)
+        : glassContentTransparency
     readonly property real glassContentTransparency: Config?.options.background.widgets.glass.enable ? 0.6 : 0
 
     // niri only blurs a layer surface that is translucent and asks for blur.
@@ -125,7 +127,7 @@ Singleton {
         // Blurred panel backgrounds: translucent only while niri blur is on, so
         // the compositor has something to blur behind them
         property color colLayer0Blurred: root.blurActive ? ColorUtils.applyAlpha(colLayer0Base, root.panelOpacity) : colLayer0
-        property color colLayer1Blurred: root.blurActive ? ColorUtils.applyAlpha(colLayer1Base, root.panelOpacity) : colLayer1
+        property color colLayer1Blurred: root.blurActive ? ColorUtils.applyAlpha(colLayer1Base, root.panelOpacity) : ColorUtils.transparentize(colLayer1Base, root.backgroundTransparency)
         property color colOnLayer0: m3colors.m3onBackground
         property color colLayer0Hover: ColorUtils.transparentize(ColorUtils.mix(colLayer0, colOnLayer0, 0.9, root.contentTransparency))
         property color colLayer0Active: ColorUtils.transparentize(ColorUtils.mix(colLayer0, colOnLayer0, 0.8, root.contentTransparency))
