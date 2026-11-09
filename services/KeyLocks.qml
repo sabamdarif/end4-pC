@@ -1,61 +1,98 @@
 pragma Singleton
 pragma ComponentBehavior: Bound
 
-import qs.modules.common
-import qs.modules.common.functions
 import QtQuick
 import Quickshell
 import Quickshell.Io
 
 /**
- * Tracks Caps Lock and Num Lock state by passively watching keyboard LED
- * events from /dev/input (scripts/keylocks/watch-led.py). We cannot bind the
- * lock keys in niri, because niri consumes any bound key and the lock would
- * never toggle; the watcher observes the real LED state without stealing keys.
+ * Tracks Caps Lock and Num Lock states and handles OSD trigger IPC.
  */
 Singleton {
     id: root
 
-    readonly property string watcherPath: FileUtils.trimFileProtocol(`${Directories.scriptPath}/keylocks/watch-led.py`)
-
     property bool capsLock: false
     property bool numLock: false
-    // False until the startup snapshot has been applied, so we do not flash an
-    // OSD on shell launch.
     property bool ready: false
 
     signal showCapsLockOsd(bool state)
     signal showNumLockOsd(bool state)
 
-    Process {
-        id: watcher
-        // The python watcher costs ~10 MB resident; only keep it alive while a
-        // lock-state OSD is actually enabled.
-        running: Config.options.osd.enableCapsLock || Config.options.osd.enableNumLock
-        onRunningChanged: {
-            if (!running) root.ready = false
-        }
-        command: ["python3", root.watcherPath]
+    function triggerCapsLock(): void {
+        root.capsLock = !root.capsLock;
+        root.showCapsLockOsd(root.capsLock);
+    }
 
-        stdout: SplitParser {
-            onRead: line => {
-                const text = line.trim();
-                if (text === "") return;
-                if (text === "ready") {
-                    root.ready = true;
-                    return;
+    function setCapsLock(state: bool): void {
+        root.capsLock = state;
+        root.showCapsLockOsd(root.capsLock);
+    }
+
+    function triggerNumLock(): void {
+        root.numLock = !root.numLock;
+        root.showNumLockOsd(root.numLock);
+    }
+
+    function setNumLock(state: bool): void {
+        root.numLock = state;
+        root.showNumLockOsd(root.numLock);
+    }
+
+    Process {
+        id: initProc
+        command: ["sh", "-c", "echo \"$(cat /sys/class/leds/*::capslock/brightness 2>/dev/null | head -1) $(cat /sys/class/leds/*::numlock/brightness 2>/dev/null | head -1)\""]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const parts = text.trim().split(/\s+/);
+                if (parts.length >= 2) {
+                    if (parts[0] !== "") root.capsLock = (parseInt(parts[0]) || 0) > 0;
+                    if (parts[1] !== "") root.numLock = (parseInt(parts[1]) || 0) > 0;
                 }
-                const parts = text.split(" ");
-                if (parts.length < 2) return;
-                const state = parseInt(parts[1]) > 0;
-                if (parts[0] === "caps") {
-                    root.capsLock = state;
-                    if (root.ready) root.showCapsLockOsd(state);
-                } else if (parts[0] === "num") {
-                    root.numLock = state;
-                    if (root.ready) root.showNumLockOsd(state);
-                }
+                root.ready = true;
             }
         }
+        Component.onCompleted: running = true
+    }
+
+    IpcHandler {
+        target: "keylocks"
+
+        function triggerCapsLock(): void { root.triggerCapsLock(); }
+        function triggerNumLock(): void { root.triggerNumLock(); }
+        function toggleCapsLock(): void { root.triggerCapsLock(); }
+        function toggleNumLock(): void { root.triggerNumLock(); }
+        function capsLock(): void { root.triggerCapsLock(); }
+        function numLock(): void { root.triggerNumLock(); }
+        function setCapsLock(state: bool): void { root.setCapsLock(state); }
+        function setNumLock(state: bool): void { root.setNumLock(state); }
+    }
+
+    IpcHandler {
+        target: "keyLocks"
+
+        function triggerCapsLock(): void { root.triggerCapsLock(); }
+        function triggerNumLock(): void { root.triggerNumLock(); }
+        function toggleCapsLock(): void { root.triggerCapsLock(); }
+        function toggleNumLock(): void { root.triggerNumLock(); }
+        function capsLock(): void { root.triggerCapsLock(); }
+        function numLock(): void { root.triggerNumLock(); }
+        function setCapsLock(state: bool): void { root.setCapsLock(state); }
+        function setNumLock(state: bool): void { root.setNumLock(state); }
+    }
+
+    IpcHandler {
+        target: "capslock"
+
+        function trigger(): void { root.triggerCapsLock(); }
+        function toggle(): void { root.triggerCapsLock(); }
+        function set(state: bool): void { root.setCapsLock(state); }
+    }
+
+    IpcHandler {
+        target: "numlock"
+
+        function trigger(): void { root.triggerNumLock(); }
+        function toggle(): void { root.triggerNumLock(); }
+        function set(state: bool): void { root.setNumLock(state); }
     }
 }
