@@ -88,7 +88,7 @@ ContentPage {
             }
 
             ConfigComboBox {
-                buttonIcon: "mood_heart"
+                buttonIcon: "sentiment_excited"
                 text: Translation.tr("Expressive font name")
                 searchable: true
                 previewFont: true
