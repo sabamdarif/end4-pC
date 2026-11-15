@@ -4,12 +4,17 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import qs.modules.common
+import qs.modules.common.functions
 
 /**
  * Tracks Caps Lock and Num Lock states and handles OSD trigger IPC.
  */
 Singleton {
     id: root
+
+    readonly property string watcherPath: FileUtils.trimFileProtocol(`${Directories.scriptPath}/keylocks/watch-led.py`)
+    readonly property string toggleScriptPath: FileUtils.trimFileProtocol(`${Directories.scriptPath}/keylocks/toggle-key.py`)
 
     property bool capsLock: false
     property bool numLock: false
@@ -19,39 +24,61 @@ Singleton {
     signal showNumLockOsd(bool state)
 
     function triggerCapsLock(): void {
-        root.capsLock = !root.capsLock;
-        root.showCapsLockOsd(root.capsLock);
+        toggleCapsProc.running = true;
     }
 
     function setCapsLock(state: bool): void {
-        root.capsLock = state;
-        root.showCapsLockOsd(root.capsLock);
+        if (root.ready && root.capsLock === state) return;
+        root.triggerCapsLock();
     }
 
     function triggerNumLock(): void {
-        root.numLock = !root.numLock;
-        root.showNumLockOsd(root.numLock);
+        toggleNumProc.running = true;
     }
 
     function setNumLock(state: bool): void {
-        root.numLock = state;
-        root.showNumLockOsd(root.numLock);
+        if (root.ready && root.numLock === state) return;
+        root.triggerNumLock();
     }
 
     Process {
-        id: initProc
-        command: ["sh", "-c", "echo \"$(cat /sys/class/leds/*::capslock/brightness 2>/dev/null | head -1) $(cat /sys/class/leds/*::numlock/brightness 2>/dev/null | head -1)\""]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const parts = text.trim().split(/\s+/);
-                if (parts.length >= 2) {
-                    if (parts[0] !== "") root.capsLock = (parseInt(parts[0]) || 0) > 0;
-                    if (parts[1] !== "") root.numLock = (parseInt(parts[1]) || 0) > 0;
+        id: watcher
+        running: Config.options.osd.enableCapsLock || Config.options.osd.enableNumLock
+        onRunningChanged: {
+            if (!running) root.ready = false;
+        }
+        command: ["python3", root.watcherPath]
+
+        stdout: SplitParser {
+            onRead: line => {
+                const text = line.trim();
+                if (text === "") return;
+                if (text === "ready") {
+                    root.ready = true;
+                    return;
                 }
-                root.ready = true;
+                const parts = text.split(" ");
+                if (parts.length < 2) return;
+                const state = parseInt(parts[1]) > 0;
+                if (parts[0] === "caps") {
+                    root.capsLock = state;
+                    if (root.ready) root.showCapsLockOsd(state);
+                } else if (parts[0] === "num") {
+                    root.numLock = state;
+                    if (root.ready) root.showNumLockOsd(state);
+                }
             }
         }
-        Component.onCompleted: running = true
+    }
+
+    Process {
+        id: toggleNumProc
+        command: ["python3", root.toggleScriptPath, "num"]
+    }
+
+    Process {
+        id: toggleCapsProc
+        command: ["python3", root.toggleScriptPath, "caps"]
     }
 
     IpcHandler {
