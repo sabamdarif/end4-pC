@@ -9,7 +9,6 @@ import qs.modules.common.functions
 
 ContentPage {
     id: page
-    forceWidth: true
 
     readonly property var defaultAppRoles: [
         { key: "browser", icon: "language",       label: Translation.tr("Web browser") },

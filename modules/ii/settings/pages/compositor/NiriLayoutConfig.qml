@@ -8,7 +8,6 @@ import qs.modules.common.widgets
 
 ContentPage {
     id: page
-    forceWidth: true
 
     property bool focusFollowsMouseOwnedByConfig: false
 

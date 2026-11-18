@@ -7,7 +7,6 @@ import qs.modules.common.widgets
 
 ContentPage {
     id: page
-    forceWidth: true
 
     property string selectedDnsConn: ""
     property string selectedDnsProvider: ""

@@ -7,7 +7,6 @@ import qs.modules.common.widgets
 
 ContentPage {
     id: page
-    forceWidth: true
 
     ContentSection {
         icon: "text_format"

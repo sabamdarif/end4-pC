@@ -9,7 +9,6 @@ import Quickshell
 
 ContentPage {
     id: page
-    forceWidth: true
 
     ContentSection {
         id: settingsClock

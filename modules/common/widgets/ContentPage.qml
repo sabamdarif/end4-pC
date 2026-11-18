@@ -6,12 +6,15 @@ import qs.modules.common.widgets
 StyledFlickable {
     id: root
     property real baseWidth: 600
+    property real maxContentWidth: 1250
     property bool forceWidth: false
     property real bottomContentPadding: 90
+    property real horizontalPadding: 24
 
     default property alias data: contentColumn.data
 
     clip: true
+    contentWidth: width
     contentHeight: contentColumn.implicitHeight + root.bottomContentPadding // Add some padding at the bottom
     implicitWidth: contentColumn.implicitWidth
 
@@ -42,13 +45,15 @@ StyledFlickable {
 
     ColumnLayout {
         id: contentColumn
-        width: root.forceWidth ? root.baseWidth : Math.max(root.baseWidth, implicitWidth)
+        width: root.forceWidth
+            ? root.baseWidth
+            : Math.min(Math.max(400, root.width > 0 ? root.width - (root.horizontalPadding * 2) : root.baseWidth), root.maxContentWidth)
         anchors {
             top: parent.top
+            topMargin: 20
             horizontalCenter: parent.horizontalCenter
-            margins: 20
         }
-        spacing: 30
+        spacing: 24
     }
 
 }

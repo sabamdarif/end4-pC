@@ -9,7 +9,6 @@ import Quickshell
 
 ContentPage {
     id: page
-    forceWidth: true
 
     property int lastSlideshowInterval: Config.options.wallpaperSelector.changeInterval > 0
         ? Config.options.wallpaperSelector.changeInterval

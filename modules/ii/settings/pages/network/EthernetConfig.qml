@@ -10,7 +10,6 @@ import qs.modules.common.widgets
 
 ContentPage {
     id: page
-    forceWidth: true
 
     Component.onCompleted: NetworkExtras.refresh()
 

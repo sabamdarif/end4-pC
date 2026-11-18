@@ -9,7 +9,6 @@ import qs.modules.common.functions
 
 ContentPage {
     id: page
-    forceWidth: true
 
     function autostartList() {
         return (NiriConfig.options.autostart ?? []).map(e => ({

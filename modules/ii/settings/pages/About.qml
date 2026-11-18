@@ -10,7 +10,6 @@ import qs.modules.common.widgets
 import qs.modules.common.functions
 
 ContentPage {
-    forceWidth: true
     bottomContentPadding: 35
 
     function runSystemUpdate() {

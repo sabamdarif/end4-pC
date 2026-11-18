@@ -7,7 +7,6 @@ import qs.modules.common.widgets
 
 ContentPage {
     id: page
-    forceWidth: true
 
     readonly property var activeWidgets: [
         ...(Config.options.bar.layouts.leftLayout ?? []),

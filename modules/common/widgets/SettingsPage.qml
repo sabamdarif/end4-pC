@@ -11,16 +11,16 @@ StyledFlickable {
     property string subtitle: ""
     property var tabs: []
     property int currentTab: 0
-    property real maxContentWidth: 760
+    property real maxContentWidth: 1250
     property real bottomContentPadding: 90
     property string wipFeature: ""
 
     default property alias data: sectionsColumn.data
     property alias headerActions: headerActionsContainer.data
 
-    width: parent ? parent.width : maxContentWidth
+    width: parent ? parent.width : (maxContentWidth > 0 ? maxContentWidth : 600)
     height: parent ? parent.height : 600
-    implicitWidth: maxContentWidth
+    implicitWidth: maxContentWidth > 0 ? maxContentWidth : 600
 
     clip: true
     contentWidth: width
@@ -53,7 +53,9 @@ StyledFlickable {
 
     ColumnLayout {
         id: contentColumn
-        width: Math.min(Math.max(root.width - 40, 200), root.maxContentWidth)
+        width: root.maxContentWidth > 0
+            ? Math.min(Math.max(root.width - 40, 200), root.maxContentWidth)
+            : Math.max(root.width - 40, 200)
         anchors {
             top: parent.top
             topMargin: 20

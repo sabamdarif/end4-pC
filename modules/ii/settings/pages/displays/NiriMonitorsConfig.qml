@@ -10,7 +10,6 @@ import qs.modules.common.models
 
 ContentPage {
     id: page
-    forceWidth: true
 
     NiriIncludeNotice {}
 

@@ -8,8 +8,6 @@ import qs.modules.common.widgets
 
 ContentPage {
     id: page
-    forceWidth: true
-    baseWidth: 720
 
     function saveScheme() {
         const name = customSchemeNameField.value.trim();

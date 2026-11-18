@@ -8,7 +8,6 @@ import qs.modules.common.widgets
 
 ContentPage {
     id: page
-    forceWidth: true
 
     // Show each date format as a live sample so the dropdown needs no explanation
     readonly property var dateFormatPresets: [

@@ -30,6 +30,7 @@ RowLayout {
     Layout.rightMargin: 8
 
     RowLayout {
+        id: labelRow
         spacing: 10
         visible: root.text !== ""
         OptionalMaterialSymbol {
@@ -39,6 +40,7 @@ RowLayout {
         StyledText {
             id: labelWidget
             Layout.fillWidth: true
+            Layout.minimumWidth: implicitWidth
             text: root.text
             color: Appearance.colors.colOnSecondaryContainer
             opacity: root.enabled ? 1 : 0.4

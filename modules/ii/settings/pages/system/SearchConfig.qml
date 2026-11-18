@@ -6,7 +6,6 @@ import qs.modules.common.widgets
 
 ContentPage {
     id: page
-    forceWidth: true
     bottomContentPadding: 15
 
     function toggleLocation(path, enabled) {

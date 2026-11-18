@@ -7,7 +7,6 @@ import qs.modules.common.widgets
 
 ContentPage {
     id: page
-    forceWidth: true
 
     readonly property BluetoothAdapter adapter: Bluetooth.defaultAdapter
     readonly property bool poweredOn: page.adapter?.enabled ?? false

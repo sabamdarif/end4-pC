@@ -10,7 +10,6 @@ import qs.modules.common.widgets
 
 ContentPage {
     id: page
-    forceWidth: true
 
     component SoundOverrideRow: ConfigRow {
         id: soundRow

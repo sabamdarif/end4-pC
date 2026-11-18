@@ -27,7 +27,6 @@ import qs.modules.common.functions
  */
 ContentPage {
     id: page
-    forceWidth: true
 
     property string searchText: ""
     // Key of the bind whose inline editor is open ("" = none)
