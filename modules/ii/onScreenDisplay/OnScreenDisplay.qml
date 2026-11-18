@@ -43,6 +43,7 @@ Scope {
     ]
 
     function triggerOsd() {
+        GlobalStates.osdIndicatorType = root.currentIndicator;
         GlobalStates.osdVolumeOpen = true;
         osdTimeout.restart();
     }
@@ -54,6 +55,7 @@ Scope {
         running: false
         onTriggered: {
             GlobalStates.osdVolumeOpen = false;
+            GlobalStates.osdIndicatorType = "";
             root.protectionMessage = "";
         }
     }
@@ -176,7 +178,7 @@ Scope {
 
             implicitWidth: columnLayout.implicitWidth
             implicitHeight: columnLayout.implicitHeight
-            visible: osdLoader.active
+            visible: osdLoader.active && !GlobalStates.dynamicIslandEnabled
 
             ColumnLayout {
                 id: columnLayout

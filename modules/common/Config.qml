@@ -381,13 +381,81 @@ Singleton {
                     property bool pushWindows: false
                 }
                 property bool bottom: false // Instead of top
-                property int cornerStyle: 4 // 0: Hug | 1: Float | 2: Plain rectangle | 3: M3 | 4: M3 Hug
+                property int cornerStyle: 4 // 0: Hug | 1: Float | 2: Dynamic Island | 3: M3 | 4: M3 Hug
                 property bool floatStyleShadow: true // Show shadow behind bar when cornerStyle == 1 (Float)
                 property string borderless: "pills"
                 property string topLeftIcon: "spark" // Options: "distro" or any icon name in ~/.config/quickshell/ii/assets/icons
                 property bool showBackground: true
                 property bool verbose: true
                 property bool vertical: false
+                property JsonObject dynamicIsland: JsonObject {
+                    property string visualizerStyle: "dots" // "dots", "wave", "none"
+                    property bool showMediaControls: false
+                    property bool expandOnHover: true
+                    property int hoverExpandDelay: 250
+                    property bool autoExpand: true
+                    property int autoExpandDuration: 4500
+                    property bool splitMode: false
+                    property bool secondIsland: true
+                    property list<string> secondIslandKinds: ["call", "recording", "timer", "download", "media"]
+                    property list<string> pinned: ["weather"]
+                    property bool lyrics: true
+                    property bool lyricsPill: true
+                    property bool lyricsCard: true
+                    property bool albumTint: true
+                    property bool uniformHeight: false
+                    property bool albumColors: true
+                    property bool privacyIndicators: true
+                    property bool privacyIndicatorAnimated: false
+                    property bool displayActivity: true
+                    property list<string> privacyIgnoredApps: ["easyeffects", "quickshell", "cava"]
+                    property bool clipboard: true
+                    property bool screenshots: true
+                    property bool bluetooth: true
+                    property bool audioOutput: true
+                    property bool weatherAlerts: true
+                    property bool systemLoad: true
+                    property int systemLoadThreshold: 90
+                    property bool updatesIndicator: true
+                    property bool liveActivities: true
+                    property bool network: true
+                    property bool anchor: true
+                    property bool anchorDate: true
+                    property string anchorFont: "expressive" // expressive | numbers | monospace | main
+                    property bool anchorAlwaysTime: false
+                    property bool watchRatings: false
+                    property bool callActivity: true
+                    property string callLeaveShortcut: ""
+                    property int memoryThreshold: 90
+                    property int gpuThreshold: 90
+                    property real volumeMax: 1.5
+                    property bool hoverExpandsMessages: true
+                    property bool fullscreenPeek: true
+                    property bool fullscreenFeedback: true
+                    property bool fullscreenCatchUp: true
+                    property bool fullscreenMessages: true
+                    property int fullscreenHoverDelay: 350 // ms
+                    property list<string> fullscreenGameClasses: ["steam_app_", "gamescope", "minecraft", "retroarch"]
+                    property bool fullscreenGameQuiet: true
+                    property string downloadDetection: "files"
+                    property int shelfExpireHours: 2
+                    property bool shelfClearOnBoot: true
+                    property string linkDownloadDir: ""
+                    property list<string> mutedConversations: []
+                    property list<string> mutedConversationsUntil: []
+                    property list<string> priorityNotificationApps: ["whatsapp", "telegram", "discord"]
+                    property list<string> caseArtDevices: []
+                    property bool pauseOnHeadphonesDisconnect: true
+                    property bool followHeadphones: true
+                    property bool hardware: true
+                    property int slowChargerWatts: 25
+                    property int hotTemperature: 90
+                    property string leftWidget: "none"
+                    property string rightWidget: "none"
+                    property string leftPin: "auto"
+                    property string middlePin: "auto"
+                    property string rightPin: "auto"
+                }
                 property JsonObject resources: JsonObject {
                     property string style: "filled"
                     property bool showValue: false

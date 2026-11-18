@@ -25,9 +25,29 @@ Singleton {
     property bool screenUnlockFailed: false
     property bool sessionOpen: false
     property bool wallpaperSelectorOpen: false
+    readonly property bool dynamicIslandEnabled: (Config.options?.bar?.cornerStyle === 2)
+        || ((Config.options?.bar?.layouts?.leftLayout ?? []).indexOf("dynamicIsland") !== -1)
+        || ((Config.options?.bar?.layouts?.middleLayout ?? []).indexOf("dynamicIsland") !== -1)
+        || ((Config.options?.bar?.layouts?.rightLayout ?? []).indexOf("dynamicIsland") !== -1)
+    property string osdIndicatorType: "volume"
+    property bool diSessionOpen: false
+    property bool islandExpanded: false
+    property bool barCenterOnly: false
+    property bool superDown: false
+    property bool startupLockPending: false
+    property real lastBackingY: 0
+    property string diForceView: ""
+    property bool diForceCycle: false
     property bool workspaceShowNumbers: false
     property string settingsPage: ""
     property Item currentPageInstance: null
+
+    function openSettingsAt(targetPage: string): void {
+        root.settingsOpen = true
+        Qt.callLater(() => {
+            root.settingsPage = targetPage
+        })
+    }
     property list<real> visualizerPoints: []
     property bool desktopWidgetKeyboardFocus: false
     property bool desktopMenuOpen: false

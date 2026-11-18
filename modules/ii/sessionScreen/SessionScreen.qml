@@ -295,15 +295,24 @@ Scope {
         target: "session"
 
         function toggle(): void {
-            GlobalStates.sessionOpen = !GlobalStates.sessionOpen;
+            if (GlobalStates.dynamicIslandEnabled) {
+                GlobalStates.diSessionOpen = !GlobalStates.diSessionOpen;
+            } else {
+                GlobalStates.sessionOpen = !GlobalStates.sessionOpen;
+            }
         }
 
         function close(): void {
             GlobalStates.sessionOpen = false;
+            GlobalStates.diSessionOpen = false;
         }
 
         function open(): void {
-            GlobalStates.sessionOpen = true;
+            if (GlobalStates.dynamicIslandEnabled) {
+                GlobalStates.diSessionOpen = true;
+            } else {
+                GlobalStates.sessionOpen = true;
+            }
         }
     }
 }

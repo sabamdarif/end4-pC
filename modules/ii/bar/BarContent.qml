@@ -32,9 +32,15 @@ Item {
         return result
     }
 
-    readonly property var effectiveLeftLayout:   filterLayout(Config.options.bar.layouts.leftLayout)
-    readonly property var effectiveMiddleLayout: filterLayout(Config.options.bar.layouts.middleLayout)
-    readonly property var effectiveRightLayout:  filterLayout(Config.options.bar.layouts.rightLayout)
+    readonly property var effectiveLeftLayout:   GlobalStates.dynamicIslandEnabled ? [] : filterLayout(Config.options.bar.layouts.leftLayout)
+    readonly property var effectiveMiddleLayout: {
+        let list = filterLayout(Config.options.bar.layouts.middleLayout)
+        if (GlobalStates.dynamicIslandEnabled) {
+            return ["dynamicIsland"]
+        }
+        return list
+    }
+    readonly property var effectiveRightLayout:  GlobalStates.dynamicIslandEnabled ? [] : filterLayout(Config.options.bar.layouts.rightLayout)
 
     function getWidgetUrl(name) {
         if (!name) return "";
@@ -49,7 +55,7 @@ Item {
 
     function shouldPaintMaterialPill(name) {
         if (!root.isMaterial) return false;
-        const blacklist = ["workspaces", "divisor", "powerButton", "docktoPanel", "activeWindow"];
+        const blacklist = ["workspaces", "divisor", "powerButton", "docktoPanel", "activeWindow", "dynamicIsland"];
         if (blacklist.includes(name)) {
             return false;
         }
@@ -317,6 +323,26 @@ Item {
             width: root.isMaterial ? (centerMaterialPill.implicitWidth + (root.isMaterialHug && root.effectiveMiddleLayout.length > 0 ? (centerLeftOutwardCorner.implicitSize + centerRightOutwardCorner.implicitSize) : 0)) : middleRow.implicitWidth
             height: parent.height
 
+            // Dynamic Island — left
+            Loader {
+                id: diLeftWidget
+                anchors.right: absoluteCenter.left
+                anchors.rightMargin: 8
+                anchors.verticalCenter: absoluteCenter.verticalCenter
+                active: false
+                source: ""
+            }
+
+            // Dynamic Island — right
+            Loader {
+                id: diRightWidget
+                anchors.left: absoluteCenter.right
+                anchors.leftMargin: 8
+                anchors.verticalCenter: absoluteCenter.verticalCenter
+                active: false
+                source: ""
+            }
+
             RoundCorner {
                 id: centerLeftOutwardCorner
                 glass: true
@@ -332,6 +358,7 @@ Item {
             // Material pill wrapper
             Rectangle {
                 id: centerMaterialPill
+                objectName: "dynamicIslandSurface"
                 WindowGlass {
                     anchors.fill: parent
                     glassEnabled: (parent?.color.a ?? 0) > 0
@@ -360,7 +387,7 @@ Item {
                     spacing: 3
 
                     Repeater {
-                        model: root.effectiveMiddleLayout
+                        model: root.isMaterial ? root.effectiveMiddleLayout : []
                         delegate: middleMaterialGroupDelegate
                     }
 
@@ -369,6 +396,7 @@ Item {
                         BarGroup {
                             Layout.fillHeight: true
                             currentIndex: index
+                            paintBackground: modelData !== "dynamicIsland"
                             totalCount: root.effectiveMiddleLayout.length
                             paintMaterialPill: root.shouldPaintMaterialPill(modelData)
                             bgColor: root.getMaterialPillColor(modelData)
@@ -406,7 +434,7 @@ Item {
                 spacing: Config.options.bar.borderless === "transparent" ? -7 : 2
 
                 Repeater {
-                    model: root.effectiveMiddleLayout
+                    model: root.isMaterial ? [] : root.effectiveMiddleLayout
                     delegate: middleBarGroupDelegate
                 }
 
@@ -415,10 +443,10 @@ Item {
                     BarGroup {
                         Layout.fillHeight: true
                         currentIndex: index
+                        paintBackground: modelData !== "dynamicIsland"
                         totalCount: root.effectiveMiddleLayout.length
                         Loader {
                             Layout.fillHeight: true
-                            asynchronous: true
                             source: root.getWidgetUrl(modelData)
                             onLoaded: {
                                 if (item && item.hasOwnProperty("mirrored"))

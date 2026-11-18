@@ -10,6 +10,7 @@ Item {
     property int totalCount: 0
     property bool isMaterial: Config.options.bar.cornerStyle === 3 || Config.options.bar.cornerStyle === 4
     property bool paintMaterialPill: false
+    property bool paintBackground: true
     property real padding: (root.isMaterial && !root.paintMaterialPill) ? 0 : 5
     property color bgColor: Appearance.colors.colPrimaryContainer
 
@@ -50,15 +51,17 @@ Item {
             leftMargin: root.vertical ? 4 : 0
             rightMargin: root.vertical ? 4 : 0
         }
-        color: (root.isMaterial && !root.paintMaterialPill)
+        color: !root.paintBackground
             ? "transparent"
-            : (root.isMaterial && root.paintMaterialPill)
-                ? root.bgColor
-                : (Config.options?.bar.borderless === "transparent"
-                    ? "transparent"
-                    : Config.options.bar.cornerStyle === 2
-                        ? Appearance.colors.colLayer0
-                        : Appearance.colors.colLayer1)
+            : (root.isMaterial && !root.paintMaterialPill)
+                ? "transparent"
+                : (root.isMaterial && root.paintMaterialPill)
+                    ? root.bgColor
+                    : (Config.options?.bar.borderless === "transparent"
+                        ? "transparent"
+                        : Config.options.bar.cornerStyle === 2
+                            ? Appearance.colors.colLayer0
+                            : Appearance.colors.colLayer1)
 
         topLeftRadius: (root.isMaterial && root.paintMaterialPill) ? root.fullRadius : (Config.options?.bar.borderless === "separated" ? root.fullRadius : root.startRadius)
         bottomLeftRadius: (root.isMaterial && root.paintMaterialPill) ? root.fullRadius : (Config.options?.bar.borderless === "separated" ? root.fullRadius : root.vertical ? root.endRadius : root.startRadius)

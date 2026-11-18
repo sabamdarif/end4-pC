@@ -1,14 +1,20 @@
 import QtQuick
+import qs
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 
 MaterialSymbol {
     id: root
+    property color contentColor: Appearance.colors.colOnLayer1
+    property bool contentColorOverridden: false
     readonly property bool showUnreadCount: Config.options.bar.indicators.notifications.showUnreadCount
+    readonly property bool isDi: GlobalStates.dynamicIslandEnabled && Config.options.bar.dynamicIsland.rightWidget === "systemIcons"
+
     text: Notifications.silent ? "notifications_paused" : "notifications"
     iconSize: Appearance.font.pixelSize.larger
-    color: [3, 4].includes(Config.options.bar.cornerStyle) ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnLayer1
+    readonly property bool isMaterial: Config.options.bar.cornerStyle === 3 || Config.options.bar.cornerStyle === 4
+    color: root.contentColorOverridden ? root.contentColor : (root.isDi ? Appearance.colors.colOnLayer1 : (root.isMaterial ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnLayer1))
 
     Rectangle {
         id: notifPing
@@ -20,7 +26,7 @@ MaterialSymbol {
             topMargin: root.showUnreadCount ? 0 : 3
         }
         radius: Appearance.rounding.full
-        color: [3, 4].includes(Config.options.bar.cornerStyle) ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnLayer0
+        color: root.isDi ? Appearance.colors.colOnLayer1 : (root.isMaterial ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnLayer0)
         z: 1
 
         implicitHeight: root.showUnreadCount ? Math.max(notificationCounterText.implicitWidth, notificationCounterText.implicitHeight) : 8
@@ -31,7 +37,7 @@ MaterialSymbol {
             visible: root.showUnreadCount
             anchors.centerIn: parent
             font.pixelSize: Appearance.font.pixelSize.smallest
-            color: [3, 4].includes(Config.options.bar.cornerStyle) ? Appearance.colors.colPrimaryContainer : Appearance.colors.colLayer0
+            color: root.isDi ? Appearance.colors.colOnPrimary : (root.isMaterial ? Appearance.colors.colPrimaryContainer : Appearance.colors.colLayer0)
             text: Notifications.unread
         }
     }

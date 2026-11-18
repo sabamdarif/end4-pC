@@ -14,6 +14,10 @@ Item {
     property bool showDate: Config.options.bar.verbose
     property bool vertical: Config.options.bar.vertical
     property bool isMaterial: Config.options.bar.cornerStyle === 3 || Config.options.bar.cornerStyle === 4
+    property color contentColor: Appearance.colors.colOnLayer1
+    property bool contentColorOverridden: false
+    property bool isDi: GlobalStates.dynamicIslandEnabled && Config.options.bar.dynamicIsland.rightWidget === "systemIcons"
+    readonly property color iconColor: root.contentColorOverridden ? root.contentColor : (root.isDi ? Appearance.colors.colOnLayer1 : (root.isMaterial ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnLayer1))
 
     // Only the Android quick panel has a user-managed tile list. Other styles have a fixed
     // set of toggles, so a null list here means "do not filter".
@@ -46,7 +50,7 @@ Item {
             MaterialSymbol {
                 text: Audio.sink?.audio?.muted ? "volume_off" : "volume_up"
                 iconSize: Appearance.font.pixelSize.larger
-                color: root.isMaterial ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnLayer1
+                color: root.iconColor
             }
         }
         Revealer {
@@ -54,7 +58,7 @@ Item {
             MaterialSymbol {
                 text: "mic_off"
                 iconSize: Appearance.font.pixelSize.larger
-                color: root.isMaterial ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnLayer1
+                color: root.iconColor
             }
         }
         Revealer {
@@ -62,7 +66,7 @@ Item {
             MaterialSymbol {
                 text: Config.options.light.night.automatic ? "night_sight_auto" : "bedtime"
                 iconSize: Appearance.font.pixelSize.larger
-                color: root.isMaterial ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnLayer1
+                color: root.iconColor
             }
         }
         Revealer {
@@ -70,24 +74,24 @@ Item {
             MaterialSymbol {
                 text: "coffee"
                 iconSize: Appearance.font.pixelSize.larger
-                color: root.isMaterial ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnLayer1
+                color: root.iconColor
             }
         }
         Loader {
             source: "XkbIndicator.qml"
-            onLoaded: item.color = root.isMaterial ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnLayer1
+            onLoaded: item.color = root.iconColor
         }
         MaterialSymbol {
             visible: root.hasToggle("network")
             text: Network.materialSymbol
             iconSize: Appearance.font.pixelSize.larger
-            color: root.isMaterial ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnLayer1
+            color: root.iconColor
         }
         MaterialSymbol {
             visible: BluetoothStatus.available && root.hasToggle("bluetooth")
             text: BluetoothStatus.connected ? "bluetooth_connected" : BluetoothStatus.enabled ? "bluetooth" : "bluetooth_disabled"
             iconSize: Appearance.font.pixelSize.larger
-            color: root.isMaterial ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnLayer1
+            color: root.iconColor
         }
         Loader {
             id: notifLoader

@@ -265,7 +265,11 @@ Scope {
         target: "bar"
 
         function toggle(): void {
-            GlobalStates.barOpen = !GlobalStates.barOpen
+            if (GlobalStates.dynamicIslandEnabled) {
+                GlobalStates.islandExpanded = !GlobalStates.islandExpanded
+            } else {
+                GlobalStates.barOpen = !GlobalStates.barOpen
+            }
         }
 
         function close(): void {

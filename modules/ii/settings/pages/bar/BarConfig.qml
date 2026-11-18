@@ -43,6 +43,7 @@ ContentPage {
         { id: "visualizer",        name: Translation.tr("Visualizer"),           icon: "graphic_eq" },
         { id: "xkbIndicator",      name: Translation.tr("Keyboard Layout"),      icon: "keyboard" },
         { id: "divisor",           name: Translation.tr("Divider"),              icon: "horizontal_distribute" },
+        { id: "dynamicIsland",     name: Translation.tr("Dynamic Island"),       icon: "nest_wifi_pro" },
     ]
 
     function availableFor() {
@@ -87,11 +88,10 @@ ContentPage {
                 currentValue: Config.options.bar.cornerStyle
                 onSelected: newValue => { Config.options.bar.cornerStyle = newValue; }
                 options: [
-                    { displayName: Translation.tr("Hug"),     icon: "line_curve", value: 0 },
-                    { displayName: Translation.tr("Float"),   icon: "view_day",   value: 1 },
-                    { displayName: Translation.tr("Islands"), icon: "crop_3_2",   value: 2 },
-                    { displayName: Translation.tr("M3"),      icon: "interests",  value: 3 },
-                    { displayName: Translation.tr("M3 Hug"),  icon: "category",   value: 4 }
+                    { displayName: Translation.tr("Hug"),    icon: "line_curve", value: 0 },
+                    { displayName: Translation.tr("Float"),  icon: "view_day",   value: 1 },
+                    { displayName: Translation.tr("M3"),     icon: "interests",  value: 3 },
+                    { displayName: Translation.tr("M3 Hug"), icon: "category",   value: 4 }
                 ]
             }
 
@@ -427,6 +427,192 @@ ContentPage {
                 text: Translation.tr("Screen sharing")
                 checked: Config.options.bar.privacy.showScreenShare
                 onCheckedChanged: { Config.options.bar.privacy.showScreenShare = checked; }
+            }
+        }
+    }
+
+    ContentSection {
+        icon: "nest_wifi_pro"
+        shape: MaterialShape.Shape.Cookie4Sided
+        title: Translation.tr("Dynamic Island")
+
+        GroupedList {
+            ConfigSelectionArray {
+                text: Translation.tr("Left pin")
+                icon: "dock_to_right"
+                currentValue: Config.options.bar.dynamicIsland.leftPin ?? "auto"
+                onSelected: newValue => { Config.options.bar.dynamicIsland.leftPin = newValue; }
+                options: [
+                    { displayName: Translation.tr("Auto"),          icon: "magic_button",     value: "auto" },
+                    { displayName: Translation.tr("Battery"),       icon: "battery_5_bar",    value: "battery" },
+                    { displayName: Translation.tr("Network Speed"), icon: "speed",            value: "networkSpeed" },
+                    { displayName: Translation.tr("Workspaces"),    icon: "view_carousel",    value: "workspaces" },
+                    { displayName: Translation.tr("Weather"),       icon: "partly_cloudy_day",value: "weather" },
+                    { displayName: Translation.tr("Date"),          icon: "calendar_today",   value: "glance" },
+                    { displayName: Translation.tr("None"),          icon: "block",            value: "none" }
+                ]
+            }
+            ConfigSelectionArray {
+                text: Translation.tr("Middle pin")
+                icon: "center_focus_strong"
+                currentValue: Config.options.bar.dynamicIsland.middlePin ?? "auto"
+                onSelected: newValue => { Config.options.bar.dynamicIsland.middlePin = newValue; }
+                options: [
+                    { displayName: Translation.tr("Auto"),          icon: "magic_button",     value: "auto" },
+                    { displayName: Translation.tr("Clock"),         icon: "schedule",         value: "clock" },
+                    { displayName: Translation.tr("Date & Clock"),  icon: "calendar_month",   value: "dateClock" },
+                    { displayName: Translation.tr("Media"),         icon: "music_note",       value: "media" },
+                    { displayName: Translation.tr("None"),          icon: "block",            value: "none" }
+                ]
+            }
+            ConfigSelectionArray {
+                text: Translation.tr("Right pin")
+                icon: "dock_to_left"
+                currentValue: Config.options.bar.dynamicIsland.rightPin ?? "auto"
+                onSelected: newValue => { Config.options.bar.dynamicIsland.rightPin = newValue; }
+                options: [
+                    { displayName: Translation.tr("Auto"),          icon: "magic_button",     value: "auto" },
+                    { displayName: Translation.tr("System icons"),  icon: "settings",         value: "systemIcons" },
+                    { displayName: Translation.tr("Battery"),       icon: "battery_5_bar",    value: "battery" },
+                    { displayName: Translation.tr("Weather"),       icon: "partly_cloudy_day",value: "weather" },
+                    { displayName: Translation.tr("None"),          icon: "block",            value: "none" }
+                ]
+            }
+        }
+
+        ContentSubsection {
+            Layout.topMargin: 10
+            title: Translation.tr("How it behaves")
+            GroupedList {
+                ConfigSwitch {
+                    buttonIcon: "open_in_full"
+                    text: Translation.tr("Expand on hover")
+                    checked: Config.options.bar.dynamicIsland.expandOnHover
+                    onCheckedChanged: { Config.options.bar.dynamicIsland.expandOnHover = checked; }
+                }
+                ConfigSwitch {
+                    buttonIcon: "notifications_active"
+                    text: Translation.tr("Expand automatically for important events")
+                    checked: Config.options.bar.dynamicIsland.autoExpand
+                    onCheckedChanged: { Config.options.bar.dynamicIsland.autoExpand = checked; }
+                }
+                ConfigSwitch {
+                    buttonIcon: "height"
+                    text: Translation.tr("Same height for every expanded card")
+                    checked: Config.options.bar.dynamicIsland.uniformHeight
+                    onCheckedChanged: { Config.options.bar.dynamicIsland.uniformHeight = checked; }
+                }
+                ConfigSwitch {
+                    buttonIcon: "splitscreen_right"
+                    text: Translation.tr("Second island for concurrent activity")
+                    checked: Config.options.bar.dynamicIsland.secondIsland
+                    onCheckedChanged: { Config.options.bar.dynamicIsland.secondIsland = checked; }
+                }
+                ConfigSwitch {
+                    buttonIcon: "shield_lock"
+                    text: Translation.tr("Privacy indicators")
+                    checked: Config.options.bar.dynamicIsland.privacyIndicators
+                    onCheckedChanged: { Config.options.bar.dynamicIsland.privacyIndicators = checked; }
+                }
+            }
+        }
+
+        ContentSubsection {
+            title: Translation.tr("Media & Visualizer")
+            GroupedList {
+                ConfigSelectionArray {
+                    text: Translation.tr("Visualizer style")
+                    icon: "graphic_eq"
+                    currentValue: Config.options.bar.dynamicIsland.visualizerStyle
+                    onSelected: newValue => { Config.options.bar.dynamicIsland.visualizerStyle = newValue; }
+                    options: [
+                        { displayName: Translation.tr(""),     icon: "block",      value: "none" },
+                        { displayName: Translation.tr("Dots"), icon: "steppers",   value: "dots" },
+                        { displayName: Translation.tr("Wave"), icon: "ssid_chart", value: "wave" }
+                    ]
+                }
+                ConfigSwitch {
+                    buttonIcon: "play_circle"
+                    text: Translation.tr("Show media controls in pill")
+                    checked: Config.options.bar.dynamicIsland.showMediaControls
+                    onCheckedChanged: { Config.options.bar.dynamicIsland.showMediaControls = checked; }
+                }
+                ConfigSwitch {
+                    buttonIcon: "lyrics"
+                    text: Translation.tr("Show lyrics in pill")
+                    checked: Config.options.bar.dynamicIsland.lyricsPill
+                    onCheckedChanged: { Config.options.bar.dynamicIsland.lyricsPill = checked; }
+                }
+                ConfigSwitch {
+                    buttonIcon: "palette"
+                    text: Translation.tr("Album cover tone background")
+                    checked: Config.options.bar.dynamicIsland.albumTint
+                    onCheckedChanged: { Config.options.bar.dynamicIsland.albumTint = checked; }
+                }
+            }
+        }
+
+        ContentSubsection {
+            Layout.topMargin: 10
+            title: Translation.tr("Pinned views")
+            GroupedList {
+                ConfigSwitch {
+                    buttonIcon: "partly_cloudy_day"
+                    text: Translation.tr("Pin Weather")
+                    checked: (Config.options.bar.dynamicIsland.pinned ?? []).includes("weather")
+                    onCheckedChanged: {
+                        let pins = [...(Config.options.bar.dynamicIsland.pinned ?? [])]
+                        if (checked && !pins.includes("weather")) pins.push("weather")
+                        else if (!checked) pins = pins.filter(p => p !== "weather")
+                        Config.options.bar.dynamicIsland.pinned = pins
+                    }
+                }
+                ConfigSwitch {
+                    buttonIcon: "music_note"
+                    text: Translation.tr("Pin Media player")
+                    checked: (Config.options.bar.dynamicIsland.pinned ?? []).includes("media")
+                    onCheckedChanged: {
+                        let pins = [...(Config.options.bar.dynamicIsland.pinned ?? [])]
+                        if (checked && !pins.includes("media")) pins.push("media")
+                        else if (!checked) pins = pins.filter(p => p !== "media")
+                        Config.options.bar.dynamicIsland.pinned = pins
+                    }
+                }
+                ConfigSwitch {
+                    buttonIcon: "download"
+                    text: Translation.tr("Pin Downloads")
+                    checked: (Config.options.bar.dynamicIsland.pinned ?? []).includes("download")
+                    onCheckedChanged: {
+                        let pins = [...(Config.options.bar.dynamicIsland.pinned ?? [])]
+                        if (checked && !pins.includes("download")) pins.push("download")
+                        else if (!checked) pins = pins.filter(p => p !== "download")
+                        Config.options.bar.dynamicIsland.pinned = pins
+                    }
+                }
+            }
+        }
+
+        ContentSubsection {
+            title: Translation.tr("When to warn")
+            GroupedList {
+                ConfigSpinBox {
+                    icon: "electric_bolt"
+                    text: Translation.tr("Warn about a slow charger below (W)")
+                    value: Config.options.bar.dynamicIsland.slowChargerWatts
+                    from: 5
+                    to: 100
+                    stepSize: 5
+                    onValueChanged: { Config.options.bar.dynamicIsland.slowChargerWatts = value; }
+                }
+                ConfigSpinBox {
+                    icon: "device_thermostat"
+                    text: Translation.tr("Warn about heat above (°C)")
+                    value: Config.options.bar.dynamicIsland.hotTemperature
+                    from: 60
+                    to: 105
+                    stepSize: 1
+                    onValueChanged: { Config.options.bar.dynamicIsland.hotTemperature = value; }
+                }
             }
         }
     }
