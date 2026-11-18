@@ -12,6 +12,7 @@ import qs.modules.common.functions
 Item {
     id: root
     implicitHeight: Appearance.sizes.barHeight
+    height: implicitHeight
     width: parent.width
     readonly property real barPadding: 0
     readonly property bool isMaterial: Config.options.bar.cornerStyle === 3 || Config.options.bar.cornerStyle === 4
@@ -29,6 +30,9 @@ Item {
         if (!trayHasItems) result = result.filter(name => name !== "sysTray")
         if (!Privacy.active) result = result.filter(name => name !== "privacyIndicator")
         if (!LiveWallpaper.available) result = result.filter(name => name !== "liveWallpaper")
+        if (!GlobalStates.dynamicIslandEnabled) {
+            result = result.map(name => name === "dynamicIsland" ? "clockWidget" : name)
+        }
         return result
     }
 

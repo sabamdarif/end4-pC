@@ -42,7 +42,6 @@ ContentPage {
         { id: "visualizer",        name: Translation.tr("Visualizer"),           icon: "graphic_eq" },
         { id: "xkbIndicator",      name: Translation.tr("Keyboard Layout"),      icon: "keyboard" },
         { id: "divisor",           name: Translation.tr("Divider"),              icon: "horizontal_distribute" },
-        { id: "dynamicIsland",     name: Translation.tr("Dynamic Island"),       icon: "nest_wifi_pro" },
     ]
 
     function availableFor() {

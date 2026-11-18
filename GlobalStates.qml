@@ -26,9 +26,6 @@ Singleton {
     property bool sessionOpen: false
     property bool wallpaperSelectorOpen: false
     readonly property bool dynamicIslandEnabled: (Config.options?.bar?.cornerStyle === 2)
-        || ((Config.options?.bar?.layouts?.leftLayout ?? []).indexOf("dynamicIsland") !== -1)
-        || ((Config.options?.bar?.layouts?.middleLayout ?? []).indexOf("dynamicIsland") !== -1)
-        || ((Config.options?.bar?.layouts?.rightLayout ?? []).indexOf("dynamicIsland") !== -1)
     property string osdIndicatorType: "volume"
     property bool diSessionOpen: false
     property bool islandExpanded: false
