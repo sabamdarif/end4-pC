@@ -13,6 +13,11 @@ Rectangle {
     required property string sublabel
     property color sublabelColor: Appearance.colors.colOnSurfaceVariant
     property int cardWidth: 150 
+    property bool invertThresholds: false
+
+    readonly property bool isCritical: invertThresholds
+        ? (root.value > 0 && root.value < 0.5)
+        : (root.value > 0.9)
 
     width: cardWidth
     height: 96 
@@ -21,6 +26,12 @@ Rectangle {
     color: Appearance.colors.colSurfaceContainerLow
 
     function usageColor(v) {
+        if (invertThresholds) {
+            if (v <= 0) return Appearance.colors.colPrimary
+            if (v < 0.5) return Appearance.colors.colError
+            if (v < 0.8) return Appearance.colors.colTertiary || Appearance.m3colors.m3tertiary
+            return Appearance.colors.colPrimary
+        }
         if (v > 0.9) return Appearance.colors.colError
         if (v > 0.6) return Appearance.colors.colTertiary || Appearance.m3colors.m3tertiary
         return Appearance.colors.colPrimary
@@ -90,6 +101,6 @@ Rectangle {
         }
     }
 
-    border.width: root.value > 0.9 ? 1.5 : 0
-    border.color: root.value > 0.9 ? Appearance.colors.colError : "transparent"
+    border.width: root.isCritical ? 1.5 : 0
+    border.color: root.isCritical ? Appearance.colors.colError : "transparent"
 }

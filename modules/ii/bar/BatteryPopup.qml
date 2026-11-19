@@ -89,6 +89,7 @@ StyledPopup {
                 iconText: "heart_check"
                 iconShape: MaterialShape.Shape.Clover4Leaf
                 value: Battery.health / 100
+                invertThresholds: true
                 sublabel: root.healthLabel(Battery.health)
                     + (Battery.chargeCycles > 0
                         ? ` · ${Battery.chargeCycles} ${Translation.tr("cycles")}`
