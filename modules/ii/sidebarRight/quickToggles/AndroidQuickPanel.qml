@@ -97,7 +97,7 @@ AbstractQuickPanel {
                             isUnused: false
                             baseCellWidth: root.baseCellWidth
                             baseCellHeight: root.baseCellHeight
-                            spacing: root.spacing
+                            cellSpacing: root.spacing
                             onOpenAudioOutputDialog: root.openAudioOutputDialog()
                             onOpenAudioInputDialog: root.openAudioInputDialog()
                             onOpenBluetoothDialog: root.openBluetoothDialog()
@@ -178,7 +178,7 @@ AbstractQuickPanel {
                                 isUnused: true
                                 baseCellWidth: root.baseCellWidth
                                 baseCellHeight: root.baseCellHeight
-                                spacing: root.spacing
+                                cellSpacing: root.spacing
                             }
                         }
                     }

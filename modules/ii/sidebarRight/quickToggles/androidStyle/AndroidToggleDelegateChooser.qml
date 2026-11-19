@@ -1,22 +1,27 @@
 pragma ComponentBehavior: Bound
 import qs.services
 import qs.modules.common
+import qs.modules.common.models.quickToggles
 import qs.modules.common.widgets
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Bluetooth
+import Quickshell.Services.UPower
 
-DelegateChooser {
+AndroidQuickToggleButton {
     id: root
-    property bool editMode: false
-    required property real baseCellWidth
-    required property real baseCellHeight
-    required property real spacing
-    required property int startingIndex
-    property var dropIndicatorRef: null 
-    property bool isUnused: false
-    property var gridRef: null 
+
+    required property int index
+    required property var modelData
+
+    property int startingIndex: 0
+
+    buttonIndex: root.startingIndex + index
+    buttonData: modelData
+    expandedSize: (modelData?.size ?? 1) > 1
+    cellSize: modelData?.size ?? 1
+
     signal openAudioOutputDialog()
     signal openAudioInputDialog()
     signal openBluetoothDialog()
@@ -24,207 +29,51 @@ DelegateChooser {
     signal openNightLightDialog()
     signal openWifiDialog()
 
-    role: "type"
+    onOpenMenu: {
+        switch (modelData?.type) {
+            case "audio": root.openAudioOutputDialog(); break;
+            case "bluetooth": root.openBluetoothDialog(); break;
+            case "idleInhibitor": root.openKeepAwakeDialog(); break;
+            case "mic": root.openAudioInputDialog(); break;
+            case "network": root.openWifiDialog(); break;
+            case "nightLight": root.openNightLightDialog(); break;
+        }
+    }
 
-    DelegateChoice { roleValue: "audio"; AndroidAudioToggle {
-        required property int index
-        required property var modelData
-        buttonIndex: root.startingIndex + index
-        buttonData: modelData
-        editMode: root.editMode
-        gridRef: root.gridRef
-        expandedSize: modelData.size > 1
-        baseCellWidth: root.baseCellWidth
-        baseCellHeight: root.baseCellHeight
-        cellSpacing: root.spacing
-        cellSize: modelData.size
-        dropIndicatorRef: root.dropIndicatorRef
-        isUnused: root.isUnused
-        onOpenMenu: root.openAudioOutputDialog()
-    } }
+    Component { id: audioComp; AudioToggle {} }
+    Component { id: bluetoothComp; BluetoothToggle {} }
+    Component { id: warpComp; CloudflareWarpToggle {} }
+    Component { id: pickerComp; ColorPickerToggle {} }
+    Component { id: darkModeComp; DarkModeToggle {} }
+    Component { id: idleComp; IdleInhibitorToggle {} }
+    Component { id: micComp; MicToggle {} }
+    Component { id: networkComp; NetworkToggle {} }
+    Component { id: nightLightComp; NightLightToggle {} }
+    Component { id: notifComp; NotificationToggle {} }
+    Component { id: powerComp; PowerProfilesToggle {} }
+    Component { id: snipComp; ScreenSnipToggle {} }
 
-    DelegateChoice { roleValue: "bluetooth"; AndroidBluetoothToggle {
-        required property int index
-        required property var modelData
-        buttonIndex: root.startingIndex + index
-        buttonData: modelData
-        editMode: root.editMode
-        gridRef: root.gridRef
-        expandedSize: modelData.size > 1
-        baseCellWidth: root.baseCellWidth
-        baseCellHeight: root.baseCellHeight
-        cellSpacing: root.spacing
-        cellSize: modelData.size
-        dropIndicatorRef: root.dropIndicatorRef
-        isUnused: root.isUnused
-        onOpenMenu: root.openBluetoothDialog()
-    } }
+    Loader {
+        id: modelLoader
+        active: !!root.modelData?.type
+        sourceComponent: {
+            switch (root.modelData?.type) {
+                case "audio": return audioComp;
+                case "bluetooth": return bluetoothComp;
+                case "cloudflareWarp": return warpComp;
+                case "colorPicker": return pickerComp;
+                case "darkMode": return darkModeComp;
+                case "idleInhibitor": return idleComp;
+                case "mic": return micComp;
+                case "network": return networkComp;
+                case "nightLight": return nightLightComp;
+                case "notifications": return notifComp;
+                case "powerProfile": return powerComp;
+                case "screenSnip": return snipComp;
+                default: return null;
+            }
+        }
+    }
 
-    DelegateChoice { roleValue: "cloudflareWarp"; AndroidCloudflareWarpToggle {
-        required property int index
-        required property var modelData
-        buttonIndex: root.startingIndex + index
-        buttonData: modelData
-        editMode: root.editMode
-        gridRef: root.gridRef
-        expandedSize: modelData.size > 1
-        baseCellWidth: root.baseCellWidth
-        baseCellHeight: root.baseCellHeight
-        cellSpacing: root.spacing
-        cellSize: modelData.size
-        dropIndicatorRef: root.dropIndicatorRef
-        isUnused: root.isUnused
-    } }
-
-    DelegateChoice { roleValue: "colorPicker"; AndroidColorPickerToggle {
-        required property int index
-        required property var modelData
-        buttonIndex: root.startingIndex + index
-        buttonData: modelData
-        editMode: root.editMode
-        gridRef: root.gridRef
-        expandedSize: modelData.size > 1
-        baseCellWidth: root.baseCellWidth
-        baseCellHeight: root.baseCellHeight
-        cellSpacing: root.spacing
-        cellSize: modelData.size
-        dropIndicatorRef: root.dropIndicatorRef
-        isUnused: root.isUnused
-    } }
-
-    DelegateChoice { roleValue: "darkMode"; AndroidDarkModeToggle {
-        required property int index
-        required property var modelData
-        buttonIndex: root.startingIndex + index
-        buttonData: modelData
-        editMode: root.editMode
-        gridRef: root.gridRef
-        expandedSize: modelData.size > 1
-        baseCellWidth: root.baseCellWidth
-        baseCellHeight: root.baseCellHeight
-        cellSpacing: root.spacing
-        cellSize: modelData.size
-        dropIndicatorRef: root.dropIndicatorRef
-        isUnused: root.isUnused
-    } }
-
-
-
-    DelegateChoice { roleValue: "idleInhibitor"; AndroidIdleInhibitorToggle {
-        required property int index
-        required property var modelData
-        buttonIndex: root.startingIndex + index
-        buttonData: modelData
-        editMode: root.editMode
-        gridRef: root.gridRef
-        expandedSize: modelData.size > 1
-        baseCellWidth: root.baseCellWidth
-        baseCellHeight: root.baseCellHeight
-        cellSpacing: root.spacing
-        cellSize: modelData.size
-        dropIndicatorRef: root.dropIndicatorRef
-        isUnused: root.isUnused
-        onOpenMenu: root.openKeepAwakeDialog()
-    } }
-
-    DelegateChoice { roleValue: "mic"; AndroidMicToggle {
-        required property int index
-        required property var modelData
-        buttonIndex: root.startingIndex + index
-        buttonData: modelData
-        editMode: root.editMode
-        gridRef: root.gridRef
-        expandedSize: modelData.size > 1
-        baseCellWidth: root.baseCellWidth
-        baseCellHeight: root.baseCellHeight
-        cellSpacing: root.spacing
-        cellSize: modelData.size
-        isUnused: root.isUnused
-        dropIndicatorRef: root.dropIndicatorRef
-        onOpenMenu: root.openAudioInputDialog()
-    } }
-
-
-    DelegateChoice { roleValue: "network"; AndroidNetworkToggle {
-        required property int index
-        required property var modelData
-        buttonIndex: root.startingIndex + index
-        buttonData: modelData
-        editMode: root.editMode
-        gridRef: root.gridRef
-        expandedSize: modelData.size > 1
-        baseCellWidth: root.baseCellWidth
-        baseCellHeight: root.baseCellHeight
-        cellSpacing: root.spacing
-        cellSize: modelData.size
-        isUnused: root.isUnused
-        dropIndicatorRef: root.dropIndicatorRef
-        onOpenMenu: root.openWifiDialog()
-    } }
-
-    DelegateChoice { roleValue: "nightLight"; AndroidNightLightToggle {
-        required property int index
-        required property var modelData
-        buttonIndex: root.startingIndex + index
-        buttonData: modelData
-        editMode: root.editMode
-        gridRef: root.gridRef
-        expandedSize: modelData.size > 1
-        baseCellWidth: root.baseCellWidth
-        baseCellHeight: root.baseCellHeight
-        cellSpacing: root.spacing
-        cellSize: modelData.size
-        isUnused: root.isUnused
-        dropIndicatorRef: root.dropIndicatorRef
-        onOpenMenu: root.openNightLightDialog()
-    } }
-
-    DelegateChoice { roleValue: "notifications"; AndroidNotificationToggle {
-        required property int index
-        required property var modelData
-        buttonIndex: root.startingIndex + index
-        buttonData: modelData
-        editMode: root.editMode
-        gridRef: root.gridRef
-        expandedSize: modelData.size > 1
-        baseCellWidth: root.baseCellWidth
-        baseCellHeight: root.baseCellHeight
-        cellSpacing: root.spacing
-        cellSize: modelData.size
-        dropIndicatorRef: root.dropIndicatorRef
-        isUnused: root.isUnused
-    } }
-
-
-    DelegateChoice { roleValue: "powerProfile"; AndroidPowerProfileToggle {
-        required property int index
-        required property var modelData
-        buttonIndex: root.startingIndex + index
-        buttonData: modelData
-        editMode: root.editMode
-        gridRef: root.gridRef
-        expandedSize: modelData.size > 1
-        baseCellWidth: root.baseCellWidth
-        baseCellHeight: root.baseCellHeight
-        cellSpacing: root.spacing
-        cellSize: modelData.size
-        dropIndicatorRef: root.dropIndicatorRef
-        isUnused: root.isUnused
-    } }
-
-    DelegateChoice { roleValue: "screenSnip"; AndroidScreenSnipToggle {
-        required property int index
-        required property var modelData
-        buttonIndex: root.startingIndex + index
-        buttonData: modelData
-        editMode: root.editMode
-        gridRef: root.gridRef
-        expandedSize: modelData.size > 1
-        baseCellWidth: root.baseCellWidth
-        baseCellHeight: root.baseCellHeight
-        cellSpacing: root.spacing
-        cellSize: modelData.size
-        dropIndicatorRef: root.dropIndicatorRef
-        isUnused: root.isUnused
-    } }
+    toggleModel: modelLoader.item
 }

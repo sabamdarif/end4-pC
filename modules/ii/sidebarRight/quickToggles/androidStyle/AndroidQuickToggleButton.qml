@@ -208,15 +208,20 @@ GroupButton {
                     const sceneY = centroid.scenePosition.y;
                     const nearest = findNearest(sceneX, sceneY);
                     if (nearest) {
-                        const toggleList = Config.options.sidebar.quickToggles.android.toggles;
                         const myType = root.buttonData.type;
                         const sibType = nearest.buttonData.type;
-                        const myIdx = toggleList.findIndex(t => t.type === myType);
-                        const sibIdx = toggleList.findIndex(t => t.type === sibType);
+                        const list = Array.from(Config.options.sidebar.quickToggles.android.toggles).map(t => ({ type: t.type, size: t.size }));
+                        const myIdx = list.findIndex(t => t.type === myType);
+                        const sibIdx = list.findIndex(t => t.type === sibType);
                         if (myIdx !== -1 && sibIdx !== -1 && myIdx !== sibIdx) {
-                            const temp = toggleList[myIdx];
-                            toggleList[myIdx] = toggleList[sibIdx];
-                            toggleList[sibIdx] = temp;
+                            const [movedItem] = list.splice(myIdx, 1);
+                            const nearestScene = nearest.mapToItem(null, 0, 0);
+                            const myScene = root.mapToItem(null, 0, 0);
+                            const goesAfter = nearestScene.x > myScene.x || nearestScene.y > myScene.y;
+                            let targetIdx = list.findIndex(t => t.type === sibType);
+                            if (goesAfter) targetIdx++;
+                            list.splice(targetIdx, 0, movedItem);
+                            Config.options.sidebar.quickToggles.android.toggles = list;
                         }
                     }
                 }
@@ -256,10 +261,12 @@ GroupButton {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
         onClicked: {
-            const toggleList = Config.options.sidebar.quickToggles.android.toggles;
+            const list = Array.from(Config.options.sidebar.quickToggles.android.toggles).map(t => ({ type: t.type, size: t.size }));
             const buttonType = root.buttonData.type;
-            if (!toggleList.find(t => t.type === buttonType))
-                toggleList.push({ type: buttonType, size: 1 });
+            if (!list.find(t => t.type === buttonType)) {
+                list.push({ type: buttonType, size: 1 });
+                Config.options.sidebar.quickToggles.android.toggles = list;
+            }
         }
     }
 
@@ -298,10 +305,13 @@ GroupButton {
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             onClicked: {
-                const toggleList = Config.options.sidebar.quickToggles.android.toggles;
+                const list = Array.from(Config.options.sidebar.quickToggles.android.toggles).map(t => ({ type: t.type, size: t.size }));
                 const buttonType = root.buttonData.type;
-                const idx = toggleList.findIndex(t => t.type === buttonType);
-                if (idx !== -1) toggleList.splice(idx, 1);
+                const idx = list.findIndex(t => t.type === buttonType);
+                if (idx !== -1) {
+                    list.splice(idx, 1);
+                    Config.options.sidebar.quickToggles.android.toggles = list;
+                }
             }
         }
     }
@@ -357,10 +367,13 @@ GroupButton {
                 const steps = Math.round(dx / root.baseCellWidth);
                 const newSize = Math.max(1, Math.min(3, pressSize + steps));
                 if (newSize !== root.cellSize) {
-                    const toggleList = Config.options.sidebar.quickToggles.android.toggles;
+                    const list = Array.from(Config.options.sidebar.quickToggles.android.toggles).map(t => ({ type: t.type, size: t.size }));
                     const buttonType = root.buttonData.type;
-                    const idx = toggleList.findIndex(t => t.type === buttonType);
-                    if (idx !== -1) toggleList[idx].size = newSize;
+                    const idx = list.findIndex(t => t.type === buttonType);
+                    if (idx !== -1) {
+                        list[idx].size = newSize;
+                        Config.options.sidebar.quickToggles.android.toggles = list;
+                    }
                 }
             }
         }
