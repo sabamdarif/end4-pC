@@ -1,6 +1,7 @@
 pragma Singleton
 pragma ComponentBehavior: Bound
 
+import QtQuick
 import Quickshell
 import Quickshell.Bluetooth
 import Quickshell.Io
@@ -49,5 +50,29 @@ Singleton {
         // rfkill-blocked adapter won't power on — unblock first
         Quickshell.execDetached(["bash", "-c", "rfkill unblock bluetooth"]);
         adapter.enabled = !adapter.enabled;
+    }
+
+    function trustDevice(device) {
+        if (!device) return;
+        try { device.trusted = true; } catch (e) {}
+        Quickshell.execDetached(["bluetoothctl", "trust", device.address]);
+    }
+
+    Instantiator {
+        model: Bluetooth.devices
+        delegate: Connections {
+            required property BluetoothDevice modelData
+            target: modelData
+            function onPairedChanged() {
+                if (modelData.paired && !modelData.trusted) {
+                    root.trustDevice(modelData);
+                }
+            }
+            Component.onCompleted: {
+                if (modelData.paired && !modelData.trusted) {
+                    root.trustDevice(modelData);
+                }
+            }
+        }
     }
 }

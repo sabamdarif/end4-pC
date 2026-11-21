@@ -16,6 +16,31 @@ DialogListItem {
 
     onClicked: expanded = !expanded
     altAction: () => expanded = !expanded
+
+    Connections {
+        target: root.device
+        function onPairedChanged() {
+            const device = root.device;
+            if (device && device.paired && !device.connected) {
+                device.connect();
+            }
+        }
+    }
+
+    function handleConnect() {
+        const device = root.device;
+        if (!device) return;
+        if (device.connected) {
+            device.disconnect();
+        } else if (device.pairing) {
+            device.cancelPair();
+        } else if (!device.paired) {
+            device.pair();
+        } else {
+            BluetoothStatus.trustDevice(device);
+            device.connect();
+        }
+    }
     
     component ActionButton: DialogButton {
         colBackground: Appearance.colors.colPrimary
@@ -98,35 +123,28 @@ DialogListItem {
                 Layout.fillWidth: true
             }
             ActionButton {
-                readonly property bool p: root.device?.paired ?? false
-                colBackground: p ? Appearance.colors.colError : ColorUtils.transparentize(Appearance.colors.colLayer3, 1)
-                colBackgroundHover: p ? Appearance.colors.colErrorHover : ColorUtils.transparentize(Appearance.colors.colLayer3, 1)
-                colRipple: p ? Appearance.colors.colErrorActive : Appearance.colors.colLayer3Hover
-                colText: p ? Appearance.colors.colOnError : Appearance.colors.colPrimary
+                visible: root.device?.paired ?? false
+                colBackground: Appearance.colors.colError
+                colBackgroundHover: Appearance.colors.colErrorHover
+                colRipple: Appearance.colors.colErrorActive
+                colText: Appearance.colors.colOnError
 
-                buttonText: p ? Translation.tr("Forget") : Translation.tr("Always connect")
+                buttonText: Translation.tr("Forget")
                 onClicked: {
-                    const device = root.device;
-                    if (!device) return;
-                    if (device.paired) {
-                        device.forget();
-                    } else {
-                        device.pair();
-                    }
+                    root.device?.forget();
                 }
             }
             ActionButton {
-                buttonText: root.device?.connected ? Translation.tr("Disconnect") : Translation.tr("Connect")
-
-                onClicked: {
+                buttonText: {
                     const device = root.device;
-                    if (!device) return;
-                    if (device.connected) {
-                        device.disconnect();
-                    } else {
-                        device.connect();
-                    }
+                    if (!device) return Translation.tr("Connect");
+                    if (device.connected) return Translation.tr("Disconnect");
+                    if (device.pairing) return Translation.tr("Pairing…");
+                    if (device.state === BluetoothDeviceState.Connecting) return Translation.tr("Connecting…");
+                    return Translation.tr("Connect");
                 }
+
+                onClicked: root.handleConnect()
             }
         }
         Item {
