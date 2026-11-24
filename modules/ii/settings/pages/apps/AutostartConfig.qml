@@ -11,8 +11,9 @@ ContentPage {
     id: page
 
     function autostartList() {
-        return (NiriConfig.options.autostart ?? []).map(e => ({
-            command: e?.command ?? "",
+        // Assigning the array rebuilds every delegate, including pending edits.
+        return (NiriConfig.options.autostart ?? []).map((e, index) => ({
+            command: autostartRepeater.itemAt(index)?.commandDraft ?? e?.command ?? "",
             enabled: e?.enabled ?? true
         }))
     }
@@ -89,11 +90,13 @@ ContentPage {
                 }
 
                 Repeater {
+                    id: autostartRepeater
                     model: NiriConfig.options.autostart
                     delegate: RowLayout {
                         id: autostartRow
                         required property var modelData
                         required property int index
+                        property alias commandDraft: autostartCmdArea.text
                         Layout.fillWidth: true
                         spacing: 10
 
