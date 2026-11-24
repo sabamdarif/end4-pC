@@ -22,14 +22,14 @@ ContentPage {
         const list = page.autostartList()
         let found = false
         for (const entry of list) {
-            if (!entry.command.includes("cliphist store")) continue
+            const c = entry.command.replace(/\s+-max-items(?:\s+|=)\d+\b/g, "")
+            if (!/\bcliphist\s+store\b/.test(c)) continue
             found = true
-            let c = entry.command.replace(/\s+-max-items\s+\d+/g, "")
-            entry.command = c.replace("cliphist store", `cliphist store -max-items ${n}`)
+            entry.command = c.replace(/\bcliphist\s+store\b/, `cliphist -max-items ${n} store`)
         }
         if (!found) {
-            list.push({ command: `wl-paste --type text --watch cliphist store -max-items ${n}`, enabled: true })
-            list.push({ command: `wl-paste --type image --watch cliphist store -max-items ${n}`, enabled: true })
+            list.push({ command: `wl-paste --type text --watch cliphist -max-items ${n} store`, enabled: true })
+            list.push({ command: `wl-paste --type image --watch cliphist -max-items ${n} store`, enabled: true })
         }
         NiriConfig.options.autostart = list
     }
@@ -65,7 +65,7 @@ ContentPage {
                 StyledText {
                     Layout.fillWidth: true
                     text: Translation.tr("The shell trims history past the limit on every refresh. The autostart entry also passes it to the watcher (%1), which caps future inserts on its own.")
-                        .arg(`cliphist store -max-items ${Config.options.cliphist.maxEntries}`)
+                        .arg(`cliphist -max-items ${Config.options.cliphist.maxEntries} store`)
                     font.pixelSize: Appearance.font.pixelSize.smaller
                     color: Appearance.colors.colSubtext
                     wrapMode: Text.Wrap

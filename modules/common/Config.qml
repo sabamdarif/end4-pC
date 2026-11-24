@@ -158,7 +158,7 @@ Singleton {
 
             property JsonObject cliphist: JsonObject {
                 // Enforced by services/Cliphist.qml on every refresh; also applied
-                // via `cliphist store -max-items N` when the watcher is in autostart.
+                // via `cliphist -max-items N store` when the watcher is in autostart.
                 property int maxEntries: 700
             }
 
