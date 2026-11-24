@@ -38,21 +38,12 @@ ContentPage {
 
         GroupedList {
             ConfigSwitch {
-                id: wifiEnableSwitch
                 buttonIcon: "wifi"
                 text: Translation.tr("Enable Wi-Fi")
                 checked: Network.wifiEnabled
                 onCheckedChanged: {
                     if (checked !== Network.wifiEnabled)
                         Network.enableWifi(checked)
-                }
-                // Clicking breaks the `checked` binding — re-sync when the
-                // state changes elsewhere (sidebar toggle, nmcli, hardware)
-                Connections {
-                    target: Network
-                    function onWifiEnabledChanged() {
-                        wifiEnableSwitch.checked = Network.wifiEnabled
-                    }
                 }
             }
             RowLayout {

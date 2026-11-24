@@ -16,7 +16,7 @@ RippleButton {
     implicitHeight: contentItem.implicitHeight + 8 
     font.pixelSize: Appearance.font.pixelSize.small
     
-    onClicked: checked = !checked
+    checkable: true
 
     contentItem: RowLayout {
         spacing: 10
@@ -52,8 +52,7 @@ RippleButton {
             down: root.down
             Layout.fillWidth: false
             checked: root.checked
-            onClicked: root.clicked()
+            onClicked: root.click()
         }
     }
 }
-

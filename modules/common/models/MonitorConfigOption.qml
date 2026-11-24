@@ -54,11 +54,13 @@ NestableObject {
     }
 
     function logicalWidth(m) {
-        return (m.transform === 1 || m.transform === 3) ? m.height : m.width
+        const width = (m.transform === 1 || m.transform === 3) ? m.height : m.width
+        return Math.round(width / (m.scale > 0 ? m.scale : 1))
     }
 
     function logicalHeight(m) {
-        return (m.transform === 1 || m.transform === 3) ? m.width : m.height
+        const height = (m.transform === 1 || m.transform === 3) ? m.width : m.height
+        return Math.round(height / (m.scale > 0 ? m.scale : 1))
     }
 
     Process {
