@@ -34,6 +34,29 @@ Item {
     implicitWidth:  vertical ? Appearance.sizes.verticalBarWidth : Math.min(colLayout.implicitWidth + 6, 280)
     implicitHeight: vertical ? iconItem.implicitHeight : Appearance.sizes.barHeight
 
+    MouseArea {
+        id: ruleMouseArea
+        anchors.fill: parent
+        acceptedButtons: Qt.RightButton
+        property bool menuOpen: false
+        onClicked: menuOpen = !menuOpen
+    }
+    StyledPopup {
+        hoverTarget: ruleMouseArea
+        active: ruleMouseArea.menuOpen
+        RippleButtonWithIcon {
+            materialIcon: "splitscreen"
+            mainText: Translation.tr("Add window rule…")
+            enabled: root.activeAppClass !== ""
+            onClicked: {
+                ruleMouseArea.menuOpen = false;
+                GlobalStates.settingsOpen = true;
+                GlobalStates.settingsPage = "window-rules";
+                NiriConfig.pendingWindowRule = { app_id: root.activeAppClass };
+            }
+        }
+    }
+
     // Vertical
     Item {
         id: iconItem

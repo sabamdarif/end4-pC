@@ -127,6 +127,17 @@ Temporary images are private and removed when the dialog closes. Saved images
 contain the password, so share them carefully. Sharing uses the saved profile,
 not unsaved edits.
 
+### Window rules
+
+Settings → Windows and Workspaces → Window rules manages niri rules. Pick an
+open window or enter app ID/title regular expressions, then set opening mode,
+opacity, column width, capture blocking, clipping or scroll factor. Match fields
+must all match the same window. Niri validates rules before they are saved.
+Right-click the active window title in either bar to start a rule for that app.
+Use **Setup** if prompted to add the generated includes to your niri config;
+your original config is backed up. Rules are stored in
+`$XDG_CONFIG_HOME/niri/qssettings/settings.json` and generated as `windowrules.kdl`.
+
 > [!NOTE]
 > The install steps above only assume [niri](https://github.com/YaLTeR/niri) and quickshell. Everything in the tables below is a program the shell itself spawns at runtime; Arch package names are given. Packages marked (AUR) are not in the official repositories.
 

@@ -61,9 +61,9 @@ NoticeBox {
     Process {
         id: includeCheckProc
         // ok = all include lines present and nothing but blanks/comments/includes after them
-        command: ["sh", "-c", `cfg="$HOME/.config/niri/config.kdl"
+        command: ["sh", "-c", `cfg="\${XDG_CONFIG_HOME:-$HOME/.config}/niri/config.kdl"
 missing=0
-for f in shell outputs autostart binds; do
+for f in shell outputs autostart binds windowrules; do
     grep -qs "qssettings/$f.kdl" "$cfg" || missing=1
 done
 if [ "$missing" = 1 ]; then echo missing
@@ -79,11 +79,11 @@ fi`]
         id: setupIncludesProc
         // Backs up config.kdl, strips qssettings include lines wherever they are,
         // re-appends them at the end. Writes through symlinks (stow-managed dotfiles).
-        command: ["sh", "-c", `cfg="$HOME/.config/niri/config.kdl"
+        command: ["sh", "-c", `cfg="\${XDG_CONFIG_HOME:-$HOME/.config}/niri/config.kdl"
 cp -L "$cfg" "$cfg.backup.$(date +%s)" || exit 1
 tmp=$(mktemp)
-grep -vE 'qssettings/(shell|outputs|autostart|binds)\\.kdl' "$cfg" > "$tmp"
-printf '\\ninclude optional=true "qssettings/shell.kdl"\\ninclude optional=true "qssettings/outputs.kdl"\\ninclude optional=true "qssettings/autostart.kdl"\\ninclude optional=true "qssettings/binds.kdl"\\n' >> "$tmp"
+grep -vE 'qssettings/(shell|outputs|autostart|binds|windowrules)\\.kdl' "$cfg" > "$tmp"
+printf '\\ninclude optional=true "qssettings/shell.kdl"\\ninclude optional=true "qssettings/outputs.kdl"\\ninclude optional=true "qssettings/autostart.kdl"\\ninclude optional=true "qssettings/binds.kdl"\\ninclude optional=true "qssettings/windowrules.kdl"\\n' >> "$tmp"
 cat "$tmp" > "$cfg"
 rm -f "$tmp"`]
         onExited: includeCheckProc.running = true

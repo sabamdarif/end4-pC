@@ -56,3 +56,7 @@ ShellRoot {
         self.load_components(["modules/ii/settings/pages/network/WifiQrDialog.qml",
                               "modules/ii/settings/pages/network/WifiConfig.qml",
                               "modules/ii/settings/pages/network/WifiProfileEditor.qml"])
+
+    def test_window_rule_components_load(self):
+        self.load_components(["modules/ii/settings/pages/compositor/WindowRuleEditorDialog.qml",
+                              "modules/ii/settings/pages/compositor/WindowRulesConfig.qml"])
