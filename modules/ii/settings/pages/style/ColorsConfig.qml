@@ -225,7 +225,7 @@ ContentPage {
             // Templates parsed live from ~/.config/matugen/config.toml.orig — nothing hardcoded
             Rectangle {
                 Layout.fillWidth: true
-                implicitHeight: matugenTogglesCol.implicitHeight + 28
+                implicitHeight: Math.max(64, matugenTogglesCol.implicitHeight + 28)
                 radius: Appearance.rounding.normal
                 color: Appearance.colors.colLayer1
 
@@ -237,6 +237,8 @@ ContentPage {
                     StyledText {
                         visible: SystemTheming.matugenTemplates.length === 0
                         Layout.leftMargin: 8
+                        Layout.fillHeight: SystemTheming.matugenTemplates.length === 0
+                        verticalAlignment: Text.AlignVCenter
                         text: Translation.tr("No matugen config found (~/.config/matugen/config.toml)")
                         color: Appearance.colors.colSubtext
                     }

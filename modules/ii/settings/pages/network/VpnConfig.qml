@@ -17,7 +17,7 @@ ContentPage {
 
         Rectangle {
             Layout.fillWidth: true
-            implicitHeight: vpnCol.implicitHeight + 20
+            implicitHeight: Math.max(64, vpnCol.implicitHeight + 20)
             radius: Appearance.rounding.normal
             color: Appearance.colors.colLayer1
 
@@ -29,6 +29,8 @@ ContentPage {
                 StyledText {
                     visible: NetworkExtras.vpnConnections.length === 0
                     Layout.leftMargin: 8
+                    Layout.fillHeight: NetworkExtras.vpnConnections.length === 0
+                    verticalAlignment: Text.AlignVCenter
                     text: Translation.tr("No VPN connections configured")
                     color: Appearance.colors.colSubtext
                 }

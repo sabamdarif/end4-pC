@@ -20,7 +20,7 @@ ContentPage {
 
         Rectangle {
             Layout.fillWidth: true
-            implicitHeight: ethCol.implicitHeight + 28
+            implicitHeight: Math.max(64, ethCol.implicitHeight + 28)
             radius: Appearance.rounding.normal
             color: Appearance.colors.colLayer1
 
@@ -32,6 +32,8 @@ ContentPage {
                 StyledText {
                     visible: NetworkExtras.ethernetDevices.length === 0
                     Layout.leftMargin: 8
+                    Layout.fillHeight: NetworkExtras.ethernetDevices.length === 0
+                    verticalAlignment: Text.AlignVCenter
                     text: Translation.tr("No wired network devices")
                     color: Appearance.colors.colSubtext
                 }

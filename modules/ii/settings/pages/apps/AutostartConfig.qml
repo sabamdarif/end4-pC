@@ -73,7 +73,7 @@ ContentPage {
 
         Rectangle {
             Layout.fillWidth: true
-            implicitHeight: autostartCol.implicitHeight + 20
+            implicitHeight: Math.max(64, autostartCol.implicitHeight + 20)
             radius: Appearance.rounding.normal
             color: Appearance.colors.colLayer1
 
@@ -85,6 +85,8 @@ ContentPage {
                 StyledText {
                     visible: (NiriConfig.options.autostart ?? []).length === 0
                     Layout.leftMargin: 8
+                    Layout.fillHeight: (NiriConfig.options.autostart ?? []).length === 0
+                    verticalAlignment: Text.AlignVCenter
                     text: Translation.tr("No autostart entries")
                     color: Appearance.colors.colSubtext
                 }
@@ -219,7 +221,7 @@ ContentPage {
 
         Rectangle {
             Layout.fillWidth: true
-            implicitHeight: niriAutostartCol.implicitHeight + 20
+            implicitHeight: Math.max(64, niriAutostartCol.implicitHeight + 20)
             radius: Appearance.rounding.normal
             color: Appearance.colors.colLayer1
 
@@ -231,6 +233,8 @@ ContentPage {
                 StyledText {
                     visible: SystemAutostart.niriEntries.length === 0
                     Layout.leftMargin: 8
+                    Layout.fillHeight: SystemAutostart.niriEntries.length === 0
+                    verticalAlignment: Text.AlignVCenter
                     text: Translation.tr("No spawn-at-startup entries in your niri config")
                     color: Appearance.colors.colSubtext
                 }
@@ -334,7 +338,7 @@ ContentPage {
 
         Rectangle {
             Layout.fillWidth: true
-            implicitHeight: xdgAutostartCol.implicitHeight + 20
+            implicitHeight: Math.max(64, xdgAutostartCol.implicitHeight + 20)
             radius: Appearance.rounding.normal
             color: Appearance.colors.colLayer1
 
@@ -346,6 +350,8 @@ ContentPage {
                 StyledText {
                     visible: SystemAutostart.xdgEntries.length === 0
                     Layout.leftMargin: 8
+                    Layout.fillHeight: SystemAutostart.xdgEntries.length === 0
+                    verticalAlignment: Text.AlignVCenter
                     text: Translation.tr("No .desktop autostart entries")
                     color: Appearance.colors.colSubtext
                 }

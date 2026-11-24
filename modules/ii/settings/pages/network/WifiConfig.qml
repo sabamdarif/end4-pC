@@ -75,7 +75,7 @@ ContentPage {
         // children only) — card + ColumnLayout + Repeater instead
         Rectangle {
             Layout.fillWidth: true
-            implicitHeight: wifiListCol.implicitHeight + 20
+            implicitHeight: Math.max(64, wifiListCol.implicitHeight + 20)
             radius: Appearance.rounding.normal
             color: Appearance.colors.colLayer1
 
@@ -87,6 +87,8 @@ ContentPage {
                 StyledText {
                     visible: Network.friendlyWifiNetworks.length === 0
                     Layout.leftMargin: 8
+                    Layout.fillHeight: Network.friendlyWifiNetworks.length === 0
+                    verticalAlignment: Text.AlignVCenter
                     text: Network.wifiEnabled ? Translation.tr("No networks found") : Translation.tr("Wi-Fi is disabled")
                     color: Appearance.colors.colSubtext
                 }
@@ -227,7 +229,7 @@ ContentPage {
 
         Rectangle {
             Layout.fillWidth: true
-            implicitHeight: savedListCol.implicitHeight + 20
+            implicitHeight: Math.max(64, savedListCol.implicitHeight + 20)
             radius: Appearance.rounding.normal
             color: Appearance.colors.colLayer1
 
@@ -239,6 +241,8 @@ ContentPage {
                 StyledText {
                     visible: NetworkExtras.wifiConnections.length === 0
                     Layout.leftMargin: 8
+                    Layout.fillHeight: NetworkExtras.wifiConnections.length === 0
+                    verticalAlignment: Text.AlignVCenter
                     text: Translation.tr("No saved Wi-Fi networks")
                     color: Appearance.colors.colSubtext
                 }

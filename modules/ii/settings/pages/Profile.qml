@@ -249,7 +249,7 @@ ContentPage {
             // children only) — card + ColumnLayout + Repeater instead
             Rectangle {
                 Layout.fillWidth: true
-                implicitHeight: usersCol.implicitHeight + 20
+                implicitHeight: Math.max(64, usersCol.implicitHeight + 20)
                 radius: Appearance.rounding.normal
                 color: Appearance.colors.colLayer1
 
@@ -261,6 +261,8 @@ ContentPage {
                     StyledText {
                         visible: Users.users.length === 0
                         Layout.leftMargin: 8
+                        Layout.fillHeight: Users.users.length === 0
+                        verticalAlignment: Text.AlignVCenter
                         text: Translation.tr("No users found")
                         color: Appearance.colors.colSubtext
                     }

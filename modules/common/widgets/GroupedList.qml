@@ -25,7 +25,7 @@ Item {
                 readonly property bool isFirst: index === 0
                 readonly property bool isLast: index === root.items.length - 1
                 Layout.fillWidth: true
-                implicitHeight: (root.items[index]?.implicitHeight ?? 0) + root.itemVerticalPadding
+                implicitHeight: Math.max(64, (root.items[index]?.implicitHeight ?? 0) + root.itemVerticalPadding)
                 color: root.bgcolor
 
                 WindowGlass {

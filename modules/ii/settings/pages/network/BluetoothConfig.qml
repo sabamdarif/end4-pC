@@ -93,7 +93,7 @@ ContentPage {
         // only), so use a card with a ColumnLayout and a Repeater instead
         Rectangle {
             Layout.fillWidth: true
-            implicitHeight: availableCol.implicitHeight + 20
+            implicitHeight: Math.max(64, availableCol.implicitHeight + 20)
             radius: Appearance.rounding.normal
             color: Appearance.colors.colLayer1
 
@@ -105,6 +105,8 @@ ContentPage {
                 StyledText {
                     visible: BluetoothStatus.unpairedDevices.length === 0
                     Layout.leftMargin: 8
+                    Layout.fillHeight: BluetoothStatus.unpairedDevices.length === 0
+                    verticalAlignment: Text.AlignVCenter
                     text: page.poweredOn ? Translation.tr("No devices found") : Translation.tr("Bluetooth is off")
                     color: Appearance.colors.colSubtext
                 }
@@ -187,7 +189,7 @@ ContentPage {
 
         Rectangle {
             Layout.fillWidth: true
-            implicitHeight: savedCol.implicitHeight + 20
+            implicitHeight: Math.max(64, savedCol.implicitHeight + 20)
             radius: Appearance.rounding.normal
             color: Appearance.colors.colLayer1
 
@@ -199,6 +201,8 @@ ContentPage {
                 StyledText {
                     visible: page.savedDevices.length === 0
                     Layout.leftMargin: 8
+                    Layout.fillHeight: page.savedDevices.length === 0
+                    verticalAlignment: Text.AlignVCenter
                     text: Translation.tr("No paired devices")
                     color: Appearance.colors.colSubtext
                 }
