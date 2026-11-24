@@ -95,6 +95,13 @@ shell.qml -> panelFamilies/ -> modules/ii/ -> modules/common/ and services/ -> s
 - `defaults/`: default user-facing content.
 - `translations/`: translation catalogs and tooling.
 
+### Settings storage
+
+- `Directories.shellConfig` is `$XDG_CONFIG_HOME/qssettings`, with `config.json`,
+  `actions/`, and `sounds/`. UI links use `Directories.shellConfigPath`, not a literal path.
+- Shell helper scripts read `$XDG_CONFIG_HOME/qssettings/config.json`, with the normal
+  `$HOME/.config` fallback. Niri settings stay under `$XDG_CONFIG_HOME/niri/qssettings`.
+
 ### Settings navigation
 
 `modules/ii/settings/SettingsPages.qml` is the single registry for the settings window's

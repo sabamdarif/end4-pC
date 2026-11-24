@@ -95,10 +95,22 @@ Only pull when the working tree is clean and there are no unpushed local commits
 
 - **Settings:** Below 900 px, the navigation rail collapses after selecting a page. Click a group icon to reopen it. Keyboard selection scrolls search results into view, and searchable dropdowns select the highlighted filtered item.
 - **Clipboard history:** In **Apps → Clipboard**, use **Update autostart entry** to correct existing watchers, then restart those watchers or your session. The supported command is `wl-paste --type text --watch cliphist -max-items N store`, with flags before `store`. This also applies to image watchers. Updating the command cannot restore history already discarded under the old limit.
-- **Audio mixer:** The default now prefers `pavucontrol-qt`, then `pavucontrol`. Existing saved `apps.volumeMixer` commands are not migrated. If yours still points into a Hyprland checkout, replace it in `~/.config/illogical-impulse/config.json` with an installed mixer command.
+- **Audio mixer:** The default now prefers `pavucontrol-qt`, then `pavucontrol`. Existing saved `apps.volumeMixer` commands are not migrated. If yours still points into a Hyprland checkout, replace it in `~/.config/qssettings/config.json` with an installed mixer command.
 - **Saved data:** Unreadable desktop notes and task files are preserved, and edits are blocked until the data is repaired and the shell reloaded. Unreadable notification history is also preserved; new notifications still work, but history writes stay disabled until reload. Notification images supplied as process-local Quickshell handles are not saved across restarts.
 - **Dynamic Island:** Link downloads, fallback chat replies, file-download tracking, and per-process traffic attribution require helpers under `scripts/island/`, which are not included in this checkout. Unavailable actions and watchers stay disabled; total network traffic display remains available. A failed download watcher is not immediately relaunched.
 - **Terminal colors:** Wallpaper-based terminal theming uses this checkout's templates and no longer requires a separate `quickshell/ii` directory.
+
+### Settings storage
+
+Shell settings now live in **`~/.config/qssettings/`**:
+
+- `config.json`: shell preferences, including those edited in the welcome app.
+- `actions/`: custom action files.
+- `sounds/`: custom sound overrides.
+
+Niri settings remain separate in **`~/.config/niri/qssettings/`**, including `settings.json` and the generated KDL files. Both locations follow `XDG_CONFIG_HOME` when it is set. Runtime state and caches remain in their existing XDG state/cache locations.
+
+The shell and its helper scripts use only this new folder. There is no automatic migration or fallback to `illogical-impulse/`.
 
 ---
 

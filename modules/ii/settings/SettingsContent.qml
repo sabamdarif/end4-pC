@@ -9,7 +9,6 @@ import qs.services
 import qs.modules.common
 import qs.modules.ii.settings
 import qs.modules.common.widgets
-import qs.modules.common.functions as CF
 
 Item {
     id: root
@@ -498,7 +497,7 @@ Item {
                         colRipple: Appearance.colors.colPrimaryContainerActive
 
                         onClicked: {
-                            Qt.openUrlExternally(`${Directories.config}/illogical-impulse/config.json`);
+                            Qt.openUrlExternally(Qt.resolvedUrl(Directories.shellConfigPath));
                         }
 
                         MouseArea {
@@ -506,7 +505,7 @@ Item {
                             acceptedButtons: Qt.RightButton
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
-                                Quickshell.clipboardText = CF.FileUtils.trimFileProtocol(`${Directories.config}/illogical-impulse/config.json`);
+                                Quickshell.clipboardText = Directories.shellConfigPath;
                                 configButton.justCopied = true;
                                 revertTextTimer.restart()
                             }
@@ -519,7 +518,7 @@ Item {
                         }
 
                         StyledToolTip {
-                            text: Translation.tr("Open ~/.config/illogical-impulse/config.json\nRight-click to copy path")
+                            text: Translation.tr("Open %1\nRight-click to copy path").arg(Directories.shellConfigPath)
                         }
 
                         contentItem: RowLayout {

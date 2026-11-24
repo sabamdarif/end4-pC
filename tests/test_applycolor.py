@@ -18,7 +18,7 @@ class ApplyColorTests(unittest.TestCase):
         self.state = self.root / "state/quickshell/user/generated"
         self.state.mkdir(parents=True)
         self.state.joinpath("material_colors.scss").write_text("$term0: #123456;\n$term7: #abcdef;\n")
-        config = self.root / "config/illogical-impulse"
+        config = self.root / "config/qssettings"
         config.mkdir(parents=True)
         config.joinpath("config.json").write_text(json.dumps({
             "appearance": {"wallpaperTheming": {"enableTerminal": False}}

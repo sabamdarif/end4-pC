@@ -26,7 +26,7 @@ Singleton {
     property string favicons: FileUtils.trimFileProtocol(`${Directories.cache}/media/favicons`)
     property string coverArt: FileUtils.trimFileProtocol(`${Directories.cache}/media/coverart`)
     property string tempImages: "/tmp/quickshell/media/images"
-    property string shellConfig: FileUtils.trimFileProtocol(`${Directories.config}/illogical-impulse`)
+    property string shellConfig: FileUtils.trimFileProtocol(`${Directories.config}/qssettings`)
     property string shellConfigName: "config.json"
     property string shellConfigPath: `${Directories.shellConfig}/${Directories.shellConfigName}`
 	property string todoPath: FileUtils.trimFileProtocol(`${Directories.state}/user/todo.json`)
