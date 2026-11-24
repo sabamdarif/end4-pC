@@ -2,6 +2,7 @@ pragma Singleton
 pragma ComponentBehavior: Bound
 
 import qs.modules.common
+import qs.services
 import Quickshell
 import Quickshell.Io
 import QtQuick
@@ -12,10 +13,13 @@ import QtQuick
  */
 Singleton {
     id: root
-    property var filePath: Directories.desktopNotesPath ?? (Directories.config + "/notes.json")
+    property var filePath: Directories.desktopNotesPath
     property var list: []
+    property bool ready: false
+    property string errorText: ""
 
     function addNote(content, attachments) {
+        if (!ready) return;
         const item = {
             "id": Date.now().toString() + "-" + Math.floor(Math.random() * 10000),
             "content": content ?? "",
@@ -29,6 +33,7 @@ Singleton {
     }
 
     function updateNote(id, content, attachments) {
+        if (!ready) return;
         const idx = list.findIndex(n => n.id === id)
         if (idx >= 0) {
             list[idx].content = content
@@ -40,6 +45,7 @@ Singleton {
     }
 
     function deleteNote(id) {
+        if (!ready) return;
         const idx = list.findIndex(n => n.id === id)
         if (idx >= 0) {
             list.splice(idx, 1)
@@ -63,11 +69,17 @@ Singleton {
             const fileContents = notesFileView.text()
             try {
                 const parsed = JSON.parse(fileContents)
-                root.list = Array.isArray(parsed) ? parsed : []
+                if (!Array.isArray(parsed) || !parsed.every(note => note && typeof note.id === "string"
+                    && typeof note.content === "string" && Array.isArray(note.attachments)
+                    && note.attachments.every(path => typeof path === "string")))
+                    throw new Error("Invalid notes format");
+                root.list = parsed
+                root.ready = true
+                root.errorText = ""
             } catch (e) {
-                console.log("[Notes] Corrupt or empty file, resetting to empty list. Error: " + e)
-                root.list = []
-                notesFileView.setText(JSON.stringify(root.list))
+                root.ready = false
+                root.errorText = Translation.tr("Could not load notes. Repair the data file and reload the shell.")
+                console.error("[Notes] Preserving unreadable file:", root.filePath, e)
             }
             console.log("[Notes] File loaded")
         }
@@ -75,9 +87,13 @@ Singleton {
             if (error == FileViewError.FileNotFound) {
                 console.log("[Notes] File not found, creating new file.")
                 root.list = []
+                root.ready = true
+                root.errorText = ""
                 notesFileView.setText(JSON.stringify(root.list))
             } else {
-                console.log("[Notes] Error loading file: " + error)
+                root.ready = false
+                root.errorText = Translation.tr("Could not load notes. Repair the data file and reload the shell.")
+                console.error("[Notes] Error loading file:", error)
             }
         }
     }

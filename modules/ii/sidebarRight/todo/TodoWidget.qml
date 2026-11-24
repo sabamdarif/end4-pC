@@ -22,8 +22,8 @@ Item {
             }
             event.accepted = true;
         }
-        // Open add dialog on "N" (any modifiers)
-        else if (event.key === Qt.Key_N) {
+        // Let the text field handle N while the add dialog is open.
+        else if (event.key === Qt.Key_N && Todo.ready && !root.showAddDialog && event.modifiers === Qt.NoModifier) {
             root.showAddDialog = true
             event.accepted = true;
         }
@@ -51,6 +51,15 @@ Item {
             }
         }
 
+        StyledText {
+            Layout.fillWidth: true
+            Layout.topMargin: 10
+            visible: Todo.errorText.length > 0
+            text: Todo.errorText
+            wrapMode: Text.Wrap
+            color: Appearance.colors.colError
+        }
+
         SwipeView {
             id: swipeView
             Layout.topMargin: 10
@@ -58,6 +67,7 @@ Item {
             Layout.fillHeight: true
             spacing: 10
             clip: true
+            enabled: Todo.ready
             currentIndex: tabBar.currentIndex
 
             // To Do tab
@@ -96,6 +106,7 @@ Item {
 
         onClicked: root.showAddDialog = true
         iconText: "add"
+        enabled: Todo.ready
     }
 
     Item {
@@ -143,7 +154,7 @@ Item {
             radius: Appearance.rounding.normal
 
             function addTask() {
-                if (todoInput.text.length > 0) {
+                if (Todo.ready && todoInput.text.trim().length > 0) {
                     Todo.addTask(todoInput.text)
                     todoInput.text = ""
                     root.showAddDialog = false

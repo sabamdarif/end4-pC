@@ -25,6 +25,7 @@ AbstractBackgroundWidget {
     function toggleFlip() { flipAnim.start() }
 
     function openNewNote() {
+        if (!Notes.ready) return;
         root.pendingNoteId = null
         root.editingText = ""
         toggleFlip()
@@ -37,7 +38,8 @@ AbstractBackgroundWidget {
     }
 
     function saveAndBack() {
-        if (root.editingText.length > 0) {
+        if (!Notes.ready) return;
+        if (root.pendingNoteId || root.editingText.length > 0) {
             if (root.pendingNoteId) {
                 Notes.updateNote(root.pendingNoteId, root.editingText)
             } else {
@@ -103,7 +105,7 @@ AbstractBackgroundWidget {
                         font.pixelSize: Appearance.font.pixelSize.huge
                         font.weight: Font.Medium
                         color: Appearance.colors.colOnPrimaryContainer
-                        text: "Notes"
+                        text: Translation.tr("Notes")
                     }
                     Item { Layout.fillWidth: true }
 
@@ -112,8 +114,18 @@ AbstractBackgroundWidget {
                         Layout.alignment: Qt.AlignVCenter
                         baseSize: 38
                         iconText: "add"
+                        enabled: Notes.ready
                         onClicked: root.openNewNote()
                     }
+                }
+
+                StyledText {
+                    Layout.fillWidth: true
+                    visible: Notes.errorText.length > 0
+                    text: Notes.errorText
+                    wrapMode: Text.Wrap
+                    color: Appearance.colors.colError
+                    font.pixelSize: Appearance.font.pixelSize.small
                 }
 
                 StyledListView {
@@ -123,6 +135,7 @@ AbstractBackgroundWidget {
                     clip: true
                     spacing: 6
                     model: Notes.list
+                    enabled: Notes.ready
 
                     delegate: SwipeDelegate {
                         id: noteCard
@@ -222,6 +235,7 @@ AbstractBackgroundWidget {
                         Layout.alignment: Qt.AlignVCenter
                         baseSize: 38
                         iconText: "save"
+                        enabled: Notes.ready
                         onClicked: root.saveAndBack()
                     }
                 }
@@ -238,7 +252,7 @@ AbstractBackgroundWidget {
                         anchors.margins: 8
                         text: root.editingText
                         wrapMode: TextArea.Wrap
-                        placeholderText: "Type your note..."
+                        placeholderText: Translation.tr("Type your note...")
                         color: Appearance.colors.colOnLayer0
                         background: null
                         onTextChanged: root.editingText = text
