@@ -33,45 +33,16 @@ Item {
 
     readonly property string cleanedTitle: StringUtils.cleanMusicTitle(activePlayer?.trackTitle) || Translation.tr("No media")
 
-    property var    artUrl:      activePlayer?.trackArtUrl ?? ""
     property string trackTitle:  activePlayer?.trackTitle  ?? ""
     property string trackArtist: activePlayer?.trackArtist ?? ""
     property bool   isPlaying:   activePlayer?.isPlaying   ?? false
     property bool   hasTrack:    trackTitle.length > 0
 
-    property string artDownloadLocation: Directories.coverArt
-    property string artFileName:         Qt.md5(artUrl)
-    property string artFilePath:         `${artDownloadLocation}/${artFileName}`
-    property bool   artDownloaded:       false
+    readonly property string displayedArtFilePath: coverArt.source
 
-    property string displayedArtFilePath: {
-        if (!root.artDownloaded) return ""
-        if (root.artUrl.startsWith("file://")) return root.artUrl
-        return Qt.resolvedUrl(artFilePath)
-    }
-
-    onArtFilePathChanged: {
-        if (!root.artUrl || root.artUrl.length === 0) {
-            root.artDownloaded = false
-            return
-        }
-        if (root.artUrl.startsWith("file://")) {
-            root.artDownloaded = true
-            return
-        }
-        artDownloader.targetFile  = root.artUrl
-        artDownloader.artFilePath = root.artFilePath
-        root.artDownloaded = false
-        artDownloader.running = true
-    }
-
-    Process {
-        id: artDownloader
-        property string targetFile:  root.artUrl
-        property string artFilePath: root.artFilePath
-        command: ["bash", "-c",
-            `[ -f ${artFilePath} ] || curl -sSL '${targetFile}' -o '${artFilePath}'`]
-        onExited: { root.artDownloaded = true }
+    CoverArt {
+        id: coverArt
+        url: root.activePlayer?.trackArtUrl ?? ""
     }
 
     Layout.fillHeight: true

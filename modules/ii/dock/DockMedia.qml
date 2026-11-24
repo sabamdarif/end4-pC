@@ -21,22 +21,12 @@ Item {
 
     property var player: MprisController.activePlayer
 
-    property var    artUrl:      player?.trackArtUrl ?? ""
     property string trackTitle:  player?.trackTitle  ?? ""
     property string trackArtist: player?.trackArtist ?? ""
     property bool   isPlaying:   player?.isPlaying   ?? false
     property bool   hasTrack:    trackTitle.length > 0
 
-    property string artDownloadLocation: Directories.coverArt
-    property string artFileName:         Qt.md5(artUrl)
-    property string artFilePath:         `${artDownloadLocation}/${artFileName}`
-    property bool   artDownloaded:       false
-
-    property string displayedArtFilePath: {
-        if (!root.artDownloaded) return ""
-        if (root.artUrl.startsWith("file://")) return root.artUrl
-        return Qt.resolvedUrl(artFilePath)
-    }
+    readonly property string displayedArtFilePath: coverArt.source
 
     property color artDominantColor: ColorUtils.mix(
         colorQuantizer?.colors[0] ?? Appearance.colors.colPrimary,
@@ -47,31 +37,9 @@ Item {
         color: root.artDominantColor
     }
 
-    onArtFilePathChanged: {
-        if (!root.artUrl || root.artUrl.length === 0) {
-            root.artDominantColor = Appearance.m3colors.m3secondaryContainer
-            root.artDownloaded = false
-            return
-        }
-
-        if (root.artUrl.startsWith("file://")) {
-            root.artDownloaded = true
-            return
-        }
-
-        artDownloader.targetFile  = root.artUrl
-        artDownloader.artFilePath = root.artFilePath
-        root.artDownloaded = false
-        artDownloader.running = true
-    }
-
-    Process {
-        id: artDownloader
-        property string targetFile:  root.artUrl
-        property string artFilePath: root.artFilePath
-        command: ["bash", "-c",
-            `[ -f ${artFilePath} ] || curl -sSL '${targetFile}' -o '${artFilePath}'`]
-        onExited: { root.artDownloaded = true }
+    CoverArt {
+        id: coverArt
+        url: root.player?.trackArtUrl ?? ""
     }
 
     ColorQuantizer {

@@ -66,27 +66,13 @@ AbstractBackgroundWidget {
 
     // Cover art of the current track, cached like the media widget does
     readonly property MprisPlayer activePlayer: MprisController.activePlayer
-    readonly property string artUrl: activePlayer?.trackArtUrl ?? ""
     readonly property bool needsCover: isRing || useCoverColors
-    readonly property string artFilePath: `${Directories.coverArt}/${Qt.md5(artUrl)}`
-    property bool coverDownloaded: false
-    readonly property string coverUrl: {
-        if (!root.needsCover || root.artUrl.length === 0) return "";
-        if (root.artUrl.startsWith("file://")) return root.artUrl;
-        return root.coverDownloaded ? Qt.resolvedUrl(root.artFilePath) : "";
-    }
+    readonly property string coverUrl: coverArt.source
 
-    onArtFilePathChanged: fetchCover()
-    onNeedsCoverChanged: fetchCover()
-    function fetchCover() {
-        root.coverDownloaded = false;
-        if (!root.needsCover || root.artUrl.length === 0 || root.artUrl.startsWith("file://")) return;
-        coverDownloader.command = ["bash", "-c", '[ -f "$1" ] || curl -sSL "$2" -o "$1"', "_", root.artFilePath, root.artUrl];
-        coverDownloader.running = true;
-    }
-    Process {
-        id: coverDownloader
-        onExited: root.coverDownloaded = true
+    CoverArt {
+        id: coverArt
+        url: root.activePlayer?.trackArtUrl ?? ""
+        enabled: root.needsCover
     }
     ColorQuantizer {
         id: coverQuantizer
