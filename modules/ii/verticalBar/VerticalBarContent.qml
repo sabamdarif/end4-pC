@@ -21,8 +21,10 @@ Item {
     readonly property bool trayHasItems: SystemTray.items.values.length > 0
 
     function filterLayout(layout) {
-        if (trayHasItems) return layout
-        return layout.filter(name => name !== "sysTray")
+        let result = trayHasItems ? layout : layout.filter(name => name !== "sysTray")
+        if (!Drives.hasRemovableDrives && !Config.options.bar.removableDrive.alwaysShow)
+            result = result.filter(name => name !== "removableDrive")
+        return result
     }
 
     readonly property var effectiveLeftLayout:   filterLayout(Config.options.bar.layouts.leftLayout)
@@ -106,6 +108,7 @@ Item {
 
     function getWidgetUrl(name) {
         if (!name) return "";
+        if (name === "removableDrive") return Qt.resolvedUrl("../bar/RemovableDriveWidget.qml");
         let formattedName = name.charAt(0).toUpperCase() + name.slice(1);
         return Qt.resolvedUrl("../bar/" + formattedName + ".qml");
     }

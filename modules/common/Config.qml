@@ -475,7 +475,10 @@ Singleton {
                 property JsonObject layouts: JsonObject {
                     property list<string> leftLayout: ["workspaces", "networkSpeed", "resources"]
                     property list<string> middleLayout: ["updatesCount", "clockWidget", "privacyIndicator"]
-                    property list<string> rightLayout: ["sysTray", "batteryIndicator", "systemIcons"]
+                    property list<string> rightLayout: ["removableDrive", "sysTray", "batteryIndicator", "systemIcons"]
+                }
+                property JsonObject removableDrive: JsonObject {
+                    property bool alwaysShow: false
                 }
                 
                 property list<string> screenList: [] // List of names, like "eDP-1", find out with 'niri msg outputs' command

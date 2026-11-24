@@ -32,6 +32,7 @@ ContentPage {
         { id: "clockWidget",       name: Translation.tr("Clock"),                icon: "schedule" },
         { id: "utilButtons",       name: Translation.tr("Util Buttons"),         icon: "toggle_on" },
         { id: "sysTray",           name: Translation.tr("Tray"),                 icon: "inbox" },
+        { id: "removableDrive",    name: Translation.tr("Removable drives"),     icon: "usb" },
         { id: "batteryIndicator",  name: Translation.tr("Battery"),              icon: "battery_android_frame_full" },
         { id: "bluetooth",         name: Translation.tr("Bluetooth"),            icon: "bluetooth" },
         { id: "activeWindow",      name: Translation.tr("Active Window"),        icon: "subtitles" },
@@ -56,6 +57,17 @@ ContentPage {
     function getWidgetName(id) {
         const w = allWidgets.find(w => w.id === id)
         return w ? w.name : id
+    }
+
+    ContentSection {
+        visible: page.activeWidgets.includes("removableDrive")
+        icon: "usb"
+        title: Translation.tr("Removable drives")
+        ConfigSwitch {
+            text: Translation.tr("Show even when no drives are connected")
+            checked: Config.options.bar.removableDrive.alwaysShow
+            onCheckedChanged: Config.options.bar.removableDrive.alwaysShow = checked
+        }
     }
 
     ContentSection {

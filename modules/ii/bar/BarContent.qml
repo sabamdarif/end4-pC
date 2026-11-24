@@ -30,6 +30,8 @@ Item {
         if (!trayHasItems) result = result.filter(name => name !== "sysTray")
         if (!Privacy.active) result = result.filter(name => name !== "privacyIndicator")
         if (!LiveWallpaper.available) result = result.filter(name => name !== "liveWallpaper")
+        if (!Drives.hasRemovableDrives && !Config.options.bar.removableDrive.alwaysShow)
+            result = result.filter(name => name !== "removableDrive")
         if (!GlobalStates.dynamicIslandEnabled) {
             result = result.map(name => name === "dynamicIsland" ? "clockWidget" : name)
         }
@@ -48,6 +50,7 @@ Item {
 
     function getWidgetUrl(name) {
         if (!name) return "";
+        if (name === "removableDrive") return Qt.resolvedUrl("RemovableDriveWidget.qml");
         let formattedName = name.charAt(0).toUpperCase() + name.slice(1);
         return Qt.resolvedUrl("./" + formattedName + ".qml");
     }

@@ -20,6 +20,7 @@ import qs.modules.ii.sidebarRight.volumeMixer
 import qs.modules.ii.sidebarRight.wifiNetworks
 import qs.modules.ii.sidebarRight.iconPicker
 import qs.modules.ii.sidebarRight.keepAwake
+import qs.modules.ii.sidebarRight.drives
 
 Item {
     id: root
@@ -37,6 +38,7 @@ Item {
     property bool showWifiDialog: false
     property bool editMode: false
     property bool showIconPickerDialog: false
+    property bool showDrivesDialog: false
 
     function closeDialogs() {
         showAudioOutputDialog = false;
@@ -46,6 +48,7 @@ Item {
         showNightLightDialog = false;
         showWifiDialog = false;
         showIconPickerDialog = false;
+        showDrivesDialog = false;
     }
 
     function openDialog(shownPropertyString) {
@@ -101,6 +104,10 @@ Item {
             if (!BluetoothStatus.available) return;
             root.openDialog("showBluetoothDialog");
             GlobalStates.sidebarRightOpen = true;
+        }
+        function onRequestDrivesDialog() {
+            GlobalStates.sidebarRightOpen = true;
+            root.openDialog("showDrivesDialog");
         }
 
         function onSidebarRightOpenChanged() {
@@ -452,6 +459,11 @@ Item {
     ToggleDialog {
         shownPropertyString: "showIconPickerDialog"
         dialog: IconPickerDialog {}
+    }
+
+    ToggleDialog {
+        shownPropertyString: "showDrivesDialog"
+        dialog: DrivesDialog {}
     }
 
     component ToggleDialog: Loader {

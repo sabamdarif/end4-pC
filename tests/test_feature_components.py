@@ -31,6 +31,7 @@ class FeatureComponentTests(unittest.TestCase):
 import QtQuick.Controls
 import QtQuick.Window
 import Quickshell
+import qs.modules.ii.sidebarRight.drives
 ShellRoot {
     Window {
         visible: true
@@ -60,3 +61,6 @@ ShellRoot {
     def test_window_rule_components_load(self):
         self.load_components(["modules/ii/settings/pages/compositor/WindowRuleEditorDialog.qml",
                               "modules/ii/settings/pages/compositor/WindowRulesConfig.qml"])
+
+    def test_storage_components_load(self):
+        self.load_components(["modules/ii/sidebarRight/drives/DrivesDialog.qml"])

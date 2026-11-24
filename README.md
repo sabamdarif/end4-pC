@@ -138,6 +138,21 @@ Use **Setup** if prompted to add the generated includes to your niri config;
 your original config is backed up. Rules are stored in
 `$XDG_CONFIG_HOME/niri/qssettings/settings.json` and generated as `windowrules.kdl`.
 
+### Removable drives and storage
+
+Add **Removable drives** to a bar layout in Settings → Shell → Bar. It appears
+only while a removable drive is connected unless **Show even when no drives are
+connected** is enabled. New configurations include it by default. Click a volume
+to mount it or open its folder, unmount it with its eject button, or safely eject
+the whole drive after all its volumes have been unmounted. Failed unmounts stop
+ejection; nothing is forcibly unmounted.
+
+The popup's **Storage manager** shows internal and removable disks, partition
+capacity and optional SMART health, temperature, lifetime usage and power-on
+hours. Install `udisks2` for mount/eject actions and `smartmontools` for health
+checks. SMART access needs device permissions and may not work through USB
+bridges. The shell does not automatically request elevated privileges.
+
 > [!NOTE]
 > The install steps above only assume [niri](https://github.com/YaLTeR/niri) and quickshell. Everything in the tables below is a program the shell itself spawns at runtime; Arch package names are given. Packages marked (AUR) are not in the official repositories.
 
