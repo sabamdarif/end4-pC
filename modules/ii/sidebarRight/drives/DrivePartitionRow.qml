@@ -20,12 +20,13 @@ ColumnLayout {
             contentItem: ColumnLayout {
                 StyledText {
                     Layout.fillWidth: true
-                    text: root.partition.label
+                    text: root.partition.kind === "mtp" ? Translation.tr("Phone: %1").arg(root.partition.label) : root.partition.label
                     elide: Text.ElideRight
                 }
                 StyledText {
                     Layout.fillWidth: true
-                    text: Drives.formatBytes(root.partition.size) + " • " + (root.partition.filesystem || Translation.tr("Unknown filesystem"))
+                    text: root.partition.kind === "mtp" ? "MTP • " + (root.partition.mountPoint ? Translation.tr("Connected") : Translation.tr("Not mounted"))
+                        : Drives.formatBytes(root.partition.size) + " • " + (root.partition.filesystem || Translation.tr("Unknown filesystem"))
                         + " • " + (root.partition.mountPoint || Translation.tr("Not mounted"))
                     font.pixelSize: Appearance.font.pixelSize.smaller
                     color: Appearance.colors.colSubtext
@@ -39,17 +40,17 @@ ColumnLayout {
             mainText: ""
             enabled: !Drives.busy
             onClicked: Drives.unmountPartition(root.partition.device)
-            StyledToolTip { text: Translation.tr("Unmount") }
+            StyledToolTip { text: root.partition.kind === "mtp" ? Translation.tr("Disconnect phone") : Translation.tr("Unmount") }
         }
     }
     StyledProgressBar {
         Layout.fillWidth: true
-        visible: root.partition.mountPoint !== ""
+        visible: root.partition.total !== null && root.partition.mountPoint !== ""
         value: root.partition.usage
     }
     StyledText {
         Layout.fillWidth: true
-        visible: root.partition.mountPoint !== ""
+        visible: root.partition.total !== null && root.partition.mountPoint !== ""
         text: Translation.tr("%1 used • %2 available").arg(Drives.formatBytes(root.partition.used)).arg(Drives.formatBytes(root.partition.free))
         font.pixelSize: Appearance.font.pixelSize.smaller
         color: Appearance.colors.colSubtext

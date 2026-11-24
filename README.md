@@ -153,6 +153,12 @@ hours. Install `udisks2` for mount/eject actions and `smartmontools` for health
 checks. SMART access needs device permissions and may not work through USB
 bridges. The shell does not automatically request elevated privileges.
 
+MTP phones also appear in the drive menu, including phones that are not mounted
+yet. Opening one mounts it or opens it in your file manager; **Disconnect** safely
+unmounts its GVfs connection, without powering off the phone. Install Python
+PyGObject and the GVfs MTP backend, and enable file transfer on the unlocked phone.
+Disk capacity and SMART diagnostics are not available for MTP devices.
+
 ### Digital wellbeing
 
 Click the screen time desktop widget for a weekly chart and app usage details,
@@ -210,6 +216,7 @@ Only the core list is needed for the shell to start and work. Feature-gated pack
 | Drive discovery and events | `lsblk`, `udevadm` | util-linux, systemd |
 | Mount and safely eject drives | `udisksctl` | udisks2 |
 | SMART drive health | `smartctl` | smartmontools |
+| MTP phones | `gio`, Python `gi`, GVfs MTP backend | glib2, python-gobject, gvfs-mtp |
 | Audio visualizer | `cava` | cava |
 | Stop an existing screen recording | `wf-recorder` | wf-recorder |
 | System sound fallbacks | `paplay`, `pw-play`, `canberra-gtk-play` (first available wins) | libpulse, pipewire-audio, libcanberra |

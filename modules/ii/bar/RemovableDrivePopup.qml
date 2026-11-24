@@ -35,11 +35,12 @@ StyledPopup {
                             Layout.fillWidth: true
                             StyledText { Layout.fillWidth: true; text: disk.modelData.model || disk.modelData.name; elide: Text.ElideRight }
                             RippleButtonWithIcon {
+                                visible: disk.modelData.kind !== "mtp" || disk.modelData.partitions.some(p => p.mountPoint)
                                 materialIcon: "eject"
                                 mainText: ""
                                 enabled: !Drives.busy
                                 onClicked: Drives.ejectDrive(disk.modelData.device)
-                                StyledToolTip { text: Translation.tr("Safely eject drive") }
+                                StyledToolTip { text: disk.modelData.kind === "mtp" ? Translation.tr("Disconnect phone") : Translation.tr("Safely eject drive") }
                             }
                         }
                         Repeater {

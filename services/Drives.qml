@@ -54,16 +54,20 @@ Singleton {
     function mountPartition(device) {
         const part = root.partition(device);
         if (!part || part.mountPoint || !part.filesystem || part.filesystem === "crypto_LUKS" || part.filesystem === "swap") return;
-        root.runActions([["udisksctl", "mount", "-b", device]]);
+        root.runActions([part.kind === "mtp" ? ["gio", "mount", device] : ["udisksctl", "mount", "-b", device]]);
     }
     function unmountPartition(device) {
         const part = root.partition(device);
         if (!part || !part.mountPoint) return;
-        root.runActions([["udisksctl", "unmount", "-b", device]]);
+        root.runActions([part.kind === "mtp" ? ["gio", "mount", "-u", part.mountPoint] : ["udisksctl", "unmount", "-b", device]]);
     }
     function ejectDrive(device) {
         const disk = root.removableDrives.find(d => d.device === device);
         if (!disk) return;
+        if (disk.kind === "mtp") {
+            root.runActions(disk.partitions.filter(p => p.mountPoint).map(p => ["gio", "mount", "-u", p.mountPoint]));
+            return;
+        }
         const commands = disk.partitions.filter(p => p.mountPoint).map(p => ["udisksctl", "unmount", "-b", p.device]);
         commands.push(["udisksctl", "power-off", "-b", device]);
         root.runActions(commands);
@@ -75,7 +79,7 @@ Singleton {
         else root.mountPartition(device);
     }
     function checkHealth(device) {
-        if (smartProc.running || !root.allDrives.some(d => d.device === device)) return;
+        if (smartProc.running || !root.allDrives.some(d => d.device === device && d.kind !== "mtp")) return;
         root.lastError = "";
         smartProc.exec(["python3", Quickshell.shellPath("scripts/system/drives_info.py"), "--smart", device]);
     }
@@ -86,6 +90,11 @@ Singleton {
     Timer { id: refreshDelay; interval: 400; onTriggered: root.refresh() }
     Process {
         command: ["udevadm", "monitor", "--kernel", "--subsystem-match=block"]
+        running: root.enabled
+        stdout: SplitParser { onRead: line => refreshDelay.restart() }
+    }
+    Process {
+        command: ["gio", "mount", "-o"]
         running: root.enabled
         stdout: SplitParser { onRead: line => refreshDelay.restart() }
     }

@@ -184,6 +184,9 @@ a quick toggle through `AbstractQuickPanel`'s `open<Name>Dialog` signal.
   subscribes. `scripts/system/drives_info.py` owns discovery and SMART parsing.
   Ejection queues ordinary unmounts before power-off and stops on any failure;
   health checks never escalate privileges automatically.
+  MTP phones come from Gio's GVfs volume monitor, not lsblk. Their identifiers and
+  mount points are `mtp://` URIs; use `gio mount` to connect/disconnect them, never
+  udisksctl or smartctl. Do not report virtual filesystem capacity as phone storage.
 - `ScreenTime` is initialized by `shell.qml`, independently of widget visibility.
   Its tracker receives shell lock/idle state on stdin and also checks loginctl.
   Private, atomic `qssettings/screentime.json` stores a versioned `days` array,

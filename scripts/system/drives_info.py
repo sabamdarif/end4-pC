@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read block-device capacity and optional SMART diagnostics."""
+"""Discover block disks and MTP phones, with optional SMART diagnostics."""
 
 import argparse
 import json
@@ -69,7 +69,44 @@ def discover():
     result = subprocess.run(["lsblk", "-J", "-b", "-o",
         "NAME,PATH,SIZE,TYPE,MOUNTPOINT,FSTYPE,LABEL,MODEL,HOTPLUG,RM,RO,ROTA,STATE,TRAN"],
         capture_output=True, text=True, timeout=10, check=True)
-    return parse_drives(json.loads(result.stdout), mount_points())
+    data = parse_drives(json.loads(result.stdout), mount_points())
+    phones = discover_mtp()
+    data["allDrives"].extend(phones)
+    data["removableDrives"].extend(phones)
+    return data
+
+
+def parse_mtp(volumes, mounts):
+    devices = {}
+    for volume in volumes:
+        root = volume.get_activation_root()
+        if root and root.get_uri().startswith("mtp://"):
+            devices[root.get_uri()] = (volume.get_name(), volume.get_mount())
+    for mount in mounts:
+        uri = mount.get_root().get_uri()
+        if uri.startswith("mtp://") and uri not in devices:
+            devices[uri] = (mount.get_name(), mount)
+    phones = []
+    for uri, (name, mount) in devices.items():
+        mount_uri = mount.get_root().get_uri() if mount else ""
+        phones.append({"device": uri, "kind": "mtp", "name": name, "model": name,
+            "size": None, "bus": "MTP", "removable": True, "rotational": False,
+            "partitions": [{"device": uri, "kind": "mtp", "label": name, "size": None,
+                "filesystem": "MTP", "mountPoint": mount_uri,
+                "mountPoints": [mount_uri] if mount_uri else [], "readOnly": False,
+                "total": None, "used": None, "free": None, "usage": 0}]})
+    return phones
+
+
+def discover_mtp():
+    try:
+        import gi
+        gi.require_version("Gio", "2.0")
+        from gi.repository import Gio
+    except (ImportError, ValueError):
+        return []
+    monitor = Gio.VolumeMonitor.get()
+    return parse_mtp(monitor.get_volumes(), monitor.get_mounts())
 
 
 def parse_smart(data):
@@ -92,7 +129,7 @@ def parse_smart(data):
 
 
 def smart(device):
-    if not any(disk["device"] == device for disk in discover()["allDrives"]):
+    if not device.startswith("/dev/") or not any(disk["device"] == device for disk in discover()["allDrives"]):
         raise ValueError("unknown-device")
     result = subprocess.run(["smartctl", "-j", "-H", "-A", device], capture_output=True, text=True, timeout=20)
     data = json.loads(result.stdout)

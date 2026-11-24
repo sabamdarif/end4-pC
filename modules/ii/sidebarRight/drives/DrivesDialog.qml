@@ -45,9 +45,11 @@ DialogSheet {
                         wrapMode: Text.Wrap
                     }
                     StyledText {
-                        text: Drives.formatBytes(disk.modelData.size) + " • " + (disk.modelData.removable ? Translation.tr("Removable") : Translation.tr("Internal"))
+                        text: disk.modelData.kind === "mtp" ? Translation.tr("Phone • MTP")
+                            : Drives.formatBytes(disk.modelData.size) + " • " + (disk.modelData.removable ? Translation.tr("Removable") : Translation.tr("Internal"))
                     }
                     RowLayout {
+                        visible: disk.modelData.kind !== "mtp"
                         Layout.fillWidth: true
                         spacing: 2
                         Repeater {
@@ -90,15 +92,16 @@ DialogSheet {
                     }
                     RowLayout {
                         RippleButtonWithIcon {
+                            visible: disk.modelData.kind !== "mtp"
                             materialIcon: "health_and_safety"
                             mainText: Translation.tr("Check health")
                             enabled: !Drives.smartBusy
                             onClicked: Drives.checkHealth(disk.modelData.device)
                         }
                         RippleButtonWithIcon {
-                            visible: disk.modelData.removable
+                            visible: disk.modelData.removable && (disk.modelData.kind !== "mtp" || disk.modelData.partitions.some(p => p.mountPoint))
                             materialIcon: "eject"
-                            mainText: Translation.tr("Safely eject")
+                            mainText: disk.modelData.kind === "mtp" ? Translation.tr("Disconnect") : Translation.tr("Safely eject")
                             enabled: !Drives.busy
                             onClicked: Drives.ejectDrive(disk.modelData.device)
                         }
