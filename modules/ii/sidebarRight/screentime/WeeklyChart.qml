@@ -8,6 +8,7 @@ import "../../../../services/Wellbeing.js" as Wellbeing
 ColumnLayout {
     id: root
     property bool compact: false
+    property int plotHeight: compact ? 46 : 120
     property var days: ScreenTime.days
     property date today: Wellbeing.parseKey(ScreenTime.todayKey)
     property int firstDayOfWeek: Qt.locale().firstDayOfWeek % 7
@@ -56,7 +57,7 @@ ColumnLayout {
         spacing: 4
         ColumnLayout {
             visible: !root.compact
-            Layout.preferredHeight: 100
+            Layout.preferredHeight: root.plotHeight - 20
             spacing: 0
             StyledText { text: ScreenTime.formatTime(root.axis.top); font.pixelSize: Appearance.font.pixelSize.smallest }
             Item { Layout.fillHeight: true }
@@ -64,7 +65,7 @@ ColumnLayout {
         }
         Item {
             Layout.fillWidth: true
-            implicitHeight: root.compact ? 46 : 120
+            implicitHeight: root.plotHeight
             Rectangle {
                 visible: !root.compact && root.limitSeconds > 0
                 width: parent.width

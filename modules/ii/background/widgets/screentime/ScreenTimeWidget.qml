@@ -12,8 +12,8 @@ AbstractBackgroundWidget {
     configEntryName: "screentime"
     hoverEnabled: true
     readonly property bool wide: root.configEntry.sizeMode === "1x4"
-    implicitWidth: wide ? 540 : 400
-    implicitHeight: wide ? 560 : 620
+    implicitWidth: wide ? 480 : 400
+    implicitHeight: content.implicitHeight + 32
     Rectangle {
         id: card
         anchors.fill: parent
@@ -22,8 +22,9 @@ AbstractBackgroundWidget {
         WindowGlass { anchors.fill: parent; cardRadius: card.radius; tint: card.color }
         StyledRectangularShadow { target: card; z: -1 }
         ColumnLayout {
-            anchors { fill: parent; margins: 20 }
-            spacing: 12
+            id: content
+            anchors { fill: parent; margins: 16 }
+            spacing: 8
             RowLayout {
                 Layout.fillWidth: true
                 MaterialSymbol { text: "digital_wellbeing"; iconSize: Appearance.font.pixelSize.larger }

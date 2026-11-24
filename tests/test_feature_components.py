@@ -160,15 +160,62 @@ ShellRoot {
                 GlobalStates.sidebarRightOpen = false;
                 loader0.item.clicked(null);
                 fixtureWindow.check(!GlobalStates.sidebarRightOpen, "clicking the desktop card does not open quick settings");
-                fixtureWindow.check(loader0.item.height === 620, "portrait card has room for the full layout");
+                fixtureWindow.check(loader0.item.height < 500, "sparse usage does not leave a tall empty card");
                 const footer = nodes.find(node => node.buttonText === Translation.tr("Daily limit"));
+                const usage = nodes.find(node => "limitRequested" in node && "apps" in node);
+                fixtureWindow.check(usage.height <= 75, "sparse usage fits without blank list space");
                 fixtureWindow.check(footer.mapToItem(loader0.item, 0, 0).y + footer.height <= loader0.item.height,
                     "portrait limit controls fit inside the card");
                 Config.options.background.widgets.screentime.sizeMode = "1x4";
                 Qt.callLater(() => {
+                    fixtureWindow.check(loader0.item.width === 480, "wide card keeps a compact width");
                     fixtureWindow.check(footer.mapToItem(loader0.item, 0, 0).y + footer.height <= loader0.item.height,
                         "wide limit controls fit inside the card too");
                 });
+            }
+        }
+''')
+
+    def test_desktop_wellbeing_caps_long_app_lists(self):
+        self.load_components(["modules/ii/background/widgets/screentime/ScreenTimeWidget.qml"], '''
+        property var usageList
+        property var footer
+        function check(condition, message) { if (!condition) console.error("ASSERTION_FAILED", message); }
+        function findItems(node) {
+            if ("limitRequested" in node && "apps" in node) fixtureWindow.usageList = node;
+            if (node.buttonText === Translation.tr("Daily limit")) fixtureWindow.footer = node;
+            for (const child of node.children || []) fixtureWindow.findItems(child);
+        }
+        Timer {
+            interval: 300; running: true
+            onTriggered: {
+                const apps = {};
+                for (let i = 0; i < 10; i++) apps["app" + i] = 60 * (10 - i);
+                ScreenTime.days = [{date: ScreenTime.todayKey, active: 3300, apps: apps}];
+            }
+        }
+        Timer {
+            interval: 700; running: true
+            onTriggered: {
+                fixtureWindow.findItems(loader0.item);
+                const usageList = fixtureWindow.usageList;
+                const footer = fixtureWindow.footer;
+                fixtureWindow.check(usageList.count === 10, "all apps remain accessible in the compact card");
+                fixtureWindow.check(usageList.height <= 144, "long usage lists have a bounded viewport");
+                fixtureWindow.check(usageList.contentHeight > usageList.height, "long lists scroll instead of growing the card");
+                fixtureWindow.check(loader0.item.height < 550, "busy usage still keeps the card compact");
+                fixtureWindow.check(footer.mapToItem(loader0.item, 0, 0).y + footer.height <= loader0.item.height,
+                    "daily limit controls fit below a long list");
+                ScreenTime.days = [];
+            }
+        }
+        Timer {
+            interval: 1000; running: true
+            onTriggered: {
+                const usageList = fixtureWindow.usageList;
+                fixtureWindow.check(usageList.count === 0, "empty history clears the app list");
+                fixtureWindow.check(loader0.item.height < 500, "empty usage shrinks back to the compact height");
+                fixtureWindow.check(usageList.height >= 70, "empty state retains enough room for its message");
             }
         }
 ''')

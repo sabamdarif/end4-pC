@@ -10,10 +10,12 @@ ColumnLayout {
     id: root
     property string period: "week"
     property bool desktop: false
-    spacing: 12
+    spacing: desktop ? 8 : 12
     AppLimitSheet { id: limitSheet; desktop: root.desktop }
     WeeklyChart {
         id: chart
+        plotHeight: root.desktop ? 90 : 120
+        spacing: root.desktop ? 4 : 8
         Layout.fillWidth: true
         Layout.maximumHeight: implicitHeight
     }
@@ -35,6 +37,7 @@ ColumnLayout {
         Layout.fillWidth: true
         Layout.fillHeight: true
         Layout.minimumHeight: 70
+        Layout.preferredHeight: root.desktop ? Math.max(70, Math.min(144, contentHeight)) : -1
         days: Wellbeing.periodDays(ScreenTime.days, chart.selectedDate ? Wellbeing.parseKey(chart.selectedDate)
             : root.period === "day" && chart.weekOffset === 0 ? chart.today : chart.anchor,
             chart.firstDayOfWeek, chart.selectedDate ? "day" : root.period, chart.today)

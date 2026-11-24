@@ -166,7 +166,8 @@ Disk capacity and SMART diagnostics are not available for MTP devices.
 The screen time desktop widget has the same detailed weekly chart, app usage
 list, and limit controls as the wellbeing sheet. Use them directly on the desktop;
 clicking the widget no longer opens Quick Settings. Drag its header to reposition it.
-The portrait and wide sizes provide more room for the interactive layout.
+The portrait and wide sizes fit their content, with a scrollable app list to keep
+the desktop card compact.
 You can also open Settings → System → Digital wellbeing. Browse previous weeks, select a
 day, or switch the app list between day, week and the last 30 calendar days.
 Set a daily screen time limit or an app limit with the duration steppers.
