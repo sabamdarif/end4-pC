@@ -55,7 +55,7 @@ RowLayout {
             anchors.fill: parent
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
-            onClicked: Quickshell.execDetached([Directories.recordScriptPath])
+            onClicked: rec.di.stopRecording()
         }
     }
 

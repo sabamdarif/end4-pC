@@ -156,6 +156,20 @@ Item {
         return Math.floor(s / 60).toString().padStart(2, '0') + ":" + (s % 60).toString().padStart(2, '0')
     }
 
+    function stopRecording() {
+        if (root.fakeRecording) root.fakeRecording = false
+        else recordingStop.running = true
+        root.collapse()
+    }
+
+    Process {
+        id: recordingStop
+        command: ["pkill", "-INT", "-x", "wf-recorder"]
+        onExited: (exitCode, exitStatus) => {
+            if (exitCode === 0 || exitCode === 1) Persistent.states.record.enable = false
+        }
+    }
+
     Timer {
         interval: 1000
         repeat: true
@@ -2421,7 +2435,7 @@ Item {
                     return
                 }
                 if (anchor.visible && anchor.contains(anchor.mapFromItem(pill, eventPoint.position))) {
-                    if (root.anchorInfo.icon === "fiber_manual_record") Quickshell.execDetached([Directories.recordScriptPath])
+                    if (root.anchorInfo.icon === "fiber_manual_record") root.stopRecording()
                     else root.expandTo(2, "idle")
                     return
                 }

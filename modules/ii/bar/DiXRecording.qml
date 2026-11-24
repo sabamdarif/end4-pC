@@ -30,7 +30,7 @@ RowLayout {
 
     readonly property string folder: {
         if (xr.filePath !== "") return xr.filePath.substring(0, xr.filePath.lastIndexOf("/"))
-        return (Config.options.screenRecord.savePath ?? "") || `${xr.home}/Videos`
+        return FileUtils.trimFileProtocol(Directories.videos)
     }
     readonly property string fileName: xr.filePath.substring(xr.filePath.lastIndexOf("/") + 1)
 
@@ -52,10 +52,7 @@ RowLayout {
         return `${(b / 1073741824).toFixed(2)} GB`
     }
     function stop() {
-        // The script toggles, so only call it when there really is a recorder to stop
-        if (xr.found) Quickshell.execDetached([Directories.recordScriptPath])
-        else xr.di.fakeRecording = false
-        xr.di.collapse()
+        xr.di.stopRecording()
     }
 
     Component.onCompleted: probe.running = true
