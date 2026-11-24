@@ -151,7 +151,7 @@ Singleton {
                 property string taskManager: "plasma-systemmonitor --page-name Processes"
                 property string terminal: "ghostty" // This is only for shell actions
                 property string update: "kitty -1 --hold=yes fish -i -c 'pkexec pacman -Syu'"
-                property string volumeMixer: "~/.config/hypr/hyprland/scripts/launch_first_available.sh \"pavucontrol-qt\" \"pavucontrol\""
+                property string volumeMixer: "if command -v pavucontrol-qt >/dev/null 2>&1; then exec pavucontrol-qt; else exec pavucontrol; fi"
                 // [{from, to}] — window app IDs remapped before bar/dock icon lookup
                 property list<var> idSubstitutions: [{ "from": "", "to": "" }]
             }
