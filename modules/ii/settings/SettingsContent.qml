@@ -38,6 +38,7 @@ Item {
         root.showingProfile = false
         const group = SettingsPages.groupOf(key)
         if (group !== "") root.setGroupExpanded(group, true)
+        if (root.width > 0 && root.width <= 900) root.railExpanded = false
     }
 
     Component.onCompleted: {

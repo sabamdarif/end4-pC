@@ -13,7 +13,7 @@ def qml_block(path, start, end):
 
 
 def run_qml(test, body):
-    with tempfile.TemporaryDirectory(prefix="ui-", dir="/tmp/opencode") as directory:
+    with tempfile.TemporaryDirectory(prefix="ui-") as directory:
         root = Path(directory)
         (root / "shell.qml").write_text('''import QtQuick
 import QtQuick.Controls
@@ -22,15 +22,19 @@ import QtQuick.Window
 import Quickshell
 ShellRoot {
     Window {
-        id: root
         visible: true
         width: 980
         height: 600
-        function check(condition, message) {
-            if (!condition) console.error("ASSERTION_FAILED", message);
-        }
+        Item {
+            id: root
+            width: 980
+            height: 600
+            function check(condition, message) {
+                if (!condition) console.error("ASSERTION_FAILED", message);
+            }
 ''' + body + '''
-        Timer { interval: 1000; running: true; onTriggered: Qt.quit() }
+            Timer { interval: 1000; running: true; onTriggered: Qt.quit() }
+        }
     }
 }
 ''')

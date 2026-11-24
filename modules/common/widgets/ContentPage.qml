@@ -47,7 +47,7 @@ StyledFlickable {
         id: contentColumn
         width: root.forceWidth
             ? root.baseWidth
-            : Math.min(Math.max(400, root.width > 0 ? root.width - (root.horizontalPadding * 2) : root.baseWidth), root.maxContentWidth)
+            : Math.min(Math.max(0, root.width > 0 ? root.width - (root.horizontalPadding * 2) : root.baseWidth), root.maxContentWidth)
         anchors {
             top: parent.top
             topMargin: 20
