@@ -684,7 +684,8 @@ ColumnLayout {
                 StyledText {
                     Layout.fillWidth: true
                     visible: dl.active && (IslandEvents.downloadSourcesError !== "" || dl.sources.length === 0)
-                    text: IslandEvents.downloadSourcesError === "missing" ? Translation.tr("Install nethogs to see where it comes from")
+                    text: IslandEvents.downloadSourcesError === "unavailable" ? Translation.tr("Per-process traffic tracking is unavailable")
+                        : IslandEvents.downloadSourcesError === "missing" ? Translation.tr("Install nethogs to see where it comes from")
                         : IslandEvents.downloadSourcesError === "sudo" ? Translation.tr("nethogs needs passwordless sudo")
                         : IslandEvents.downloadSourcesError !== "" ? Translation.tr("Couldn't measure per process")
                         : Translation.tr("Identifying…")

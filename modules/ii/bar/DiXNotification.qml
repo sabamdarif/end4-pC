@@ -75,7 +75,8 @@ ColumnLayout {
     readonly property bool bigImage: imageProbe.status === Image.Ready
         && (Math.max(imageProbe.implicitWidth, imageProbe.implicitHeight) >= 200 || xn.imageAspect < 0.8 || xn.imageAspect > 1.25)
 
-    readonly property bool canReply: (xn.notif?.hasInlineReply ?? false) || xn.messaging
+    readonly property bool canReply: ((xn.notif?.hasInlineReply ?? false) && typeof Notifications.sendInlineReply === "function")
+        || (xn.messaging && IslandEvents.chatReplyAvailable)
     readonly property var appActions: (xn.notif?.actions ?? []).filter(a => a.identifier !== "default")
     readonly property real mediaMaxHeight: xn.canReply ? 84 : 130
     readonly property bool messaging: /whats|zap|telegram|discord|vesktop|signal|slack|teams|instagram|messenger/i.test(xn.parts.app)
@@ -99,7 +100,7 @@ ColumnLayout {
     function sendText(text) {
         if (text.trim() === "" || !xn.notif) return
         xn.di.wantsKeyboard = false
-        if (xn.notif.hasInlineReply) {
+        if (xn.notif.hasInlineReply && typeof Notifications.sendInlineReply === "function") {
             Notifications.sendInlineReply(xn.notif.notificationId, text)
             xn.replyHint = Translation.tr("Sent")
             return

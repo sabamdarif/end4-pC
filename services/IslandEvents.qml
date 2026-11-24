@@ -748,10 +748,24 @@ Singleton {
         }
     }
 
+    readonly property var islandHelpers: {
+        const names = []
+        for (let i = 0; i < helperFiles.count; i++) names.push(helperFiles.get(i, "fileName"))
+        return names
+    }
+    readonly property bool chatReplyAvailable: islandHelpers.includes("reply-paste.sh")
+
+    FolderListModel {
+        id: helperFiles
+        folder: Qt.resolvedUrl(Quickshell.shellPath("scripts/island"))
+        showDirs: false
+    }
+
     readonly property bool mediaDownloadBusy: mediaDownloadProc.running
 
     // "video" | "post" | "audio" | "file" for links known to download, "try" for the rest of the web, "" for pages with nothing to fetch
     function linkDownloadKind(text) {
+        if (!root.islandHelpers.includes("link_download.py")) return ""
         const m = /^https?:\/\/(?:www\.|m\.|mobile\.)?([^\/?#:]+)(?::\d+)?([^?#]*)(.*)$/i.exec((text ?? "").trim())
         if (!m) return ""
         const host = m[1].toLowerCase()
@@ -768,6 +782,11 @@ Singleton {
 
     // mode: "video" (a post with only pictures gives the pictures), "audio" or "file"
     function downloadMedia(url, mode) {
+        if (!root.islandHelpers.includes("link_download.py")) {
+            root.upsertActivity("link-download", Translation.tr("Download unavailable"),
+                Translation.tr("The download helper is not installed"), "download", -1, "error")
+            return
+        }
         const job = { id: `linkdl-${Date.now()}`, url: url, mode: mode }
         root.upsertActivity(job.id,
             mode === "audio" ? Translation.tr("Downloading audio") : mode === "file" ? Translation.tr("Downloading file") : Translation.tr("Downloading video"),
@@ -785,8 +804,6 @@ Singleton {
         mediaDownloadProc.running = true
     }
 
-    Process {
-        id: mediaDownloadProc
     // Link downloads land in a folder the user can find again; the drawer only points at the file
     readonly property string linkDownloadDir: {
         const custom = (root.cfg.linkDownloadDir ?? "").trim().replace(/\/+$/, "")
@@ -821,6 +838,9 @@ Singleton {
         { kind: "audio", re: /^((on\.)?soundcloud\.com\/[^\/?#]+|open\.spotify\.com\/(intl-[a-z-]+\/)?(track|album|playlist)\/|deezer\.com\/([a-z]{2}\/)?track\/\d)/ },
         { kind: "audio", re: /^([^\/]+\.bandcamp\.com\/(track|album)\/|mixcloud\.com\/[^\/]+\/[^\/]|audiomack\.com\/[^\/]+\/(song|album)\/|newgrounds\.com\/audio\/listen)/ }
     ]
+
+    Process {
+        id: mediaDownloadProc
         property string activityId: ""
         property var saved: []
         property string failure: ""
@@ -1339,7 +1359,7 @@ Singleton {
         if (!notif || text.trim() === "") return false
         const parts = root.notificationParts(notif)
         const canOpen = (notif.actions ?? []).some(a => a.identifier === "default")
-        if (/whats/i.test(parts.app) && canOpen) {
+        if (/whats/i.test(parts.app) && canOpen && root.islandHelpers.includes("reply-send.sh")) {
             replySendProc.contact = parts.title || parts.app
             Notifications.attemptInvokeAction(notif.notificationId, "default")
             replySendProc.command = ["bash", Quickshell.shellPath("scripts/island/reply-send.sh"), text, "WhatsApp"]
@@ -1364,6 +1384,12 @@ Singleton {
 
     function pasteReplyInto(notif, text) {
         if (text.trim() === "") return false
+        if (!root.chatReplyAvailable) {
+            Quickshell.clipboardText = text
+            root.upsertActivity("reply", Translation.tr("Reply copied"),
+                Translation.tr("Paste it into the chat to send"), "content_paste", 1, "done")
+            return false
+        }
         const app = `${notif?.notification?.desktopEntry ?? ""} ${notif?.appName ?? ""}`.trim()
         pasteProc.command = ["bash", Quickshell.shellPath("scripts/island/reply-paste.sh"), text, app]
         pasteProc.running = true
@@ -1509,6 +1535,12 @@ Singleton {
     property bool downloadActive: false
     property bool trafficBurst: false
     property bool fakeNet: false
+    onFakeNetChanged: {
+        if (!fakeNet) {
+            root.downloadSources = []
+            root.downloadSourcesError = root.islandHelpers.includes("net_sources.py") ? "" : "unavailable"
+        }
+    }
     property real fastSeconds: 0
     property real prevRx: -1
     property real prevTx: -1
@@ -1533,6 +1565,7 @@ Singleton {
     property Flash fullscreenDigest: Flash { duration: 9000 }
 
     readonly property bool downloadWatchEnabled: (root.cfg.network ?? true) && root.downloadMode === "files" && !root.fakeNet
+        && root.islandHelpers.includes("download_watch.py")
 
     FolderListModel {
         id: partialDownloads
@@ -1565,7 +1598,15 @@ Singleton {
         stdout: SplitParser {
             onRead: line => root.handleDownloadWatch(line)
         }
-        onExited: Qt.callLater(root.startDownloadWatch)
+        onExited: (exitCode, exitStatus) => {
+            if (exitCode === 0 && root.downloadWatchEnabled) downloadWatchRetry.restart()
+        }
+    }
+
+    Timer {
+        id: downloadWatchRetry
+        interval: 5000
+        onTriggered: root.startDownloadWatch()
     }
 
     function handleDownloadWatch(line) {
@@ -1647,7 +1688,7 @@ Singleton {
     }
 
     property var downloadSources: []
-    property string downloadSourcesError: ""
+    property string downloadSourcesError: root.islandHelpers.includes("net_sources.py") ? "" : "unavailable"
     property var downloadHistory: []
     property double downloadSince: 0
     property real downloadPeak: 0
@@ -1731,12 +1772,15 @@ Singleton {
     Process {
         id: netSourcesProc
         running: !root.fakeNet && (root.downloadActive || root.downloadWatch || (root.trafficBurst && root.downloadMode === "traffic"))
-            && (root.cfg.network ?? true)
+            && (root.cfg.network ?? true) && root.islandHelpers.includes("net_sources.py")
         command: ["python3", Quickshell.shellPath("scripts/island/net_sources.py")]
         stdout: SplitParser {
             onRead: line => root.handleNetSources(line)
         }
         onRunningChanged: if (!running && !root.fakeNet) root.downloadSources = []
+        onExited: (exitCode, exitStatus) => {
+            if (exitCode !== 0) root.downloadSourcesError = "failed"
+        }
     }
 
     Process {
