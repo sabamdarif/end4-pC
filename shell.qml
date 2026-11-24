@@ -24,6 +24,7 @@ ShellRoot {
         Wallpapers.load()
         Updates.load()
         ScreenTime.load()
+        SystemTheming.load()
     }
 
     PanelFamilyLoader {

@@ -46,7 +46,7 @@ Customized and maintained by **[sabamdarif](https://github.com/sabamdarif)**
 ## ⚡ Installation
 
 > [!NOTE]
-> This fork runs on [niri](https://github.com/YaLTeR/niri) only. It manages its own configuration folder independently — it does **not** overwrite or modify any existing setup.
+> This fork runs on [niri](https://github.com/YaLTeR/niri) only. Shell preferences are stored separately. Enabling wallpaper theming writes the configured app palettes and selects them in Qt settings.
 
 ```bash
 cd ~/.config/quickshell/
@@ -101,7 +101,42 @@ Only pull when the working tree is clean and there are no unpushed local commits
 - **Audio mixer:** The default now prefers `pavucontrol-qt`, then `pavucontrol`. Existing saved `apps.volumeMixer` commands are not migrated. If yours still points into a Hyprland checkout, replace it in `~/.config/qssettings/config.json` with an installed mixer command.
 - **Saved data:** Unreadable desktop notes and task files are preserved, and edits are blocked until the data is repaired and the shell reloaded. Unreadable notification history is also preserved; new notifications still work, but history writes stay disabled until reload. Notification images supplied as process-local Quickshell handles are not saved across restarts.
 - **Dynamic Island:** Link downloads, fallback chat replies, file-download tracking, and per-process traffic attribution require helpers under `scripts/island/`, which are not included in this checkout. Unavailable actions and watchers stay disabled; total network traffic display remains available. A failed download watcher is not immediately relaunched.
-- **Terminal colors:** Wallpaper-based terminal theming uses this checkout's templates and no longer requires a separate `quickshell/ii` directory.
+- **Wallpaper colors:** Matugen generates shell, terminal, GTK/libadwaita and Qt palettes. Templates live in `~/.config/matugen/templates/`, with `config.toml` as the editable source of truth. Auto uses Matugen's smart scheme. Python's color generator and OpenCV scheme detection are no longer used.
+
+### Wallpaper theming
+
+Install Matugen with `scheme-smart` support (4.2 or newer). The shell sets up Matugen automatically at startup and before normal color generation, including existing installations. No manual `--install` step is required. To regenerate the current wallpaper's colors:
+
+```bash
+bash scripts/colors/switchwall.sh --noswitch
+```
+
+Existing app templates and edits are preserved. Default declarations live in `~/.config/matugen/configs/defaults.toml`, below your own configuration in priority. Template filenames are generic, such as `kitty.conf`, `gtk4-colors.css` and `terminal-colors.json`. Previous prefixed files are migrated without overwriting existing generic files. The old auto-generated `config.toml` setup is migrated from `config.toml.orig`, keeping backups. Afterwards, edit **`~/.config/matugen/config.toml` directly**, not `.orig`. Template toggles filter each invocation without rewriting your configuration. The shell template cannot be disabled individually; use **Shell & utilities** instead.
+
+You can also drop additional `*.toml` configurations directly into `~/.config/matugen/` or `~/.config/matugen/configs/`, without registering them anywhere. For example, `~/.config/matugen/my-app.toml`:
+
+```toml
+[templates.my_app]
+input_path = "./templates/my-app.conf"
+output_path = "~/.config/my-app/colors.conf"
+```
+
+The input file must contain a Matugen template. A raw template alone cannot specify where its generated output belongs.
+
+Configurations merge in this order: `configs/defaults.toml`, `config.toml`, root-level TOML files alphabetically, then other `configs/` TOML files alphabetically. Later values override earlier ones, including individual template fields. Relative paths resolve from the **Matugen directory**, even for files in `configs/`. Added, edited and removed configs update the settings template list automatically; their colors apply on the next wallpaper change or **Regenerate now**. Hidden temporary files and `.orig`/backup files are ignored. Invalid configs are reported instead of replacing the last working shell palette.
+
+- **Terminals:** Kitty uses `~/.local/state/quickshell/user/generated/terminal/kitty-theme.conf`. Include that file in Kitty's config. Ghostty uses `theme = Matugen`. ANSI colors come from Matugen's built-in filters, not the old Python harmonization settings. **Force dark mode in terminal** also applies to the configured Ghostty, Foot, Alacritty and WezTerm templates. Existing open terminals receive color escape sequences.
+- **Qt:** Install `qt6ct` for Qt 6 and `qt5ct` for Qt 5. The shell selects `Matugen.colors` and enables the custom palette in both configuration files, without changing an existing widget style. Launch Qt 6 apps with `QT_QPA_PLATFORMTHEME=qt6ct` and Qt 5 apps with `QT_QPA_PLATFORMTHEME=qt5ct`. Restart apps after changing the platform theme. KDE apps also get a native `MatugenKDE.colors` scheme selected through `kwriteconfig6`, when installed.
+- **GTK/libadwaita:** The default templates install `colors.css` and an importing `gtk.css` in both GTK configuration directories. GTK 4 output includes modern libadwaita CSS variables and legacy named colors. GTK 3 uses `adw-gtk3` when installed, otherwise built-in Adwaita. Existing apps may need restarting. If you already have a custom stylesheet, keep it and add `@import "colors.css";` instead of enabling the corresponding `gtk3-css` or `gtk4-css` template.
+- **Flatpak:** With **Shell & utilities** enabled, automatic setup grants all your Flatpak apps read-only access to the two GTK stylesheet directories. This is a persistent user-wide override, so future installs are covered too. It does not grant access to the rest of your configuration. The equivalent manual command is:
+
+  ```bash
+  flatpak override --user --filesystem=xdg-config/gtk-3.0:ro --filesystem=xdg-config/gtk-4.0:ro
+  ```
+
+  Restart running apps to load the stylesheets. Existing app-specific filesystem denials remain respected. You can opt an app out with `flatpak override --user --nofilesystem=xdg-config/gtk-3.0 --nofilesystem=xdg-config/gtk-4.0 APP_ID`. Disabling wallpaper theming does not revoke already granted permissions. Host Qt plugins do not automatically become available inside Flatpak runtimes, and apps with hardcoded styles may ignore platform palettes.
+
+All configuration and output paths follow the corresponding XDG directories. Lock-screen colors are rendered separately, without updating app palettes or running their hooks.
 
 ### Settings storage
 
@@ -237,7 +272,7 @@ Only the core list is needed for the shell to start and work. Feature-gated pack
 | Brightness control | `brightnessctl`, `ddcutil` | brightnessctl, ddcutil |
 | Night light | `wlsunset` | wlsunset |
 | Live wallpaper | `mpvpaper`, `socat`, `swaybg` | mpvpaper, socat, swaybg |
-| Theming from wallpaper | `matugen` plus Python `PIL` / `materialyoucolor` / `numpy` / `cv2` | matugen, python-pillow, python-numpy, python-opencv, python-materialyoucolor (AUR) |
+| Theming from wallpaper | `matugen` 4.2+ and Python 3.11+ (standard library only); optional Qt platform themes | matugen, python, qt6ct, qt5ct |
 | File pickers | `kdialog` or `yad` | kdialog, yad |
 | File search | `fd` | fd |
 | GPU detection (System info) | `glxinfo`, `lspci` | mesa-utils, pciutils |

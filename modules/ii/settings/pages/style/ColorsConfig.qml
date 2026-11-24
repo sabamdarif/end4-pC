@@ -19,7 +19,7 @@ ContentPage {
         toggled: Appearance.m3colors.darkmode === dark
         colBackground: Appearance.colors.colLayer2
         onClicked: {
-            Quickshell.execDetached(["bash", "-c", `${Directories.wallpaperSwitchScriptPath} --mode ${dark ? "dark" : "light"} --noswitch`]);
+            Quickshell.execDetached(["bash", Directories.wallpaperSwitchScriptPath, "--mode", dark ? "dark" : "light", "--noswitch"]);
         }
         contentItem: ColumnLayout {
             spacing: 2
@@ -127,6 +127,7 @@ ContentPage {
                             { value: "scheme-neutral",     displayName: Translation.tr("Neutral"),     icon: "tonality" },
                             { value: "scheme-rainbow",     displayName: Translation.tr("Rainbow"),     icon: "gradient" },
                             { value: "scheme-tonal-spot",  displayName: Translation.tr("Tonal Spot"),  icon: "lens" },
+                            { value: "scheme-vibrant",     displayName: Translation.tr("Vibrant"),     icon: "colors" },
                         ]
 
                         delegate: Rectangle {
@@ -174,7 +175,7 @@ ContentPage {
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
                                     Config.options.appearance.palette.type = modelData.value
-                                    Quickshell.execDetached(["bash", "-c", `${Directories.wallpaperSwitchScriptPath} --noswitch`])
+                                    Quickshell.execDetached(["bash", Directories.wallpaperSwitchScriptPath, "--noswitch"])
                                 }
                             }
                         }
@@ -222,7 +223,6 @@ ContentPage {
         ContentSubsection {
             title: Translation.tr("App color templates (matugen)")
 
-            // Templates parsed live from ~/.config/matugen/config.toml.orig — nothing hardcoded
             Rectangle {
                 Layout.fillWidth: true
                 implicitHeight: Math.max(64, matugenTogglesCol.implicitHeight + 28)
@@ -249,6 +249,7 @@ ContentPage {
                             required property var modelData
                             buttonIcon: "colors"
                             text: modelData.name
+                            enabled: modelData.name !== "quickshell"
                             checked: SystemTheming.templateEnabled(modelData.name)
                             onCheckedChanged: SystemTheming.setTemplateEnabled(modelData.name, checked)
                         }

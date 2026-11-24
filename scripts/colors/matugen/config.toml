@@ -1,0 +1,55 @@
+[config]
+
+[templates.quickshell]
+input_path = '@CONFIG@/matugen/templates/quickshell-colors.json'
+output_path = '@STATE@/quickshell/user/generated/colors.json'
+
+[templates.quickshell-seed]
+input_path = '@CONFIG@/matugen/templates/source-color.txt'
+output_path = '@STATE@/quickshell/user/generated/color.txt'
+
+[templates.terminal]
+input_path = '@CONFIG@/matugen/templates/terminal-colors.json'
+output_path = '@STATE@/quickshell/user/generated/terminal/colors.json'
+
+[templates.kitty]
+input_path = '@CONFIG@/matugen/templates/kitty.conf'
+output_path = '@STATE@/quickshell/user/generated/terminal/kitty-theme.conf'
+
+[templates.ghostty]
+input_path = '@CONFIG@/matugen/templates/ghostty.conf'
+output_path = '@CONFIG@/ghostty/themes/Matugen'
+post_hook = 'pkill -SIGUSR2 ghostty || true'
+
+[templates.kcolorscheme]
+input_path = '@CONFIG@/matugen/templates/kde.colors'
+output_path = '@DATA@/color-schemes/MatugenKDE.colors'
+post_hook = 'if command -v kwriteconfig6 >/dev/null; then kwriteconfig6 --file kdeglobals --group General --key ColorScheme MatugenKDE; fi'
+
+[templates.qt5ct]
+input_path = '@CONFIG@/matugen/templates/qt-colors.conf'
+output_path = '@DATA@/color-schemes/Matugen.colors'
+
+[templates.qt6ct]
+input_path = '@CONFIG@/matugen/templates/qt-colors.conf'
+output_path = '@DATA@/color-schemes/Matugen.colors'
+
+[templates.gtk3]
+input_path = '@CONFIG@/matugen/templates/gtk3-colors.css'
+output_path = '@CONFIG@/gtk-3.0/colors.css'
+
+[templates.gtk3-css]
+input_path = '@CONFIG@/matugen/templates/gtk-main.css'
+output_path = '@CONFIG@/gtk-3.0/gtk.css'
+
+[templates.gtk4]
+input_path = '@CONFIG@/matugen/templates/gtk4-colors.css'
+output_path = '@CONFIG@/gtk-4.0/colors.css'
+
+[templates.gtk4-css]
+input_path = '@CONFIG@/matugen/templates/gtk-main.css'
+output_path = '@CONFIG@/gtk-4.0/gtk.css'
+
+[templates.gtk4-dark]
+input_path = '@CONFIG@/matugen/templates/gtk-main.css'
+output_path = '@CONFIG@/gtk-4.0/gtk-dark.css'

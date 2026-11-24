@@ -18,8 +18,8 @@ set_ini_key() { # file key value
 
 gsettings set org.gnome.desktop.interface gtk-theme "$theme" 2>/dev/null
 
-set_ini_key "$HOME/.config/gtk-3.0/settings.ini" gtk-theme-name "$theme"
-set_ini_key "$HOME/.config/gtk-4.0/settings.ini" gtk-theme-name "$theme"
+set_ini_key "${XDG_CONFIG_HOME:-$HOME/.config}/gtk-3.0/settings.ini" gtk-theme-name "$theme"
+set_ini_key "${XDG_CONFIG_HOME:-$HOME/.config}/gtk-4.0/settings.ini" gtk-theme-name "$theme"
 
 # GTK 2
 GTK2_CONFIG="$HOME/.gtkrc-2.0"

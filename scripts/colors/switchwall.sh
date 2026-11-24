@@ -1,46 +1,27 @@
 #!/usr/bin/env bash
 
-QUICKSHELL_CONFIG_NAME="ii"
 XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
 XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
-CONFIG_DIR="$XDG_CONFIG_HOME/quickshell/$QUICKSHELL_CONFIG_NAME"
 CACHE_DIR="$XDG_CACHE_HOME/quickshell"
 STATE_DIR="$XDG_STATE_HOME/quickshell"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SHELL_CONFIG_FILE="$XDG_CONFIG_HOME/qssettings/config.json"
-MATUGEN_DIR="$XDG_CONFIG_HOME/matugen"
-terminalscheme="$SCRIPT_DIR/terminal/scheme-base.json"
-
-handle_kde_material_you_colors() {
-    if [ -f "$SHELL_CONFIG_FILE" ]; then
-        enable_qt_apps=$(jq -r '.appearance.wallpaperTheming.enableQtApps' "$SHELL_CONFIG_FILE")
-        if [ "$enable_qt_apps" == "false" ]; then
-            return
-        fi
-    fi
-
-    local kde_scheme_variant=""
-    case "$type_flag" in
-        scheme-content|scheme-expressive|scheme-fidelity|scheme-fruit-salad|scheme-monochrome|scheme-neutral|scheme-rainbow|scheme-tonal-spot)
-            kde_scheme_variant="$type_flag"
-            ;;
-        *)
-            kde_scheme_variant="scheme-tonal-spot"
-            ;;
-    esac
-    "$XDG_CONFIG_HOME"/matugen/templates/kde/kde-material-you-colors-wrapper.sh --scheme-variant "$kde_scheme_variant"
-}
 
 pre_process() {
     local mode_flag="$1"
+    local theme="adw-gtk3"
     if [[ "$mode_flag" == "dark" ]]; then
         gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
-        gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3-dark'
+        theme="adw-gtk3-dark"
     elif [[ "$mode_flag" == "light" ]]; then
         gsettings set org.gnome.desktop.interface color-scheme 'prefer-light'
-        gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3'
     fi
+    if [[ ! -d "/usr/share/themes/$theme" && ! -d "${XDG_DATA_HOME:-$HOME/.local/share}/themes/$theme" && ! -d "$HOME/.themes/$theme" ]]; then
+        theme="Adwaita"
+        [[ "$mode_flag" == "dark" ]] && theme="Adwaita-dark"
+    fi
+    bash "$SCRIPT_DIR/../theming/set-gtk-theme.sh" "$theme"
 
     if [ ! -d "$CACHE_DIR"/user/generated ]; then
         mkdir -p "$CACHE_DIR"/user/generated
@@ -48,16 +29,12 @@ pre_process() {
 }
 
 post_process() {
-    local screen_width="$1"
-    local screen_height="$2"
-    local wallpaper_path="$3"
-    local colors_lock_flag="$4"
+    local colors_lock_flag="$1"
 
     if [[ -n "$colors_lock_flag" ]]; then
         return
     fi
 
-    handle_kde_material_you_colors &
     "$SCRIPT_DIR/code/material-code-set-color.sh" &
 }
 
@@ -173,26 +150,6 @@ update_background_files() {
     fi
 }
 
-run_matugen() {
-    # Some matugen builds fail with "IO error: not a terminal" when spawned
-    # without a TTY (e.g. from Quickshell) — wrap with script(1) if available.
-    if command -v script >/dev/null 2>&1; then
-        script -qec "matugen $(printf '%q ' "${matugen_args[@]}")" /dev/null
-    else
-        matugen "${matugen_args[@]}"
-    fi
-}
-
-activate_venv_if_present() {
-    local venv_path
-    venv_path="$(eval echo "$ILLOGICAL_IMPULSE_VIRTUAL_ENV")"
-    [[ -n "$venv_path" && -f "$venv_path/bin/activate" ]] && source "$venv_path/bin/activate"
-}
-
-deactivate_venv_if_active() {
-    type deactivate &>/dev/null && deactivate
-}
-
 set_wallpaper_path() {
     local path="$1"
     if [ -f "$SHELL_CONFIG_FILE" ]; then
@@ -216,20 +173,18 @@ switch() {
     colors_only_flag="$6"
     colors_lock_flag="$7"
 
-    matugen_args=(--source-color-index 0)
+    matugen_args=()
 
     if [[ "$color_flag" == "1" ]]; then
-        matugen_args+=(color hex "$color")
-        generate_colors_material_args=(--color "$color")
+        matugen_args+=(--color "$color")
     else
         if [[ -z "$imgpath" ]]; then
             echo 'Aborted'
             exit 0
         fi
 
-        check_and_prompt_upscale "$imgpath" &
-
         if [[ -z "$colors_only_flag" ]]; then
+            check_and_prompt_upscale "$imgpath" &
             kill_existing_mpvpaper
         fi
 
@@ -281,8 +236,7 @@ switch() {
             fi
 
             if [ -f "$thumbnail" ]; then
-                matugen_args+=(image "$thumbnail")
-                generate_colors_material_args=(--path "$thumbnail")
+                matugen_args+=(--image "$thumbnail")
                 if [[ -z "$colors_only_flag" ]]; then
                     create_restore_script "$video_path"
                     update_background_files "$thumbnail" &
@@ -295,8 +249,7 @@ switch() {
                 exit 1
             fi
         else
-            matugen_args+=(image "$imgpath")
-            generate_colors_material_args=(--path "$imgpath")
+            matugen_args+=(--image "$imgpath")
             if [[ -z "$colors_only_flag" ]]; then
                 set_wallpaper_path "$imgpath"
                 remove_restore
@@ -314,98 +267,25 @@ switch() {
         fi
     fi
 
-    # Keep external scripts (rofi theme toggles etc.) in sync with the current mode
-    mkdir -p "$MATUGEN_DIR" && echo "$mode_flag" > "$MATUGEN_DIR/current_mode"
-
-    if [[ -n "$mode_flag" ]]; then
-        matugen_args+=(--mode "$mode_flag")
-        if [[ $(jq -r '.appearance.wallpaperTheming.terminalGenerationProps.forceDarkMode' "$SHELL_CONFIG_FILE") == "true" ]]; then
-            generate_colors_material_args+=(--mode "dark")
-        else
-            generate_colors_material_args+=(--mode "$mode_flag")
-        fi
-    fi
-    [[ -n "$type_flag" ]] && matugen_args+=(--type "$type_flag") && generate_colors_material_args+=(--scheme "$type_flag")
-    generate_colors_material_args+=(--termscheme "$terminalscheme" --blend_bg_fg)
-    generate_colors_material_args+=(--cache "$STATE_DIR/user/generated/color.txt")
-
-    pre_process "$mode_flag"
+    matugen_args+=(--mode "$mode_flag" --scheme "$type_flag")
+    [[ -n "$colors_lock_flag" ]] && matugen_args+=(--lock)
 
     if [ -f "$SHELL_CONFIG_FILE" ]; then
         enable_apps_shell=$(jq -r '.appearance.wallpaperTheming.enableAppsAndShell' "$SHELL_CONFIG_FILE")
         if [ "$enable_apps_shell" == "false" ]; then
-            echo "App and shell theming disabled, skipping matugen and color generation"
+            echo "App and shell theming disabled, skipping matugen"
             return
         fi
     fi
 
-    if [ -f "$SHELL_CONFIG_FILE" ]; then
-        harmony=$(jq -r '.appearance.wallpaperTheming.terminalGenerationProps.harmony' "$SHELL_CONFIG_FILE")
-        harmonize_threshold=$(jq -r '.appearance.wallpaperTheming.terminalGenerationProps.harmonizeThreshold' "$SHELL_CONFIG_FILE")
-        term_fg_boost=$(jq -r '.appearance.wallpaperTheming.terminalGenerationProps.termFgBoost' "$SHELL_CONFIG_FILE")
-        [[ "$harmony" != "null" && -n "$harmony" ]] && generate_colors_material_args+=(--harmony "$harmony")
-        [[ "$harmonize_threshold" != "null" && -n "$harmonize_threshold" ]] && generate_colors_material_args+=(--harmonize_threshold "$harmonize_threshold")
-        [[ "$term_fg_boost" != "null" && -n "$term_fg_boost" ]] && generate_colors_material_args+=(--term_fg_boost "$term_fg_boost")
-    fi
-
-    colors_json_path="$STATE_DIR/user/generated/colors.json"
-    colors_lock_json_path="$STATE_DIR/user/generated/colors-lock.json"
-    colors_lock_watch_paths=(
-        "$colors_json_path"
-        "$XDG_CONFIG_HOME/gtk-3.0/gtk.css"
-        "$XDG_CONFIG_HOME/gtk-4.0/gtk.css"
-    )
-    colors_lock_backups=()
-    if [[ -n "$colors_lock_flag" ]]; then
-        for i in "${!colors_lock_watch_paths[@]}"; do
-            watch_path="${colors_lock_watch_paths[$i]}"
-            if [[ -f "$watch_path" ]]; then
-                backup_path="$(mktemp)"
-                cp "$watch_path" "$backup_path"
-                colors_lock_backups[$i]="$backup_path"
-            fi
-        done
-    fi
-
-    run_matugen
-
-    if [[ -n "$colors_lock_flag" ]]; then
-        if [[ -f "$colors_json_path" ]]; then
-            cp "$colors_json_path" "$colors_lock_json_path"
-        fi
-        for i in "${!colors_lock_watch_paths[@]}"; do
-            watch_path="${colors_lock_watch_paths[$i]}"
-            backup_path="${colors_lock_backups[$i]:-}"
-            if [[ -n "$backup_path" ]]; then
-                mv "$backup_path" "$watch_path"
-            fi
-        done
-    fi
-
-    activate_venv_if_present
-
-    if [[ -n "$colors_lock_flag" ]]; then
-        output_scss="$STATE_DIR/user/generated/material_colors_lock.scss"
-    else
-        output_scss="$STATE_DIR/user/generated/material_colors.scss"
-    fi
-
-    if python3 "$SCRIPT_DIR/generate_colors_material.py" "${generate_colors_material_args[@]}" \
-        > "$output_scss.new" 2>/dev/null; then
-        mv "$output_scss.new" "$output_scss"
-    else
-        rm -f "$output_scss.new"
-        echo "[switchwall] Warning: terminal color generation failed (python venv missing?), skipping" >&2
-    fi
-    deactivate_venv_if_active
+    python3 "$SCRIPT_DIR/matugen.py" "${matugen_args[@]}" || return 1
 
     if [[ -z "$colors_lock_flag" ]]; then
+        pre_process "$mode_flag"
         "$SCRIPT_DIR"/applycolor.sh
     fi
 
-    max_width_desired="$(niri msg -j outputs | jq '[.[].logical | select(. != null) | .width] | min' | xargs)"
-    max_height_desired="$(niri msg -j outputs | jq '[.[].logical | select(. != null) | .height] | min' | xargs)"
-    post_process "$max_width_desired" "$max_height_desired" "$imgpath" "$colors_lock_flag"
+    post_process "$colors_lock_flag"
 }
 
 main() {
@@ -417,7 +297,6 @@ main() {
     noswitch_flag=""
     colors_only_flag=""
     colors_lock_flag=""
-    explicit_image=""
     start_dir_flag=""
 
     get_type_from_config() {
@@ -431,14 +310,15 @@ main() {
         jq --arg color "$color" '.appearance.palette.accentColor = $color' "$SHELL_CONFIG_FILE" > "$SHELL_CONFIG_FILE.tmp" && mv "$SHELL_CONFIG_FILE.tmp" "$SHELL_CONFIG_FILE"
     }
 
-    detect_scheme_type_from_image() {
-        local img="$1"
-        activate_venv_if_present
-        "$SCRIPT_DIR"/scheme_for_image.py "$img" 2>/dev/null | tr -d '\n'
-        deactivate_venv_if_active
-    }
-
     while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --mode|--type|--image|--start-dir)
+                if [[ $# -lt 2 ]]; then
+                    echo "[switchwall] Missing value for $1" >&2
+                    return 1
+                fi
+                ;;
+        esac
         case "$1" in
             --mode)
                 mode_flag="$2"
@@ -462,7 +342,6 @@ main() {
                 ;;
             --image)
                 imgpath="$2"
-                explicit_image="1"
                 shift 2
                 ;;
             --start-dir)
@@ -471,6 +350,7 @@ main() {
                 ;;
             --noswitch)
                 noswitch_flag="1"
+                colors_only_flag="1"
                 if [[ -z "$imgpath" ]]; then
                     imgpath=$(jq -r '.background.wallpaperPath' "$SHELL_CONFIG_FILE" 2>/dev/null || echo "")
                 fi
@@ -494,8 +374,9 @@ main() {
         esac
     done
 
-    if [[ -n "$noswitch_flag" && -n "$explicit_image" ]]; then
-        colors_only_flag="1"
+    if [[ -n "$mode_flag" && "$mode_flag" != "dark" && "$mode_flag" != "light" ]]; then
+        echo "[switchwall] Invalid mode: $mode_flag" >&2
+        return 1
     fi
 
     config_color="$(get_accent_color_from_config)"
@@ -508,7 +389,7 @@ main() {
         type_flag="$(get_type_from_config)"
     fi
 
-    allowed_types=(scheme-content scheme-expressive scheme-fidelity scheme-fruit-salad scheme-monochrome scheme-neutral scheme-rainbow scheme-tonal-spot auto)
+    allowed_types=(scheme-content scheme-expressive scheme-fidelity scheme-fruit-salad scheme-monochrome scheme-neutral scheme-rainbow scheme-tonal-spot scheme-vibrant scheme-smart auto)
     valid_type=0
     for t in "${allowed_types[@]}"; do
         if [[ "$type_flag" == "$t" ]]; then
@@ -539,28 +420,6 @@ main() {
         set_accent_color ""
         color_flag=""
         color=""
-    fi
-
-    if [[ "$type_flag" == "auto" ]]; then
-        if [[ -n "$imgpath" && -f "$imgpath" ]]; then
-            detected_type="$(detect_scheme_type_from_image "$imgpath")"
-            valid_detected=0
-            for t in "${allowed_types[@]}"; do
-                if [[ "$detected_type" == "$t" && "$detected_type" != "auto" ]]; then
-                    valid_detected=1
-                    break
-                fi
-            done
-            if [[ $valid_detected -eq 1 ]]; then
-                type_flag="$detected_type"
-            else
-                echo "[switchwall] Warning: Could not auto-detect a valid scheme, defaulting to 'scheme-tonal-spot'" >&2
-                type_flag="scheme-tonal-spot"
-            fi
-        else
-            echo "[switchwall] Warning: No image to auto-detect scheme from, defaulting to 'scheme-tonal-spot'" >&2
-            type_flag="scheme-tonal-spot"
-        fi
     fi
 
     if [[ "$mode_flag" == "dark" || "$mode_flag" == "light" ]]; then

@@ -3,91 +3,58 @@
 XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
 XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
-CACHE_DIR="$XDG_CACHE_HOME/quickshell"
 STATE_DIR="$XDG_STATE_HOME/quickshell"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CONFIG_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+CONFIG_FILE="$XDG_CONFIG_HOME/qssettings/config.json"
+TERMINAL_DIR="$STATE_DIR/user/generated/terminal"
 
-term_alpha=100 #Set this to < 100 make all your terminals transparent
-# sleep 0 # idk i wanted some delay or colors dont get applied properly
-if [ ! -d "$STATE_DIR"/user/generated ]; then
-  mkdir -p "$STATE_DIR"/user/generated
-fi
+apply_kitty() {
+    [[ -f "$TERMINAL_DIR/kitty-theme.conf" ]] || return 0
+    local pids
+    pids=$(pidof kitty) || return 0
+    kill -SIGUSR1 $pids
+}
 
-colornames=''
-colorstrings=''
-colorlist=()
-colorvalues=()
-
-colornames=$(cat $STATE_DIR/user/generated/material_colors.scss | cut -d: -f1)
-colorstrings=$(cat $STATE_DIR/user/generated/material_colors.scss | cut -d: -f2 | cut -d ' ' -f2 | cut -d ";" -f1)
-IFS=$'\n'
-colorlist=($colornames)     # Array of color names
-colorvalues=($colorstrings) # Array of color values
-
-apply_kitty() {  
-  # Check if terminal escape sequence template exists
-  if [ ! -f "$SCRIPT_DIR/terminal/kitty-theme.conf" ]; then
-    echo "Template file not found for Kitty theme. Skipping that."
-    return
-  fi
-  # Copy template
-  mkdir -p "$STATE_DIR"/user/generated/terminal
-  cp "$SCRIPT_DIR/terminal/kitty-theme.conf" "$STATE_DIR"/user/generated/terminal/kitty-theme.conf
-  # Apply colors
-  for i in "${!colorlist[@]}"; do
-    sed -i "s/${colorlist[$i]} #/${colorvalues[$i]#\#}/g" "$STATE_DIR"/user/generated/terminal/kitty-theme.conf
-  done
-
-  # Reload
-  kill -SIGUSR1 $(pidof kitty)
+write_sequences() {
+    local palette
+    palette=$(jq -er '
+        [range(0;16) as $i | .["term" + ($i|tostring)]] +
+        [.background, .foreground, .cursor, .selection_background, .selection_foreground] |
+        if all(.[]; type == "string" and test("^#[0-9a-fA-F]{6}$")) then .[]
+        else error("Invalid terminal palette") end
+    ' "$TERMINAL_DIR/colors.json") || return 1
+    local colors i
+    mapfile -t colors <<< "$palette"
+    for i in {0..15}; do
+        printf '\033]4;%s;%s\033\\' "$i" "${colors[$i]}"
+    done
+    printf '\033]10;%s\033\\\033]11;%s\033\\\033]12;%s\033\\' "${colors[17]}" "${colors[16]}" "${colors[18]}"
+    printf '\033]17;%s\033\\\033]19;%s\033\\' "${colors[19]}" "${colors[20]}"
 }
 
 apply_anyterm() {
-  # Check if terminal escape sequence template exists
-  if [ ! -f "$SCRIPT_DIR/terminal/sequences.txt" ]; then
-    echo "Template file not found for Terminal. Skipping that."
-    return
-  fi
-  # Copy template
-  mkdir -p "$STATE_DIR"/user/generated/terminal
-  cp "$SCRIPT_DIR/terminal/sequences.txt" "$STATE_DIR"/user/generated/terminal/sequences.txt
-  # Apply colors
-  for i in "${!colorlist[@]}"; do
-    sed -i "s/${colorlist[$i]} #/${colorvalues[$i]#\#}/g" "$STATE_DIR"/user/generated/terminal/sequences.txt
-  done
+    [[ -f "$TERMINAL_DIR/colors.json" ]] || return 0
+    write_sequences > "$TERMINAL_DIR/sequences.txt.new" || {
+        rm -f "$TERMINAL_DIR/sequences.txt.new"
+        return 1
+    }
+    mv "$TERMINAL_DIR/sequences.txt.new" "$TERMINAL_DIR/sequences.txt"
+    local file
+    for file in /dev/pts/*; do
+        [[ "$file" =~ ^/dev/pts/[0-9]+$ && -O "$file" && -w "$file" ]] || continue
+        timeout 1s cat "$TERMINAL_DIR/sequences.txt" > "$file" 2>/dev/null || true
+    done
+}
 
-  sed -i "s/\$alpha/$term_alpha/g" "$STATE_DIR/user/generated/terminal/sequences.txt"
-
-  for file in /dev/pts/*; do
-    if [[ $file =~ ^/dev/pts/[0-9]+$ ]]; then
-      {
-      cat "$STATE_DIR"/user/generated/terminal/sequences.txt >"$file"
-      } & disown || true
+main() {
+    if [[ -f "$CONFIG_FILE" ]]; then
+        [[ $(jq -r '.appearance.wallpaperTheming.enableTerminal' "$CONFIG_FILE") != "false" ]] || return 0
     fi
-  done
+    apply_anyterm || return 1
+    if [[ ! -f "$CONFIG_FILE" ]] || ! jq -e '.appearance.matugenDisabled // [] | index("kitty")' "$CONFIG_FILE" >/dev/null; then
+        apply_kitty
+    fi
 }
 
-apply_term() {
-  apply_kitty
-  apply_anyterm
-}
-
-apply_qt() {
-  sh "$CONFIG_DIR/scripts/kvantum/materialQT.sh"          # generate kvantum theme
-  python "$CONFIG_DIR/scripts/kvantum/changeAdwColors.py" # apply config colors
-}
-
-# Check if terminal theming is enabled in config
-CONFIG_FILE="$XDG_CONFIG_HOME/qssettings/config.json"
-if [ -f "$CONFIG_FILE" ]; then
-  enable_terminal=$(jq -r '.appearance.wallpaperTheming.enableTerminal' "$CONFIG_FILE")
-  if [ "$enable_terminal" = "true" ]; then
-    apply_term &
-  fi
-else
-  echo "Config file not found at $CONFIG_FILE. Applying terminal theming by default."
-  apply_term &
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    main "$@"
 fi
-
-# apply_qt & # Qt theming is already handled by kde-material-colors

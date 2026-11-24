@@ -118,6 +118,29 @@ reuses it for the launcher's `settings:` search, so neither keeps its own page l
 - The rail collapses to group icons below 900 px and closes after selecting a leaf;
   clicking a group icon reopens the rail on that group.
 
+### Wallpaper colors
+
+- `scripts/colors/switchwall.sh` owns wallpaper changes and invokes `scripts/colors/matugen.py`.
+  Matugen is the only palette generator; Python only installs, filters and publishes templates.
+- `$XDG_CONFIG_HOME/matugen/config.toml` is user-editable. `tomllib` merges `configs/defaults.toml`,
+  `config.toml`, sorted root TOML files, then sorted other `configs/` TOML files. Later fields win;
+  all relative paths resolve from the Matugen directory. Hidden temporary and backup files are ignored.
+  `SystemTheming` watches both directories and their TOML files without polling or rewriting them.
+  `appearance.matugenDisabled` filters invocations; wallpaper theming flags gate terminal and Qt templates.
+- Default templates in `scripts/colors/matugen/` install into the user's Matugen directory.
+  `shell.qml` initializes `SystemTheming`, which runs setup after `Config.ready`. Normal generation
+  also ensures setup. Generic filenames preserve existing custom files during prefixed-name migration.
+  User config edits and templates are never replaced by bundled defaults. Old generated configurations
+  migrate from `.orig` once, retaining backups.
+- Setup grants a persistent user-wide Flatpak override for read-only GTK 3/4 config access while
+  shell/app theming is enabled. It checks existing permissions before writing and leaves app-specific
+  denials alone. Lock generation never runs setup or changes sandbox permissions.
+- Shell and terminal JSON are validated and atomically published. Lock generation selects only
+  the shell template, strips hooks and writes `colors-lock.json`, never live app state.
+- Terminal force-dark copies templates with `.default.` changed to `.dark.` for that invocation.
+  Qt palette selection preserves existing style settings. GTK 3 and GTK 4 have separate templates
+  because modern libadwaita CSS variables are not valid GTK 3 properties.
+
 ### Adding a setting
 
 1. Add the default to the appropriate `JsonObject` in `modules/common/Config.qml`.

@@ -108,16 +108,13 @@ Singleton {
                     property bool enableQtApps: true
                     property bool enableTerminal: true
                     property JsonObject terminalGenerationProps: JsonObject {
-                        property real harmony: 0.6
-                        property real harmonizeThreshold: 100
-                        property real termFgBoost: 0.35
                         property bool forceDarkMode: false
                     }
                 }
-                // matugen template names (from config.toml.orig) excluded when regenerating config.toml
+                // User template names excluded from the Matugen invocation.
                 property list<string> matugenDisabled: ["waybar", "swaync", "swayosd", "swaylock"]
                 property JsonObject palette: JsonObject {
-                    property string type: "scheme-neutral" // Allowed: auto, scheme-content, scheme-expressive, scheme-fidelity, scheme-fruit-salad, scheme-monochrome, scheme-neutral, scheme-rainbow, scheme-tonal-spot
+                    property string type: "scheme-neutral" // Auto uses Matugen's scheme-smart.
                     property string accentColor: ""
                 }
             }
