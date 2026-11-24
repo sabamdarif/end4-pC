@@ -58,6 +58,35 @@ class DriveInfoTests(unittest.TestCase):
 
 @unittest.skipUnless(shutil.which("qs"), "Quickshell is required")
 class DriveActionTests(unittest.TestCase):
+    def test_failed_unmount_stops_the_eject_queue(self):
+        handler = qml_block("services/Drives.qml", "        onExited: code => {", "    Process {\n        id: smartProc")
+        handler = handler[:handler.rfind("    }")]
+        run_qml(self, '''
+        property var actionQueue: [["udisksctl", "power-off", "-b", "/dev/sda"]]
+        property string lastError: ""
+        property int refreshes: 0
+        property int nextCalls: 0
+        function refresh() { root.refreshes++; }
+        function runNext() { root.nextCalls++; }
+        QtObject { id: actionError; property string text: "device is busy" }
+        QtObject { id: translation; function tr(text) { return text; } }
+        QtObject {
+            id: actionProc
+            signal exited(int code)
+''' + handler.replace("Translation.tr", "translation.tr") + '''
+        }
+        Component.onCompleted: {
+            actionProc.exited(1);
+            root.check(root.actionQueue.length === 0, "a failed unmount drops the pending power-off");
+            root.check(root.nextCalls === 0, "no more commands run after failure");
+            root.check(root.refreshes === 1, "failure refreshes the device state");
+            root.check(root.lastError.includes("device is busy"), "command error reaches the UI");
+            actionProc.exited(0);
+            root.check(root.nextCalls === 1, "only success advances the queue");
+            console.log("UI_TEST_DONE");
+        }
+''')
+
     def test_ejection_unmounts_every_volume_and_rejects_internal_drives(self):
         actions = qml_block("services/Drives.qml", "    function partition(", "    function openPartition(")
         run_qml(self, '''

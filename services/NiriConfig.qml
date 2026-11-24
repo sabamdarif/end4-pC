@@ -203,10 +203,14 @@ Singleton {
     FileView {
         id: windowrulesKdlFile
         path: root.windowrulesKdlPath
+        blockLoading: true
+        printErrors: false
     }
     FileView {
         id: validationFile
         path: `${root.qssettingsDir}/.windowrules-validation.kdl`
+        blockLoading: true
+        printErrors: false
         onSaved: if (root.validatingWindowRule) validationProc.exec(["niri", "validate", "-c", path])
         onSaveFailed: {
             root.validatingWindowRule = false;

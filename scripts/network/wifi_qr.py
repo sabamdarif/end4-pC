@@ -50,11 +50,29 @@ def generate(connection_uuid):
     runtime = Path(os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}"))
     if not runtime.is_dir() or runtime.stat().st_uid != os.getuid() or runtime.stat().st_mode & 0o077:
         raise ValueError("unsafe-runtime")
-    result = subprocess.run(
-        ["nmcli", "--show-secrets", "--escape", "no", "-t", "connection", "show", "uuid", connection_uuid],
-        capture_output=True, text=True, timeout=15, check=True,
-    )
-    props = dict(line.split(":", 1) for line in result.stdout.splitlines() if ":" in line)
+    def read(field, optional=False):
+        result = subprocess.run(["nmcli", "--show-secrets", "--escape", "no", "-g", field,
+            "connection", "show", "uuid", connection_uuid], capture_output=True, text=True, timeout=5)
+        if result.returncode:
+            if optional:
+                return ""
+            raise subprocess.CalledProcessError(result.returncode, result.args)
+        return result.stdout.removesuffix("\n")
+
+    # Read fields individually so literal newlines in SSIDs or secrets stay data.
+    props = {field: read(field) for field in ("connection.type", "802-11-wireless.ssid", "802-11-wireless.hidden")}
+    mode = read("802-11-wireless-security.key-mgmt")
+    if mode == "--":
+        mode = ""
+    props["802-11-wireless-security.key-mgmt"] = mode
+    if mode in ("wpa-psk", "sae"):
+        props["802-11-wireless-security.psk"] = read("802-11-wireless-security.psk", optional=True)
+    elif mode == "none":
+        index = read("802-11-wireless-security.wep-tx-keyidx", optional=True) or "0"
+        if index not in ("0", "1", "2", "3"):
+            raise ValueError("missing-secret")
+        props["802-11-wireless-security.wep-tx-keyidx"] = index
+        props[f"802-11-wireless-security.wep-key{index}"] = read(f"802-11-wireless-security.wep-key{index}", optional=True)
     payload, details = profile_payload(props)
     fd, path = tempfile.mkstemp(prefix=f"wifi-qr-{connection_uuid}-", suffix=".png", dir=runtime)
     os.close(fd)

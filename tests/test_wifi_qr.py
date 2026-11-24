@@ -2,6 +2,7 @@ import importlib.util
 from pathlib import Path
 import os
 import tempfile
+import subprocess
 import unittest
 from unittest.mock import patch
 
@@ -54,3 +55,35 @@ class WifiQrTests(unittest.TestCase):
             with self.assertRaises(OSError):
                 qr.save_image(Path(directory) / "missing", target)
             self.assertEqual(target.read_bytes(), b"png")
+
+    def test_generation_preserves_multiline_values_and_hides_secrets_from_argv(self):
+        props = self.profile()
+        props["802-11-wireless.ssid"] = "My\nWi-Fi"
+        props["802-11-wireless.hidden"] = "yes"
+        calls = []
+
+        def run(args, **kwargs):
+            calls.append((args, kwargs))
+            if args[0] == "nmcli":
+                return subprocess.CompletedProcess(args, 0, props.get(args[args.index("-g") + 1], "") + "\n", "")
+            Path(args[-1]).write_bytes(b"png")
+            return subprocess.CompletedProcess(args, 0, "", "")
+
+        with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ, XDG_RUNTIME_DIR=directory), patch.object(qr.subprocess, "run", side_effect=run):
+            details = qr.generate("12345678-1234-1234-1234-123456789012")
+            self.assertEqual(details["ssid"], "My\nWi-Fi")
+            self.assertEqual(Path(details["path"]).stat().st_mode & 0o777, 0o600)
+            self.assertIn("My\nWi-Fi", calls[-1][1]["input"])
+            self.assertNotIn(props["802-11-wireless-security.psk"], str([args for args, _ in calls]))
+
+    def test_unreadable_security_cannot_generate_an_open_network_qr(self):
+        def run(args, **kwargs):
+            self.assertEqual(args[0], "nmcli")
+            field = args[args.index("-g") + 1]
+            return subprocess.CompletedProcess(args, 1 if field.endswith("key-mgmt") else 0,
+                self.profile().get(field, "") + "\n", "")
+
+        with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ, XDG_RUNTIME_DIR=directory), patch.object(qr.subprocess, "run", side_effect=run):
+            with self.assertRaises(subprocess.CalledProcessError):
+                qr.generate("12345678-1234-1234-1234-123456789012")
+            self.assertEqual(list(Path(directory).iterdir()), [])

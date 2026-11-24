@@ -13,6 +13,8 @@ LazyLoader {
     // the popup is shown, instead of with whatever widget declares it.
     default property Component contentComponent
     property real popupBackgroundMargin: 0
+    property bool dismissOnOutsideClick: false
+    signal dismissRequested()
     active: hoverTarget && hoverTarget.containsMouse
 
     readonly property bool barVertical: Config.options.bar.vertical
@@ -24,6 +26,8 @@ LazyLoader {
 
     component: PanelWindow {
         id: popupWindow
+
+        screen: root.hoverTarget?.QsWindow.window?.screen ?? Quickshell.screens[0]
 
         color: "transparent"
         anchors.left: root.barEdge !== "right"
@@ -75,6 +79,22 @@ LazyLoader {
         }
         WlrLayershell.namespace: "quickshell:popup"
         WlrLayershell.layer: WlrLayer.Overlay
+
+        PanelWindow {
+            visible: root.dismissOnOutsideClick
+            screen: popupWindow.screen
+            color: "transparent"
+            anchors { top: true; bottom: true; left: true; right: true }
+            exclusiveZone: -1
+            WlrLayershell.namespace: "quickshell:popup:dismiss"
+            WlrLayershell.layer: WlrLayer.Top
+            WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+            MouseArea {
+                anchors.fill: parent
+                acceptedButtons: Qt.AllButtons
+                onPressed: root.dismissRequested()
+            }
+        }
 
         BackgroundEffect.blurRegion: Appearance.blurActive ? popupBlurRegion : null
         Region {

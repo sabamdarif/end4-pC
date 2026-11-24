@@ -9,6 +9,8 @@ import qs.modules.ii.sidebarRight.drives
 StyledPopup {
     id: root
     signal closeRequested()
+    dismissOnOutsideClick: true
+    onDismissRequested: root.closeRequested()
     ColumnLayout {
         implicitWidth: 340
         spacing: 12
@@ -52,7 +54,7 @@ StyledPopup {
         RowLayout {
             DialogButton {
                 buttonText: Translation.tr("Storage manager")
-                onClicked: { root.closeRequested(); GlobalStates.requestDrivesDialog(); }
+                onClicked: { root.closeRequested(); GlobalStates.openSidebarDialog("drives"); }
             }
             Item { Layout.fillWidth: true }
             DialogButton { buttonText: Translation.tr("Done"); onClicked: root.closeRequested() }

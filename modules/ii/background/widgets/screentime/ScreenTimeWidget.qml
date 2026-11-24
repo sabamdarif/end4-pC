@@ -17,7 +17,7 @@ AbstractBackgroundWidget {
     readonly property bool wide: root.configEntry.sizeMode === "1x4"
     implicitWidth: wide ? 420 : 276
     implicitHeight: wide ? 140 : 280
-    onClicked: if (!root.dragging && !GlobalStates.screenLocked) GlobalStates.requestScreenTimeDialog()
+    onClicked: if (!root.dragging && !GlobalStates.screenLocked) GlobalStates.openSidebarDialog("screentime")
     Rectangle {
         id: card
         anchors.fill: parent

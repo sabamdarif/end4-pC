@@ -44,6 +44,8 @@ Item {
     StyledPopup {
         hoverTarget: ruleMouseArea
         active: ruleMouseArea.menuOpen
+        dismissOnOutsideClick: true
+        onDismissRequested: ruleMouseArea.menuOpen = false
         RippleButtonWithIcon {
             materialIcon: "splitscreen"
             mainText: Translation.tr("Add window rule…")

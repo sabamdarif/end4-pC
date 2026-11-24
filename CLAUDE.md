@@ -166,3 +166,33 @@ DialogSheet {
 `backgroundHeight`; keep the body within it rather than raising the shared value.
 Register a new sheet as a `ToggleDialog` in `SidebarRightContent.qml`, and reach it from
 a quick toggle through `AbstractQuickPanel`'s `open<Name>Dialog` signal.
+
+### Window rules, drives and wellbeing
+
+- `NiriConfig.options.windowRules` holds `{name, enabled, match, properties}` rules.
+  All matcher attributes belong to one `match` node, so niri ANDs them. UI saves
+  validate a candidate fragment with `niri validate` before updating settings;
+  the debounced writer generates `windowrules.kdl`. Never write raw property KDL
+  from text fields. The active-window menu hands a draft to the stable
+  `window-rules` settings page through `NiriConfig.pendingWindowRule`.
+- Click-open bar popups use `StyledPopup.dismissOnOutsideClick`. Their dismiss
+  catcher is a transparent niri layer surface, not a compositor focus grab.
+- `GlobalStates.openSidebarDialog("drives" | "screentime")` retains its request
+  until the lazy `SidebarRightContent` exists. Do not replace this with a signal
+  emitted only to the unloaded sidebar.
+- `Drives` polls only while a drive widget is configured or a storage sheet
+  subscribes. `scripts/system/drives_info.py` owns discovery and SMART parsing.
+  Ejection queues ordinary unmounts before power-off and stops on any failure;
+  health checks never escalate privileges automatically.
+- `ScreenTime` is initialized by `shell.qml`, independently of widget visibility.
+  Its tracker receives shell lock/idle state on stdin and also checks loginctl.
+  Private, atomic `qssettings/screentime.json` stores a versioned `days` array,
+  retaining 92 local calendar days with optional hourly totals. Invalid history
+  must stop tracking rather than reset it. Limits live in `Config.options.wellbeing`
+  and emit once-per-app/day session reminders, never app-blocking actions.
+- `services/Wellbeing.js` adapts dux-shell date/chart helpers. Keep the upstream
+  MIT notice in `assets/licenses/dux-shell.txt`. Shared wellbeing UI lives in
+  `modules/ii/sidebarRight/screentime/` and is reused by the settings leaf.
+- Wi-Fi QR images contain credentials. `scripts/network/wifi_qr.py` sends their
+  payload to qrencode on stdin, uses private runtime files, and atomically saves
+  exported images with mode 0600. Never put passwords or Wi-Fi payloads in argv.

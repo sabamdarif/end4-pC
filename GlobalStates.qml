@@ -9,8 +9,11 @@ pragma ComponentBehavior: Bound
 Singleton {
     id: root
     signal requestBluetoothDialog()
-    signal requestDrivesDialog()
-    signal requestScreenTimeDialog()
+    property string requestedSidebarDialog: ""
+    function openSidebarDialog(dialog) {
+        root.requestedSidebarDialog = dialog;
+        root.sidebarRightOpen = true;
+    }
     property bool barOpen: true
     property bool clipboardOpen: false
     property bool crosshairOpen: false

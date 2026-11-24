@@ -50,11 +50,26 @@ class ScreenTimeTrackerTests(unittest.TestCase):
     def test_bad_history_is_not_silently_reset(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "history.json"
-            for data in ("broken", '{"days": 3}', json.dumps({"days": [{"date": "2026-11-24", "active": -1, "apps": {}}]})):
+            for data in ("broken", '{"days": 3}', '{"version": 2, "days": []}', '{"days": [null]}',
+                         json.dumps({"days": [{"date": "2026-11-24", "active": -1, "apps": {}}]}),
+                         json.dumps({"days": [{"date": "2026-11-24", "active": 1, "apps": {}, "hours": []}]})):
                 path.write_text(data)
                 with self.assertRaises(ValueError):
                     tracker.load_history(path, dt.date.today())
                 self.assertEqual(path.read_text(), data)
+
+    def test_daemon_exits_without_overwriting_invalid_history(self):
+        with tempfile.TemporaryDirectory() as directory:
+            config = Path(directory) / "qssettings"
+            config.mkdir()
+            history = config / "screentime.json"
+            history.write_text('{"days": [null]}')
+            result = subprocess.run(["python3", str(REPOSITORY / "scripts/screentime/screentime_tracker.py")],
+                capture_output=True, text=True, timeout=5,
+                env=dict(os.environ, XDG_CONFIG_HOME=directory, XDG_CACHE_HOME=directory))
+            self.assertEqual(result.returncode, 1, result.stderr)
+            self.assertEqual(json.loads(result.stdout)["error"], "history")
+            self.assertEqual(history.read_text(), '{"days": [null]}')
 
     def test_limits_notify_once_per_app_per_day_and_session(self):
         day = {"date": "2026-11-24", "active": 3600, "apps": {"kitty": 1800, "code": 100}}

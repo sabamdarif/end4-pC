@@ -28,7 +28,10 @@ Item {
     property int sidebarWidth: Appearance.sizes.sidebarWidth
     property int sidebarPadding: 10
 
-    Component.onCompleted: DateTime.uptimeSubscribers++
+    Component.onCompleted: {
+        DateTime.uptimeSubscribers++;
+        root.openPendingDialog();
+    }
     Component.onDestruction: DateTime.uptimeSubscribers--
     readonly property real compositorRounding: NiriConfig.options.decoration.rounding
     property bool showAudioOutputDialog: false
@@ -57,6 +60,15 @@ Item {
     function openDialog(shownPropertyString) {
         closeDialogs();
         root[shownPropertyString] = true;
+    }
+
+    // Keep the request until this lazily loaded sidebar can receive it.
+    function openPendingDialog() {
+        const requested = GlobalStates.requestedSidebarDialog;
+        if (!requested) return;
+        GlobalStates.requestedSidebarDialog = "";
+        if (requested === "drives") root.openDialog("showDrivesDialog");
+        else if (requested === "screentime") root.openDialog("showScreenTimeDialog");
     }
 
     readonly property MprisPlayer activePlayer: MprisController.activePlayer
@@ -108,14 +120,7 @@ Item {
             root.openDialog("showBluetoothDialog");
             GlobalStates.sidebarRightOpen = true;
         }
-        function onRequestDrivesDialog() {
-            GlobalStates.sidebarRightOpen = true;
-            root.openDialog("showDrivesDialog");
-        }
-        function onRequestScreenTimeDialog() {
-            GlobalStates.sidebarRightOpen = true;
-            root.openDialog("showScreenTimeDialog");
-        }
+        function onRequestedSidebarDialogChanged() { root.openPendingDialog(); }
 
         function onSidebarRightOpenChanged() {
             if (!GlobalStates.sidebarRightOpen) {

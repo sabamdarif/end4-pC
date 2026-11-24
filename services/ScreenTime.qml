@@ -53,6 +53,10 @@ Singleton {
         id: historyFile
         path: Directories.shellConfig + "/screentime.json"
         watchChanges: true
+        printErrors: false
+        onLoadFailed: error => {
+            if (error !== FileViewError.FileNotFound) root.lastError = Translation.tr("Could not read screen time history.");
+        }
         onFileChanged: reload()
         onLoaded: {
             try {

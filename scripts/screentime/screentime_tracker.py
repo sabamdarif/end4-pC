@@ -34,11 +34,15 @@ def load_history(path, today, legacy=None):
     if path.exists():
         with path.open() as source:
             data = json.load(source)
+        if isinstance(data, dict) and data.get("version", 1) != 1:
+            raise ValueError("unsupported screen time history version")
         entries = data.get("days") if isinstance(data, dict) else data
         if not isinstance(entries, list):
             raise ValueError("invalid screen time history")
         days = {}
         for entry in entries:
+            if not isinstance(entry, dict) or not isinstance(entry.get("hours", {}), dict):
+                raise ValueError("invalid screen time day")
             date = dt.date.fromisoformat(entry["date"]).isoformat()
             if date in days or not isinstance(entry.get("apps"), dict):
                 raise ValueError("invalid screen time day")
@@ -58,7 +62,7 @@ def load_history(path, today, legacy=None):
                 days[date] = {"date": date, "active": seconds(old["total_screentime"]),
                     "apps": {app: seconds(value) for app, value in old.get("apps", {}).items()},
                     "hours": {hour: seconds(value) for hour, value in old.get("hourly_usage", {}).items()}}
-        except (OSError, ValueError, KeyError, TypeError):
+        except (OSError, ValueError, KeyError, TypeError, AttributeError, OverflowError):
             pass
     return days
 

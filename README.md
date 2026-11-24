@@ -115,7 +115,7 @@ The shell and its helper scripts use only this new folder. There is no automatic
 
 ---
 
-## 📦 Runtime dependencies
+## Feature usage
 
 ### Wi-Fi sharing
 
@@ -170,6 +170,8 @@ Old cache data is imported only if its boot date is today; the old file is left
 untouched. Invalid history stops the tracker instead of overwriting your data.
 Date/chart helpers are adapted from dux-shell under its MIT license.
 
+## 📦 Runtime dependencies
+
 > [!NOTE]
 > The install steps above only assume [niri](https://github.com/YaLTeR/niri) and quickshell. Everything in the tables below is a program the shell itself spawns at runtime; Arch package names are given. Packages marked (AUR) are not in the official repositories.
 
@@ -204,6 +206,10 @@ Only the core list is needed for the shell to start and work. Feature-gated pack
 | --- | --- | --- |
 | Screenshot | `grim`, `satty` | grim, satty |
 | Color picker | `slurp` | slurp |
+| Wi-Fi QR sharing | `qrencode` | qrencode |
+| Drive discovery and events | `lsblk`, `udevadm` | util-linux, systemd |
+| Mount and safely eject drives | `udisksctl` | udisks2 |
+| SMART drive health | `smartctl` | smartmontools |
 | Audio visualizer | `cava` | cava |
 | Stop an existing screen recording | `wf-recorder` | wf-recorder |
 | System sound fallbacks | `paplay`, `pw-play`, `canberra-gtk-play` (first available wins) | libpulse, pipewire-audio, libcanberra |

@@ -15,6 +15,7 @@ Dialog {
     anchors.centerIn: parent
     width: Math.min(440, parent.width - 32)
     modal: true
+    closePolicy: saveProc.running ? Popup.NoAutoClose : Popup.CloseOnEscape | Popup.CloseOnPressOutside
     padding: 24
     property var details: ({})
     property string errorText: ""
@@ -25,6 +26,7 @@ Dialog {
         root.details = ({});
         root.errorText = "";
         root.saved = false;
+        reveal.checked = false;
         root.open();
         generateProc.exec(["python3", Quickshell.shellPath("scripts/network/wifi_qr.py"), uuid]);
     }
@@ -34,6 +36,7 @@ Dialog {
         root.details = ({});
     }
     onClosed: root.clearImage()
+    Component.onDestruction: root.clearImage()
 
     background: Rectangle {
         radius: Appearance.rounding.large
@@ -132,7 +135,7 @@ Dialog {
                 buttonText: Translation.tr("Save image")
                 onClicked: saveDialog.open()
             }
-            DialogButton { buttonText: Translation.tr("Done"); onClicked: root.close() }
+            DialogButton { buttonText: Translation.tr("Done"); enabled: !saveProc.running; onClicked: root.close() }
         }
     }
 }

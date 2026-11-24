@@ -4,6 +4,7 @@ import shutil
 import subprocess
 import tempfile
 import unittest
+import os
 
 from ui_test_utils import qml_block
 
@@ -44,3 +45,73 @@ class WindowRulesTests(unittest.TestCase):
             with self.subTest(props=props):
                 self.assertNotEqual(self.generate([{"match": {"appId": "kitty"}, "properties": props}]).returncode, 0)
         self.assertNotEqual(self.generate([{"match": {}}]).returncode, 0)
+
+
+@unittest.skipUnless(shutil.which("qs") and shutil.which("niri"), "Quickshell and niri are required")
+class WindowRulePersistenceTests(unittest.TestCase):
+    def test_save_validates_before_persisting_and_keeps_invalid_drafts_out(self):
+        repository = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory(prefix="window-rule-save-") as directory:
+            root = Path(directory)
+            services = root / "services"
+            services.mkdir()
+            shutil.copy(repository / "services/NiriConfig.qml", services)
+            common = root / "modules/common"
+            functions = common / "functions"
+            functions.mkdir(parents=True)
+            config = root / "config"
+            managed = config / "niri/qssettings"
+            managed.mkdir(parents=True)
+            (managed / "settings.json").write_text('{"windowRules": []}')
+            (common / "Directories.qml").write_text('pragma Singleton\nimport Quickshell\nSingleton { property string config: ' + json.dumps(str(config)) + ' }')
+            (common / "Translation.qml").write_text('pragma Singleton\nimport Quickshell\nSingleton { function tr(text) { return text; } }')
+            (functions / "FileUtils.qml").write_text('pragma Singleton\nimport Quickshell\nSingleton { function trimFileProtocol(text) { return text; } }')
+            (root / "shell.qml").write_text('''import QtQuick
+import Quickshell
+import "services"
+ShellRoot {
+    id: root
+    property int stage: 0
+    function check(condition, message) { if (!condition) console.error("ASSERTION_FAILED", message); }
+    Timer {
+        interval: 20; running: true; repeat: true
+        onTriggered: {
+            if (root.stage !== 0 || !NiriConfig.ready) return;
+            root.stage = 1;
+            NiriConfig.saveWindowRule(-1, {match: {appId: "^kitty$"}, properties: {opacity: 0.95}});
+        }
+    }
+    Connections {
+        target: NiriConfig
+        function onWindowRuleSaved() {
+            root.check(root.stage === 1, "only the valid draft saves");
+            root.check(NiriConfig.options.windowRules.length === 1, "valid rule enters settings");
+            root.stage = 2;
+            NiriConfig.saveWindowRule(0, {match: {appId: "["}, properties: {opacity: 0.5}});
+        }
+        function onWindowRuleErrorChanged() {
+            if (root.stage !== 2 || NiriConfig.windowRuleError === "") return;
+            root.check(NiriConfig.options.windowRules[0].properties.opacity === 0.95, "invalid regex leaves the saved rule intact");
+            root.stage = 3;
+        }
+    }
+    Timer {
+        interval: 1000; running: true
+        onTriggered: {
+            root.check(root.stage === 3, "both validation outcomes completed");
+            console.log("RULE_SAVE_TEST_DONE");
+            Qt.quit();
+        }
+    }
+}
+''')
+            result = subprocess.run(["qs", "-p", str(root)], capture_output=True, text=True, timeout=10,
+                env=dict(os.environ, QT_QPA_PLATFORM="offscreen"))
+            output = result.stdout + result.stderr
+            self.assertEqual(result.returncode, 0, output)
+            self.assertIn("RULE_SAVE_TEST_DONE", output)
+            for error in ("ASSERTION_FAILED", "TypeError", "ReferenceError"):
+                self.assertNotIn(error, output)
+            saved = json.loads((managed / "settings.json").read_text())["windowRules"]
+            self.assertEqual(saved[0]["properties"]["opacity"], 0.95)
+            self.assertIn("opacity 0.95", (managed / "windowrules.kdl").read_text())

@@ -11,8 +11,9 @@ DialogSheet {
     settingsPage: "wellbeing"
     StyledText {
         Layout.fillWidth: true
-        visible: !ScreenTime.isEnabled || ScreenTime.lastError !== ""
-        text: ScreenTime.lastError || Translation.tr("Tracking is disabled. Enable it in settings.")
+        visible: !ScreenTime.tracking || ScreenTime.lastError !== ""
+        text: ScreenTime.lastError || (ScreenTime.isEnabled ? Translation.tr("Tracking needs a running niri session.")
+            : Translation.tr("Tracking is disabled. Enable it in settings."))
         wrapMode: Text.Wrap
     }
     WellbeingContent { Layout.fillWidth: true; Layout.fillHeight: true }
