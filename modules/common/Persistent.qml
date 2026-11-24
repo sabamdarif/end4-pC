@@ -160,7 +160,8 @@ Singleton {
                 }
                 property JsonObject stopwatch: JsonObject {
                     property bool running: false
-                    property int start: 0
+                    property real start: 0
+                    property real elapsed: 0
                     property list<var> laps: []
                 }
                 property JsonObject countdown: JsonObject {
