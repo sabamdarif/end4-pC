@@ -384,93 +384,99 @@ Item {
                         Rectangle {
                             visible: settingsSearchField.activeFocus && root.settingsSearchQuery.trim() !== ""
                             anchors { top: settingsSearchField.bottom; left: parent.left; right: parent.right; topMargin: 4 }
-                            implicitHeight: Math.min(searchResultsColumn.implicitHeight + 8, 300)
+                            implicitHeight: Math.min(Math.max(40, root.settingsSearchResults.length * 44) + 8, 300)
                             color: Appearance.m3colors.m3surfaceContainerHigh
                             radius: Appearance.rounding.small
                             border.width: 1
                             border.color: Appearance.m3colors.m3outlineVariant
                             clip: true
 
-                            Column {
-                                id: searchResultsColumn
-                                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 4 }
+                            StyledListView {
+                                id: settingsSearchResultsView
+                                anchors { fill: parent; margins: 4 }
+                                spacing: 0
+                                animateAppearance: false
+                                clip: true
+                                boundsBehavior: Flickable.StopAtBounds
+                                model: root.settingsSearchResults
+                                currentIndex: root.settingsSearchIndex
+                                onCurrentIndexChanged: if (currentIndex >= 0) positionViewAtIndex(currentIndex, ListView.Contain)
+                                onCountChanged: Qt.callLater(() => {
+                                    if (currentIndex >= 0) positionViewAtIndex(currentIndex, ListView.Contain)
+                                })
 
-                                Repeater {
-                                    model: root.settingsSearchResults
-                                    RippleButton {
-                                        required property var index
-                                        required property var modelData
-                                        width: searchResultsColumn.width
-                                        height: 44
-                                        colBackground: index === root.settingsSearchIndex
-                                            ? Appearance.colors.colSecondaryContainer
-                                            : "transparent"
-                                        colBackgroundHover: Appearance.colors.colLayer1Hover
-                                        onClicked: root.openSettingsSearchResult(modelData)
+                                delegate: RippleButton {
+                                    required property int index
+                                    required property var modelData
+                                    width: ListView.view.width
+                                    height: 44
+                                    colBackground: index === root.settingsSearchIndex
+                                        ? Appearance.colors.colSecondaryContainer
+                                        : "transparent"
+                                    colBackgroundHover: Appearance.colors.colLayer1Hover
+                                    onClicked: root.openSettingsSearchResult(modelData)
 
-                                        contentItem: RowLayout {
-                                            spacing: 8
-                                            MaterialSymbol {
-                                                text: modelData.icon
-                                                iconSize: 18
-                                                color: Appearance.colors.colOnLayer1
-                                            }
-                                            ColumnLayout {
-                                                spacing: 0
+                                    contentItem: RowLayout {
+                                        spacing: 8
+                                        MaterialSymbol {
+                                            text: modelData.icon
+                                            iconSize: 18
+                                            color: Appearance.colors.colOnLayer1
+                                        }
+                                        ColumnLayout {
+                                            spacing: 0
+                                            Layout.fillWidth: true
+                                            RowLayout {
                                                 Layout.fillWidth: true
-                                                RowLayout {
-                                                    Layout.fillWidth: true
-                                                    spacing: 6
+                                                spacing: 6
 
-                                                    StyledText {
-                                                        Layout.fillWidth: true
-                                                        text: modelData.sectionName === "" ? modelData.pageName : modelData.sectionName
-                                                        color: Appearance.colors.colOnLayer1
-                                                        font.pixelSize: Appearance.font.pixelSize.small
-                                                        elide: Text.ElideRight
-                                                    }
-
-                                                    Rectangle {
-                                                        visible: modelData.isWip === true
-                                                        radius: Appearance.rounding.unsharpen
-                                                        color: Appearance.colors.colSecondaryContainer
-                                                        implicitWidth: wipBadgeLabel.implicitWidth + 8
-                                                        implicitHeight: wipBadgeLabel.implicitHeight + 4
-
-                                                        StyledText {
-                                                            id: wipBadgeLabel
-                                                            anchors.centerIn: parent
-                                                            text: Translation.tr("WIP")
-                                                            font.pixelSize: Appearance.font.pixelSize.smallest
-                                                            font.weight: Font.Bold
-                                                            color: Appearance.colors.colOnSecondaryContainer
-                                                        }
-                                                    }
-                                                }
                                                 StyledText {
                                                     Layout.fillWidth: true
-                                                    text: modelData.sectionName === ""
-                                                        ? modelData.groupName
-                                                        : `${modelData.groupName} • ${modelData.pageName}`
-                                                    color: Appearance.colors.colSubtext
-                                                    font.pixelSize: Appearance.font.pixelSize.smaller
+                                                    text: modelData.sectionName === "" ? modelData.pageName : modelData.sectionName
+                                                    color: Appearance.colors.colOnLayer1
+                                                    font.pixelSize: Appearance.font.pixelSize.small
                                                     elide: Text.ElideRight
                                                 }
+
+                                                Rectangle {
+                                                    visible: modelData.isWip === true
+                                                    radius: Appearance.rounding.unsharpen
+                                                    color: Appearance.colors.colSecondaryContainer
+                                                    implicitWidth: wipBadgeLabel.implicitWidth + 8
+                                                    implicitHeight: wipBadgeLabel.implicitHeight + 4
+
+                                                    StyledText {
+                                                        id: wipBadgeLabel
+                                                        anchors.centerIn: parent
+                                                        text: Translation.tr("WIP")
+                                                        font.pixelSize: Appearance.font.pixelSize.smallest
+                                                        font.weight: Font.Bold
+                                                        color: Appearance.colors.colOnSecondaryContainer
+                                                    }
+                                                }
+                                            }
+                                            StyledText {
+                                                Layout.fillWidth: true
+                                                text: modelData.sectionName === ""
+                                                    ? modelData.groupName
+                                                    : `${modelData.groupName} • ${modelData.pageName}`
+                                                color: Appearance.colors.colSubtext
+                                                font.pixelSize: Appearance.font.pixelSize.smaller
+                                                elide: Text.ElideRight
                                             }
                                         }
                                     }
                                 }
+                            }
 
-                                StyledText {
-                                    visible: root.settingsSearchResults.length === 0
-                                    width: searchResultsColumn.width
-                                    height: 40
-                                    horizontalAlignment: Text.AlignHCenter
-                                    verticalAlignment: Text.AlignVCenter
-                                    text: Translation.tr("No settings found")
-                                    color: Appearance.colors.colSubtext
-                                    font.pixelSize: Appearance.font.pixelSize.small
-                                }
+                            StyledText {
+                                visible: root.settingsSearchResults.length === 0
+                                anchors { fill: parent; margins: 4 }
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                                text: Translation.tr("No settings found")
+                                color: Appearance.colors.colSubtext
+                                font.pixelSize: Appearance.font.pixelSize.small
                             }
                         }
                     }
