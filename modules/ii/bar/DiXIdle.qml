@@ -162,7 +162,7 @@ Item {
                     buttonIcon: "settings"
                     onClicked: {
                         root.di.collapse();
-                        GlobalStates.openSettingsAt("sidebar");
+                        GlobalStates.openSettingsAt("right-sidebar");
                     }
                     StyledToolTip {
                         text: Translation.tr("Settings")
