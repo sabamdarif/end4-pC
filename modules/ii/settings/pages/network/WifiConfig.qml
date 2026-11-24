@@ -10,6 +10,11 @@ ContentPage {
 
     property string editingUuid: ""
 
+    Loader {
+        id: qrLoader
+        source: Qt.resolvedUrl("WifiQrDialog.qml")
+    }
+
     function openEditor(uuid) {
         if (uuid === "") return;
         WifiProfile.load(uuid);
@@ -308,6 +313,12 @@ ContentPage {
                             }
                         }
 
+                        RippleButtonWithIcon {
+                            materialIcon: "qr_code_2"
+                            mainText: ""
+                            onClicked: qrLoader.item.share(savedRow.modelData.uuid)
+                            StyledToolTip { text: Translation.tr("Share via QR") }
+                        }
                         RippleButtonWithIcon {
                             visible: !savedRow.confirmingForget
                             materialIcon: "delete"

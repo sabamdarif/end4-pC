@@ -31,6 +31,11 @@ ColumnLayout {
 
     signal closeRequested()
 
+    Loader {
+        id: qrLoader
+        source: Qt.resolvedUrl("WifiQrDialog.qml")
+    }
+
     function register(field) {
         editor.fields.push(field);
     }
@@ -247,6 +252,12 @@ ColumnLayout {
                 elide: Text.ElideRight
             }
         }
+    }
+
+    RippleButtonWithIcon {
+        materialIcon: "qr_code_2"
+        mainText: Translation.tr("Share via QR")
+        onClicked: qrLoader.item.share(editor.uuid)
     }
 
     ContentSection {

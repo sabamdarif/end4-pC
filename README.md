@@ -117,6 +117,16 @@ The shell and its helper scripts use only this new folder. There is no automatic
 
 ## 📦 Runtime dependencies
 
+### Wi-Fi sharing
+
+In Settings → Wi-Fi, use the QR button beside a saved network or **Share via QR**
+in its profile editor. Personal WPA/WPA3, WEP and open networks are supported;
+enterprise and Enhanced Open networks cannot be shared this way. Install
+`qrencode` for QR generation. NetworkManager must allow reading the saved secret.
+Temporary images are private and removed when the dialog closes. Saved images
+contain the password, so share them carefully. Sharing uses the saved profile,
+not unsaved edits.
+
 > [!NOTE]
 > The install steps above only assume [niri](https://github.com/YaLTeR/niri) and quickshell. Everything in the tables below is a program the shell itself spawns at runtime; Arch package names are given. Packages marked (AUR) are not in the official repositories.
 
