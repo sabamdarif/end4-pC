@@ -10,6 +10,7 @@ Singleton {
     id: root
     signal requestBluetoothDialog()
     signal requestDrivesDialog()
+    signal requestScreenTimeDialog()
     property bool barOpen: true
     property bool clipboardOpen: false
     property bool crosshairOpen: false

@@ -210,7 +210,8 @@ Singleton {
                     });
                 }
                 root.unread++;
-                if (Config.options.sounds.notification) Audio.playSystemSound("message-new-instant");
+                if (Config.options.sounds.notification && !notification.hints["suppress-sound"])
+                    Audio.playSystemSound("message-new-instant");
             }
             root.notify(newNotifObject);
             // console.log(notifToString(newNotifObject));

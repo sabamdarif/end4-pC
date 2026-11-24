@@ -21,6 +21,7 @@ import qs.modules.ii.sidebarRight.wifiNetworks
 import qs.modules.ii.sidebarRight.iconPicker
 import qs.modules.ii.sidebarRight.keepAwake
 import qs.modules.ii.sidebarRight.drives
+import qs.modules.ii.sidebarRight.screentime
 
 Item {
     id: root
@@ -39,6 +40,7 @@ Item {
     property bool editMode: false
     property bool showIconPickerDialog: false
     property bool showDrivesDialog: false
+    property bool showScreenTimeDialog: false
 
     function closeDialogs() {
         showAudioOutputDialog = false;
@@ -49,6 +51,7 @@ Item {
         showWifiDialog = false;
         showIconPickerDialog = false;
         showDrivesDialog = false;
+        showScreenTimeDialog = false;
     }
 
     function openDialog(shownPropertyString) {
@@ -108,6 +111,10 @@ Item {
         function onRequestDrivesDialog() {
             GlobalStates.sidebarRightOpen = true;
             root.openDialog("showDrivesDialog");
+        }
+        function onRequestScreenTimeDialog() {
+            GlobalStates.sidebarRightOpen = true;
+            root.openDialog("showScreenTimeDialog");
         }
 
         function onSidebarRightOpenChanged() {
@@ -464,6 +471,11 @@ Item {
     ToggleDialog {
         shownPropertyString: "showDrivesDialog"
         dialog: DrivesDialog {}
+    }
+
+    ToggleDialog {
+        shownPropertyString: "showScreenTimeDialog"
+        dialog: ScreenTimeDialog {}
     }
 
     component ToggleDialog: Loader {

@@ -5,6 +5,8 @@ import re
 import subprocess
 import tempfile
 import unittest
+import datetime
+import json
 
 
 REPOSITORY = Path(__file__).resolve().parents[1]
@@ -26,12 +28,21 @@ class FeatureComponentTests(unittest.TestCase):
             config = root / "config"
             (config / "qssettings").mkdir(parents=True)
             (config / "niri/qssettings").mkdir(parents=True)
-            loaders = "\n".join(f'Loader {{ source: "{path}"; onLoaded: console.log("LOADED", source) }}' for path in paths)
+            (config / "qssettings/config.json").write_text(json.dumps({"wellbeing": {"enable": False}}))
+            (config / "qssettings/screentime.json").write_text(json.dumps({"version": 1, "days": [
+                {"date": datetime.date.today().isoformat(), "active": 3600, "apps": {"kitty": 3600}}]}))
+            loaders = "\n".join('Loader { anchors.fill: parent; Component.onCompleted: setSource("' + path + '", '
+                + ('{screenWidth: 1920, screenHeight: 1080, scaledScreenWidth: 1920, scaledScreenHeight: 1080, wallpaperScale: 1}'
+                   if path.endswith("ScreenTimeWidget.qml") else '{}')
+                + '); onLoaded: { console.log("LOADED", source); '
+                + ('item.show = true;' if path.endswith("Dialog.qml") and "sidebarRight" in path else '') + '} }' for path in paths)
             (root / "shell.qml").write_text('''import QtQuick
 import QtQuick.Controls
 import QtQuick.Window
 import Quickshell
 import qs.modules.ii.sidebarRight.drives
+import qs.modules.ii.sidebarRight.screentime
+import qs.modules.ii.background.widgets
 ShellRoot {
     Window {
         visible: true
@@ -64,3 +75,8 @@ ShellRoot {
 
     def test_storage_components_load(self):
         self.load_components(["modules/ii/sidebarRight/drives/DrivesDialog.qml"])
+
+    def test_wellbeing_components_load_with_usage(self):
+        self.load_components(["modules/ii/sidebarRight/screentime/ScreenTimeDialog.qml",
+                              "modules/ii/settings/pages/system/WellbeingConfig.qml",
+                              "modules/ii/background/widgets/screentime/ScreenTimeWidget.qml"])

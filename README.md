@@ -153,6 +153,23 @@ hours. Install `udisks2` for mount/eject actions and `smartmontools` for health
 checks. SMART access needs device permissions and may not work through USB
 bridges. The shell does not automatically request elevated privileges.
 
+### Digital wellbeing
+
+Click the screen time desktop widget for a weekly chart and app usage details,
+or open Settings → System → Digital wellbeing. Browse previous weeks, select a
+day, or switch the app list between day, week and the last 30 calendar days.
+Set a daily screen time limit or an app limit with the duration steppers.
+Reminders notify once per app/day in a tracker session and respect notification
+sound settings. Limits never block apps.
+
+Tracking can be disabled independently of the desktop widget. Existing
+configurations initially inherit the widget's tracking choice. Usage pauses
+while locked or idle for five minutes, and rolls over at local midnight.
+Up to 92 days are stored privately in `$XDG_CONFIG_HOME/qssettings/screentime.json`.
+Old cache data is imported only if its boot date is today; the old file is left
+untouched. Invalid history stops the tracker instead of overwriting your data.
+Date/chart helpers are adapted from dux-shell under its MIT license.
+
 > [!NOTE]
 > The install steps above only assume [niri](https://github.com/YaLTeR/niri) and quickshell. Everything in the tables below is a program the shell itself spawns at runtime; Arch package names are given. Packages marked (AUR) are not in the official repositories.
 

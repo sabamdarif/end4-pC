@@ -24,6 +24,7 @@ ShellRoot {
         Cliphist.refresh()
         Wallpapers.load()
         Updates.load()
+        ScreenTime.load()
     }
 
     PanelFamilyLoader {

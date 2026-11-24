@@ -167,6 +167,12 @@ Singleton {
                 property bool closeOnCopy: true
             }
 
+            property JsonObject wellbeing: JsonObject {
+                property bool enable: configOptionsJsonAdapter.background.widgets.screentime.enable
+                property int dailyLimit: 0
+                property var appLimits: ({})
+            }
+
             property JsonObject background: JsonObject {
                 property string lockWall: ""
                 property bool widgetsLocked: false

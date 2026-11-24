@@ -132,6 +132,7 @@ Singleton {
                 { key: "updates",   name: Translation.tr("Updates and Storage"), icon: "deployed_code_update",  component: root.page("system/UpdatesConfig.qml") },
                 { key: "battery",   name: Translation.tr("Battery"),             icon: "battery_android_frame_full", component: root.page("system/BatteryConfig.qml") },
                 { key: "date-time", name: Translation.tr("Date and Time"),       icon: "nest_clock_farsight_analog", component: root.page("system/DateTimeConfig.qml") },
+                { key: "wellbeing", name: Translation.tr("Digital wellbeing"),  icon: "digital_wellbeing", component: root.page("system/WellbeingConfig.qml") },
                 { key: "weather",   name: Translation.tr("Weather"),             icon: "flare",                 component: root.page("system/WeatherConfig.qml") },
                 { key: "about",     name: Translation.tr("About"),               icon: "info",                  component: root.page("About.qml") },
             ]
