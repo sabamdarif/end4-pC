@@ -29,7 +29,6 @@ Item {
     Component.onCompleted: DateTime.uptimeSubscribers++
     Component.onDestruction: DateTime.uptimeSubscribers--
     readonly property real compositorRounding: NiriConfig.options.decoration.rounding
-    property string settingsQmlPath: Quickshell.shellPath("settings.qml")
     property bool showAudioOutputDialog: false
     property bool showAudioInputDialog: false
     property bool showBluetoothDialog: false
