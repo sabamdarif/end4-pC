@@ -115,7 +115,8 @@ Singleton {
         property string pendingEntry: ""
         property string collected: ""
 
-        command: ["bash", "-c", `printf '${StringUtils.shellSingleQuoteEscape(textPinProc.pendingEntry)}' | ${Cliphist.cliphistBinary} decode`]
+        command: ["bash", "-c", "printf '%s' \"$1\" | \"$2\" decode",
+            "cliphist-pin", textPinProc.pendingEntry, Cliphist.cliphistBinary]
 
         function pinEntry(entry) {
             textPinProc.collected = "";
@@ -153,7 +154,8 @@ Singleton {
         property string pendingKey: ""
         property string pendingPath: ""
 
-        command: ["bash", "-c", `mkdir -p '${root.pinsDir}' && printf '${StringUtils.shellSingleQuoteEscape(imagePinProc.pendingEntry)}' | ${Cliphist.cliphistBinary} decode > '${StringUtils.shellSingleQuoteEscape(imagePinProc.pendingPath)}'`]
+        command: ["bash", "-c", "mkdir -p \"$1\" && printf '%s' \"$2\" | \"$3\" decode > \"$4\"",
+            "cliphist-image-pin", root.pinsDir, imagePinProc.pendingEntry, Cliphist.cliphistBinary, imagePinProc.pendingPath]
 
         function pinEntry(entry) {
             imagePinProc.pendingKey = `i${Date.now()}`;
