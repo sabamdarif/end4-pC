@@ -21,15 +21,6 @@ ContentPage {
         Qt.callLater(() => GlobalStates.settingsOpen = false)
     }
 
-    function runUpdateDots() {
-        Quickshell.execDetached([
-            "kitty", "--hold",
-            "bash", "-c",
-            "killall qs; sleep 0.5; cd ~/.config/quickshell/ && rm -rf end4-pC && git clone https://github.com/pctrade/end4-pC.git && nohup qs -c end4-pC > /tmp/qs.log 2>&1 &"
-        ])
-        Qt.callLater(() => GlobalStates.settingsOpen = false)
-    }
-
     Rectangle {
         Layout.fillWidth: true
         Layout.preferredHeight: 156 
@@ -109,26 +100,6 @@ ContentPage {
                             border.width: 2
                             border.color: Appearance.colors.colLayer1
                         }
-                    }
-                }
-            }
-            RowLayout {
-                anchors.bottom: parent.bottom
-                anchors.right: parent.right
-                anchors.margins: 0
-                spacing: 8
-                RippleButton {
-                    buttonText: Translation.tr("Update Dots")
-                    buttonRadius: Appearance.rounding.full
-                    colBackground: Appearance.colors.colPrimaryContainer
-                    colBackgroundHover: Appearance.colors.colPrimaryContainerHover
-                    Layout.preferredHeight: 44
-                    downAction: () => runUpdateDots()
-                    contentItem: StyledText {
-                        text: parent.buttonText
-                        horizontalAlignment: Text.AlignHCenter
-                        leftPadding: 10
-                        rightPadding: 10
                     }
                 }
             }
