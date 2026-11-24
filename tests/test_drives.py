@@ -107,6 +107,36 @@ class DriveInfoTests(unittest.TestCase):
 
 @unittest.skipUnless(shutil.which("qs"), "Quickshell is required")
 class DriveActionTests(unittest.TestCase):
+    def test_popup_closes_on_workspace_switch_but_not_snapshot_updates(self):
+        workspace_binding = qml_block("modules/ii/bar/RemovableDriveWidget.qml", "    // Each output", "    implicitWidth:")
+        run_qml(self, '''
+        property bool popupOpen: false
+        QtObject {
+            id: niriData
+            property var workspaces: [
+                {id: 1, idx: 1, is_active: true, is_focused: false},
+                {id: 20, idx: 2, is_active: true, is_focused: true}]
+        }
+''' + workspace_binding.replace("NiriData", "niriData") + '''
+        Component.onCompleted: {
+            root.popupOpen = true;
+            niriData.workspaces = niriData.workspaces.map(ws => Object.assign({}, ws, {active_window_id: 100}));
+            root.check(root.popupOpen, "window changes in the current workspace do not dismiss the popup");
+            niriData.workspaces = niriData.workspaces.map(ws => Object.assign({}, ws, {idx: ws.idx + 1}));
+            root.check(root.popupOpen, "workspace renumbering does not dismiss the popup");
+            niriData.workspaces = [
+                {id: 1, idx: 1, is_active: true, is_focused: false},
+                {id: 21, idx: 2, is_active: true, is_focused: true}];
+            root.check(!root.popupOpen, "switching the focused workspace on a second monitor dismisses the popup");
+            root.popupOpen = true;
+            niriData.workspaces = [
+                {id: 1, idx: 1, is_active: true, is_focused: true},
+                {id: 21, idx: 2, is_active: true, is_focused: false}];
+            root.check(!root.popupOpen, "moving focus to another monitor dismisses the popup too");
+            console.log("UI_TEST_DONE");
+        }
+''')
+
     def test_mtp_actions_use_gio_and_never_power_off_the_phone(self):
         actions = qml_block("services/Drives.qml", "    function partition(", "    function checkHealth(")
         actions = actions.replace("Quickshell.execDetached", "detached.execDetached")

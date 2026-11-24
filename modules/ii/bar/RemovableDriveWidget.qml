@@ -8,6 +8,9 @@ MouseArea {
     id: root
     property bool vertical: false
     property bool popupOpen: false
+    // Each output has an active workspace; only one workspace is focused.
+    readonly property int focusedWorkspaceId: NiriData.workspaces.find(ws => ws.is_focused)?.id ?? -1
+    onFocusedWorkspaceIdChanged: root.popupOpen = false
     implicitWidth: vertical ? Appearance.sizes.verticalBarWidth : content.implicitWidth + 12
     implicitHeight: vertical ? 36 : Appearance.sizes.barHeight
     onClicked: { popupOpen = !popupOpen; if (popupOpen) Drives.refresh(); }

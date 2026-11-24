@@ -150,6 +150,7 @@ ejection; nothing is forcibly unmounted.
 Detected volumes appear even when they are not mounted, just as in Files.
 **Mount** connects an unmounted volume; its eject icon then unmounts it. The
 drive-level **Safely eject** action disconnects the whole USB device.
+The dropdown closes automatically when you switch workspaces.
 
 The popup's **Storage manager** switches to a detailed view in the same dropdown,
 without opening Quick Settings. **Back** returns to the removable-device list.
