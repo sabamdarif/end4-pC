@@ -86,7 +86,7 @@ loop.run()
                      and importlib.util.find_spec("gi"), "Quickshell, D-Bus and PyGObject are required")
 class MprisTests(unittest.TestCase):
     def test_selection_filtering_and_player_removal(self):
-        with tempfile.TemporaryDirectory(prefix="mpris-", dir="/tmp/opencode") as directory:
+        with tempfile.TemporaryDirectory(prefix="mpris-", dir=os.environ.get("TMPDIR")) as directory:
             root = Path(directory)
             common = root / "modules/common"
             common.mkdir(parents=True)

@@ -14,7 +14,7 @@ REPOSITORY = Path(__file__).resolve().parents[1]
 @unittest.skipUnless(shutil.which("qs"), "Quickshell is required")
 class StopwatchTests(unittest.TestCase):
     def run_stopwatch(self, state, assertions):
-        with tempfile.TemporaryDirectory(prefix="stopwatch-", dir="/tmp/opencode") as directory:
+        with tempfile.TemporaryDirectory(prefix="stopwatch-", dir=os.environ.get("TMPDIR")) as directory:
             root = Path(directory)
             common = root / "modules/common"
             common.mkdir(parents=True)

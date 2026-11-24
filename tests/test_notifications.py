@@ -13,7 +13,7 @@ REPOSITORY = Path(__file__).resolve().parents[1]
 @unittest.skipUnless(shutil.which("qs") and shutil.which("dbus-run-session"), "Quickshell and D-Bus are required")
 class NotificationTests(unittest.TestCase):
     def test_process_local_images_and_missing_timers(self):
-        with tempfile.TemporaryDirectory(prefix="notifications-", dir="/tmp/opencode") as directory:
+        with tempfile.TemporaryDirectory(prefix="notifications-", dir=os.environ.get("TMPDIR")) as directory:
             root = Path(directory)
             common = root / "modules/common"
             common.mkdir(parents=True)

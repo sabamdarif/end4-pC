@@ -12,7 +12,7 @@ REPOSITORY = Path(__file__).resolve().parents[1]
 @unittest.skipUnless(shutil.which("qs"), "Quickshell is required")
 class SettingsControlTests(unittest.TestCase):
     def test_switch_clicks_preserve_external_binding(self):
-        with tempfile.TemporaryDirectory(prefix="config-switch-", dir="/tmp/opencode") as directory:
+        with tempfile.TemporaryDirectory(prefix="config-switch-", dir=os.environ.get("TMPDIR")) as directory:
             root = Path(directory)
             common = root / "modules/common"
             widgets = common / "widgets"
@@ -75,7 +75,7 @@ ShellRoot {
             self.assertNotIn("TypeError", output)
 
     def test_scaled_and_rotated_monitor_geometry(self):
-        with tempfile.TemporaryDirectory(prefix="monitor-geometry-", dir="/tmp/opencode") as directory:
+        with tempfile.TemporaryDirectory(prefix="monitor-geometry-", dir=os.environ.get("TMPDIR")) as directory:
             root = Path(directory)
             models = root / "modules/common/models"
             models.mkdir(parents=True)

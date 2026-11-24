@@ -13,7 +13,7 @@ REPOSITORY = Path(__file__).resolve().parents[1]
 @unittest.skipUnless(shutil.which("qs"), "Quickshell is required")
 class NotesAndTasksTests(unittest.TestCase):
     def run_service(self, service, contents, ready):
-        with tempfile.TemporaryDirectory(prefix="notes-tasks-", dir="/tmp/opencode") as directory:
+        with tempfile.TemporaryDirectory(prefix="notes-tasks-", dir=os.environ.get("TMPDIR")) as directory:
             root = Path(directory)
             common = root / "modules/common"
             common.mkdir(parents=True)
