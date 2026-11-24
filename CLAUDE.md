@@ -187,6 +187,8 @@ a quick toggle through `AbstractQuickPanel`'s `open<Name>Dialog` signal.
   MTP phones come from Gio's GVfs volume monitor, not lsblk. Their identifiers and
   mount points are `mtp://` URIs; use `gio mount` to connect/disconnect them, never
   udisksctl or smartctl. Do not report virtual filesystem capacity as phone storage.
+  The bar's Storage manager switches views inside `RemovableDrivePopup`; shared
+  storage content is in `modules/ii/sidebarRight/drives/DriveList.qml`.
 - `ScreenTime` is initialized by `shell.qml`, independently of widget visibility.
   Its tracker receives shell lock/idle state on stdin and also checks loginctl.
   Private, atomic `qssettings/screentime.json` stores a versioned `days` array,

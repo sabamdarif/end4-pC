@@ -20,7 +20,7 @@ class DriveInfoTests(unittest.TestCase):
         mount.get_root.return_value.get_uri.return_value = mounted_uri
         mount.get_name.return_value = "mtp"
         volumes = []
-        for name, uri, connection in (("Phone A", mounted_uri, mount), ("Phone B", unmounted_uri, None)):
+        for name, uri, connection in (("Phone A", mounted_uri, None), ("Phone B", unmounted_uri, None)):
             volume = Mock()
             volume.get_activation_root.return_value.get_uri.return_value = uri
             volume.get_name.return_value = name
@@ -96,7 +96,8 @@ class DriveInfoTests(unittest.TestCase):
 @unittest.skipUnless(shutil.which("qs"), "Quickshell is required")
 class DriveActionTests(unittest.TestCase):
     def test_mtp_actions_use_gio_and_never_power_off_the_phone(self):
-        actions = qml_block("services/Drives.qml", "    function partition(", "    function openPartition(")
+        actions = qml_block("services/Drives.qml", "    function partition(", "    function checkHealth(")
+        actions = actions.replace("Quickshell.execDetached", "detached.execDetached")
         run_qml(self, '''
         property var allDrives: [{device: "mtp://Phone_A/", kind: "mtp", partitions: [
             {device: "mtp://Phone_A/", kind: "mtp", mountPoint: "", filesystem: "MTP"}]}]
@@ -105,13 +106,20 @@ class DriveActionTests(unittest.TestCase):
         property bool busy: false
         property string lastError: ""
         property var executed: []
+        property var opened: []
         function refresh() {}
         QtObject { id: actionProc; function exec(command) { root.executed.push(command); } }
+        QtObject { id: detached; function execDetached(command) { root.opened.push(command); } }
 ''' + actions + '''
         Component.onCompleted: {
+            root.openPartition("mtp://Phone_A/");
+            root.check(root.opened[0].join(" ") === "xdg-open mtp://Phone_A/", "file manager handles mounting when opening a phone");
+            root.check(root.executed.length === 0, "opening does not attempt a duplicate mount");
             root.mountPartition("mtp://Phone_A/");
             root.check(root.executed[0].join(" ") === "gio mount mtp://Phone_A/", "unmounted phone connects through GIO");
             root.allDrives[0].partitions[0].mountPoint = "mtp://Phone_A/";
+            root.openPartition("mtp://Phone_A/");
+            root.check(root.opened.length === 2, "mounted phone opens directly too");
             root.unmountPartition("mtp://Phone_A/");
             root.check(root.executed[1].join(" ") === "gio mount -u mtp://Phone_A/", "phone disconnects through GIO");
             root.ejectDrive("mtp://Phone_A/");

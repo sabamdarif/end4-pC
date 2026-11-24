@@ -98,15 +98,20 @@ ColumnLayout {
                                         ? Appearance.colors.colPrimary : Appearance.colors.colSecondaryContainer
                             }
                             MouseArea {
+                                id: chartArea
                                 anchors.fill: parent
+                                hoverEnabled: !root.compact
                                 enabled: !root.compact && !day.modelData.future
                                 onClicked: root.selectedDate = root.selectedDate === day.modelData.date ? "" : day.modelData.date
-                                StyledToolTip { text: Qt.formatDate(Wellbeing.parseKey(day.modelData.date), "ddd, MMM d") + ": " + ScreenTime.formatTime(day.modelData.active) }
+                                StyledToolTip {
+                                    extraVisibleCondition: chartArea.containsMouse
+                                    text: Qt.formatDate(Wellbeing.parseKey(day.modelData.date), "ddd, MMM d") + ": " + ScreenTime.formatTime(day.modelData.active)
+                                }
                             }
                         }
                         StyledText {
                             Layout.alignment: Qt.AlignHCenter
-                            text: Qt.locale().dayName(day.modelData.weekday || 7, Locale.ShortFormat).slice(0, 1)
+                            text: Qt.locale().dayName(day.modelData.weekday || 7, Locale.ShortFormat)
                             font.pixelSize: Appearance.font.pixelSize.smallest
                             color: Appearance.colors.colSubtext
                         }

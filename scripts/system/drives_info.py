@@ -84,8 +84,10 @@ def parse_mtp(volumes, mounts):
             devices[root.get_uri()] = (volume.get_name(), volume.get_mount())
     for mount in mounts:
         uri = mount.get_root().get_uri()
-        if uri.startswith("mtp://") and uri not in devices:
-            devices[uri] = (mount.get_name(), mount)
+        if uri.startswith("mtp://"):
+            name = devices[uri][0] if uri in devices else mount.get_name()
+            # GVfs can expose the mount before the volume's get_mount() catches up.
+            devices[uri] = (name, mount)
     phones = []
     for uri, (name, mount) in devices.items():
         mount_uri = mount.get_root().get_uri() if mount else ""

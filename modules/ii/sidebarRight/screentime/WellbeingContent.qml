@@ -9,9 +9,14 @@ import "../../../../services/Wellbeing.js" as Wellbeing
 ColumnLayout {
     id: root
     property string period: "week"
+    property bool desktop: false
     spacing: 12
-    AppLimitSheet { id: limitSheet }
-    WeeklyChart { id: chart; Layout.fillWidth: true }
+    AppLimitSheet { id: limitSheet; desktop: root.desktop }
+    WeeklyChart {
+        id: chart
+        Layout.fillWidth: true
+        Layout.maximumHeight: implicitHeight
+    }
     ConfigSelectionArray {
         Layout.fillWidth: true
         currentValue: root.period

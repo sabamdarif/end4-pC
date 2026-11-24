@@ -75,7 +75,8 @@ Singleton {
     function openPartition(device) {
         const part = root.partition(device);
         if (!part) return;
-        if (part.mountPoint) Quickshell.execDetached(["xdg-open", part.mountPoint]);
+        if (part.kind === "mtp") Quickshell.execDetached(["xdg-open", part.mountPoint || part.device]);
+        else if (part.mountPoint) Quickshell.execDetached(["xdg-open", part.mountPoint]);
         else root.mountPartition(device);
     }
     function checkHealth(device) {

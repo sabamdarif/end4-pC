@@ -147,7 +147,9 @@ to mount it or open its folder, unmount it with its eject button, or safely ejec
 the whole drive after all its volumes have been unmounted. Failed unmounts stop
 ejection; nothing is forcibly unmounted.
 
-The popup's **Storage manager** shows internal and removable disks, partition
+The popup's **Storage manager** switches to a detailed view in the same dropdown,
+without opening Quick Settings. **Back** returns to the removable-device list.
+It shows internal and removable disks, partition
 capacity and optional SMART health, temperature, lifetime usage and power-on
 hours. Install `udisks2` for mount/eject actions and `smartmontools` for health
 checks. SMART access needs device permissions and may not work through USB
@@ -161,8 +163,11 @@ Disk capacity and SMART diagnostics are not available for MTP devices.
 
 ### Digital wellbeing
 
-Click the screen time desktop widget for a weekly chart and app usage details,
-or open Settings → System → Digital wellbeing. Browse previous weeks, select a
+The screen time desktop widget has the same detailed weekly chart, app usage
+list, and limit controls as the wellbeing sheet. Use them directly on the desktop;
+clicking the widget no longer opens Quick Settings. Drag its header to reposition it.
+The portrait and wide sizes provide more room for the interactive layout.
+You can also open Settings → System → Digital wellbeing. Browse previous weeks, select a
 day, or switch the app list between day, week and the last 30 calendar days.
 Set a daily screen time limit or an app limit with the duration steppers.
 Reminders notify once per app/day in a tracker session and respect notification

@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import qs
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
@@ -13,6 +14,10 @@ Dialog {
     modal: true
     padding: 20
     property string appId: ""
+    property bool desktop: false
+    onOpened: if (desktop) GlobalStates.desktopWidgetKeyboardFocus = true
+    onClosed: if (desktop) GlobalStates.desktopWidgetKeyboardFocus = false
+    Component.onDestruction: if (desktop && visible) GlobalStates.desktopWidgetKeyboardFocus = false
     function presentFor(appId) {
         root.appId = appId;
         const minutes = appId ? ScreenTime.appLimits[appId] || 0 : Config.options.wellbeing.dailyLimit;
