@@ -93,6 +93,7 @@ Only pull when the working tree is clean and there are no unpushed local commits
 
 ### Usage and migration notes
 
+- **Fresh setups:** The shell starts directly without a welcome screen. Customize it through Settings using the keybind above.
 - **Settings:** Below 900 px, the navigation rail collapses after selecting a page. Click a group icon to reopen it. Keyboard selection scrolls search results into view, and searchable dropdowns select the highlighted filtered item.
 - **Colors and Theme:** The wallpaper preview and compact scheme selector stack on narrow windows. Light and dark mode labels stay inside their buttons.
 - **Network speed:** The detail popup uses compact rows and hides unavailable network details without leaving empty space.
@@ -106,7 +107,7 @@ Only pull when the working tree is clean and there are no unpushed local commits
 
 Shell settings now live in **`~/.config/qssettings/`**:
 
-- `config.json`: shell preferences, including those edited in the welcome app.
+- `config.json`: shell preferences edited in Settings.
 - `actions/`: custom action files.
 - `sounds/`: custom sound overrides.
 

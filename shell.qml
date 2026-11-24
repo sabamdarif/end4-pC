@@ -19,7 +19,6 @@ ShellRoot {
     Component.onCompleted: {
         MaterialThemeLoader.reapplyTheme()
         Wlsunset.load()
-        FirstRunExperience.load()
         ConflictKiller.load()
         Cliphist.refresh()
         Wallpapers.load()
