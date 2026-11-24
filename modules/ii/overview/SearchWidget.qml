@@ -314,7 +314,6 @@ Item {
     function launchSelected() {
         const sec = root.selectedSection;
         const idx = root.sectionIndex;
-        GlobalStates.overviewOpen = false;
 
         if (sec === "math" && LauncherSearch.mathResult) {
             Quickshell.clipboardText = LauncherSearch.mathResult.result;
@@ -336,6 +335,7 @@ Item {
                 fileSearch.results[0].execute();
             }
         }
+        GlobalStates.overviewOpen = false;
     }
 
     Keys.onPressed: event => {
