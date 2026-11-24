@@ -26,7 +26,7 @@ Singleton {
 }
 ''')
             for name, contents in {
-                "RippleButton.qml": 'import QtQuick\nimport QtQuick.Controls\nButton { property color colBackgroundHover }',
+                "RippleButton.qml": 'import QtQuick\nimport QtQuick.Controls\nButton { property color colBackgroundHover; property color colRipple; property bool rippleEnabled }',
                 "StyledSwitch.qml": 'import QtQuick.Controls\nSwitch {}',
                 "StyledText.qml": 'import QtQuick\nText {}',
                 "OptionalMaterialSymbol.qml": 'import QtQuick\nItem { property string icon; property real iconSize }',
