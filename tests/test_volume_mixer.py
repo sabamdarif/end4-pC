@@ -13,7 +13,7 @@ REPOSITORY = Path(__file__).resolve().parents[1]
 
 class VolumeMixerTests(unittest.TestCase):
     def setUp(self):
-        self.directory = tempfile.TemporaryDirectory(prefix="volume-mixer-", dir="/tmp/opencode")
+        self.directory = tempfile.TemporaryDirectory(prefix="volume-mixer-")
         self.addCleanup(self.directory.cleanup)
         self.root = Path(self.directory.name)
         source = (REPOSITORY / "modules/common/Config.qml").read_text()

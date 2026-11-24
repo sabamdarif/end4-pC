@@ -12,7 +12,7 @@ from ui_test_utils import qml_block, run_qml
 
 class CliphistCommandTests(unittest.TestCase):
     def setUp(self):
-        self.directory = tempfile.TemporaryDirectory(prefix="cliphist-commands-", dir="/tmp/opencode")
+        self.directory = tempfile.TemporaryDirectory(prefix="cliphist-commands-")
         self.addCleanup(self.directory.cleanup)
         self.root = Path(self.directory.name)
         self.entry = "42\t100% ready\\n\\c '$(touch injected)'\nnext line"

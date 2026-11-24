@@ -61,7 +61,7 @@ class CliphistAutostartTests(unittest.TestCase):
 
     @unittest.skipUnless(shutil.which("cliphist"), "cliphist is required")
     def test_watcher_command_enforces_limit(self):
-        with tempfile.TemporaryDirectory(prefix="cliphist-", dir="/tmp/opencode") as directory:
+        with tempfile.TemporaryDirectory(prefix="cliphist-") as directory:
             env = dict(os.environ, XDG_CACHE_HOME=directory, XDG_CONFIG_HOME=directory)
             for index in range(5):
                 subprocess.run(["cliphist", "-max-items", "3", "store"],
