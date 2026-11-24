@@ -47,10 +47,10 @@ Singleton {
         return {
             "notificationId": notif.notificationId,
             "actions": notif.actions,
-            "appIcon": notif.appIcon,
+            "appIcon": persistentImage(notif.appIcon),
             "appName": notif.appName,
             "body": notif.body,
-            "image": notif.image,
+            "image": persistentImage(notif.image),
             "summary": notif.summary,
             "time": notif.time,
             "urgency": notif.urgency,
@@ -58,6 +58,11 @@ Singleton {
     }
     function notifToString(notif) {
         return JSON.stringify(notifToJSON(notif), null, 2);
+    }
+
+    function persistentImage(source) {
+        // Quickshell image handles only exist in the process that received the notification.
+        return (source ?? "").startsWith("image://qsimage/") ? "" : (source ?? "");
     }
 
     component NotifTimer: Timer {
@@ -68,7 +73,7 @@ Singleton {
             const index = root.list.findIndex((notif) => notif.notificationId === notificationId);
             const notifObject = root.list[index];
             print("[Notifications] Notification timer triggered for ID: " + notificationId + ", transient: " + notifObject?.isTransient);
-            if (notifObject.isTransient) root.discardNotification(notificationId);
+            if (notifObject?.isTransient) root.discardNotification(notificationId);
             else root.timeoutNotification(notificationId);
             destroy()
         }
@@ -240,7 +245,7 @@ Singleton {
     function cancelTimeout(id) {
         const index = root.list.findIndex((notif) => notif.notificationId === id);
         if (root.list[index] != null)
-            root.list[index].timer.stop();
+            root.list[index].timer?.stop();
     }
 
     function timeoutNotification(id) {
@@ -267,7 +272,7 @@ Singleton {
             const notifServerNotif = notifServer.trackedNotifications.values[notifServerIndex];
             const action = notifServerNotif.actions.find((action) => action.identifier === notifIdentifier);
             // console.log("Action found: " + JSON.stringify(action));
-            action.invoke()
+            action?.invoke()
         } 
         else {
             console.log("Notification not found in server: " + id)
@@ -296,10 +301,10 @@ Singleton {
                 return notifComponent.createObject(root, {
                     "notificationId": notif.notificationId,
                     "actions": [], // Notification actions are meaningless if they're not tracked by the server or the sender is dead
-                    "appIcon": notif.appIcon,
+                    "appIcon": root.persistentImage(notif.appIcon),
                     "appName": notif.appName,
                     "body": notif.body,
-                    "image": notif.image,
+                    "image": root.persistentImage(notif.image),
                     "summary": notif.summary,
                     "time": notif.time,
                     "urgency": notif.urgency,
