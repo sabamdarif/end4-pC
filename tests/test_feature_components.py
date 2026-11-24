@@ -22,18 +22,39 @@ class FeatureComponentTests(unittest.TestCase):
             services = root / "services"
             services.mkdir()
             for service in (REPOSITORY / "services").iterdir():
-                if service.name != "Idle.qml":
+                if service.name != "Idle.qml" and not (service.name == "Network.qml"
+                        and "modules/ii/bar/NetworkSpeedPopup.qml" in paths):
                     (services / service.name).symlink_to(service)
             (services / "Idle.qml").write_text("pragma Singleton\nimport Quickshell\nSingleton {}\n")
+            if "modules/ii/bar/NetworkSpeedPopup.qml" in paths:
+                (services / "Network.qml").write_text('''pragma Singleton
+import Quickshell
+Singleton {
+    property bool ethernet: false
+    property string wifiStatus: "connected"
+    property var active: null
+    property string networkName: "Test Wi-Fi"
+    property int networkStrength: 100
+    property string materialSymbol: "wifi"
+    property string networkInterface: "wlan0"
+    property string ipAddress: "192.0.2.10"
+    property string publicIpAddress: "198.51.100.10"
+    property string gateway: "192.0.2.1"
+    property string macAddress: "02:00:00:00:00:01"
+}
+''')
             config = root / "config"
             (config / "qssettings").mkdir(parents=True)
             (config / "niri/qssettings").mkdir(parents=True)
             (config / "qssettings/config.json").write_text(json.dumps({"wellbeing": {"enable": False}}))
             (config / "qssettings/screentime.json").write_text(json.dumps({"version": 1, "days": [
                 {"date": datetime.date.today().isoformat(), "active": 3600, "apps": {"kitty": 3600}}]}))
-            if "modules/ii/bar/RemovableDrivePopup.qml" in paths:
+            for name in ("RemovableDrivePopup", "NetworkSpeedPopup"):
+                source_path = f"modules/ii/bar/{name}.qml"
+                if source_path not in paths:
+                    continue
                 # Offscreen Qt has no layer-window backend; keep the real popup contents.
-                popup = (REPOSITORY / "modules/ii/bar/RemovableDrivePopup.qml").read_text().replace("StyledPopup {", """Item {
+                popup = "import qs.modules.ii.bar\n" + (REPOSITORY / source_path).read_text().replace("StyledPopup {", """Item {
     property bool active: false
     property bool dismissOnOutsideClick
     signal dismissRequested()
@@ -45,8 +66,9 @@ class FeatureComponentTests(unittest.TestCase):
         }
     }
 """, 1)
-                (root / "RemovableDrivePopupFixture.qml").write_text(popup)
-                paths = ["RemovableDrivePopupFixture.qml" if path.endswith("RemovableDrivePopup.qml") else path for path in paths]
+                fixture_path = f"{name}Fixture.qml"
+                (root / fixture_path).write_text(popup)
+                paths = [fixture_path if path == source_path else path for path in paths]
             loaders = "\n".join('Loader { id: loader' + str(index) + '; '
                 + ('width: item ? item.implicitWidth : 0; height: item ? item.implicitHeight : 0;' if path.endswith("ScreenTimeWidget.qml") else 'anchors.fill: parent;')
                 + ' Component.onCompleted: setSource("' + path + '", '
@@ -217,6 +239,66 @@ ShellRoot {
                 fixtureWindow.check(usageList.count === 0, "empty history clears the app list");
                 fixtureWindow.check(loader0.item.height < 500, "empty usage shrinks back to the compact height");
                 fixtureWindow.check(usageList.height >= 70, "empty state retains enough room for its message");
+            }
+        }
+''')
+
+    def test_network_popup_details_are_compact_and_skip_empty_values(self):
+        self.load_components(["modules/ii/bar/NetworkSpeedPopup.qml"], '''
+        property var popupContent
+        property var details
+        property var rows
+        property real fullHeight
+        function check(condition, message) { if (!condition) console.error("ASSERTION_FAILED", message); }
+        Timer {
+            interval: 200; running: true
+            onTriggered: {
+                const content = loader0.item.contentComponent.createObject(fixtureWindow.contentItem);
+                content.width = Qt.binding(() => content.implicitWidth);
+                content.height = Qt.binding(() => content.implicitHeight);
+                fixtureWindow.popupContent = content;
+                fixtureWindow.details = content.children[2];
+                fixtureWindow.rows = [...fixtureWindow.details.children[0].children];
+            }
+        }
+        Timer {
+            interval: 400; running: true
+            onTriggered: {
+                const content = fixtureWindow.popupContent;
+                const details = fixtureWindow.details;
+                const layout = details.children[0];
+                const rows = fixtureWindow.rows;
+                fixtureWindow.check(rows.length === 5, "all network detail rows are present");
+                fixtureWindow.check(details.height < 200, "details do not reserve 64 pixels per row");
+                fixtureWindow.check(content.height < 350, "popup fits its compact content");
+                fixtureWindow.check(layout.x === 8 && layout.y === 8, "detail card keeps its inset");
+                for (let i = 1; i < rows.length; i++) {
+                    const gap = rows[i].y - rows[i - 1].y - rows[i - 1].height;
+                    fixtureWindow.check(Math.abs(gap - 8) < 1, "detail rows have only a small gap");
+                }
+                fixtureWindow.fullHeight = content.height;
+                Network.publicIpAddress = "";
+            }
+        }
+        Timer {
+            interval: 600; running: true
+            onTriggered: {
+                fixtureWindow.check(!fixtureWindow.rows[2].visible, "unavailable public IP is hidden");
+                fixtureWindow.check(fixtureWindow.popupContent.height < fixtureWindow.fullHeight - 20,
+                    "hidden values leave no empty row");
+                Network.networkInterface = "";
+                Network.ipAddress = "";
+                Network.gateway = "";
+                Network.macAddress = "";
+            }
+        }
+        Timer {
+            interval: 800; running: true
+            onTriggered: {
+                fixtureWindow.check(!fixtureWindow.details.visible, "empty details card is hidden");
+                fixtureWindow.check(fixtureWindow.popupContent.height < fixtureWindow.fullHeight - 100,
+                    "disconnected popup shrinks");
+                fixtureWindow.popupContent.destroy();
             }
         }
 ''')

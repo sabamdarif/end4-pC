@@ -181,7 +181,7 @@ StyledPopup {
             }
         }
 
-        GroupedList {
+        Rectangle {
             visible: Network.networkInterface !== ""
                 || Network.ipAddress !== ""
                 || Network.publicIpAddress !== ""
@@ -189,46 +189,54 @@ StyledPopup {
                 || Network.macAddress !== ""
 
             Layout.fillWidth: true
-            bgcolor: Appearance.colors.colSurfaceContainerLow
+            implicitHeight: detailRows.implicitHeight + 16
+            radius: Appearance.rounding.normal
+            color: Appearance.colors.colSurfaceContainerLow
 
-            StyledPopupValueRow {
-                Layout.fillWidth: true
-                visible: Network.networkInterface !== ""
-                icon: "settings_ethernet"
-                label: Translation.tr("Interface")
-                value: Network.networkInterface
-            }
+            ColumnLayout {
+                id: detailRows
+                anchors { fill: parent; margins: 8 }
+                spacing: 8
 
-            StyledPopupValueRow {
-                Layout.fillWidth: true
-                visible: Network.ipAddress !== ""
-                icon: "lan"
-                label: Translation.tr("Local IP")
-                value: Network.ipAddress
-            }
+                StyledPopupValueRow {
+                    Layout.fillWidth: true
+                    visible: Network.networkInterface !== ""
+                    icon: "settings_ethernet"
+                    label: Translation.tr("Interface")
+                    value: Network.networkInterface
+                }
 
-            StyledPopupValueRow {
-                Layout.fillWidth: true
-                visible: Network.publicIpAddress !== ""
-                icon: "public"
-                label: Translation.tr("Public IP")
-                value: Network.publicIpAddress
-            }
+                StyledPopupValueRow {
+                    Layout.fillWidth: true
+                    visible: Network.ipAddress !== ""
+                    icon: "lan"
+                    label: Translation.tr("Local IP")
+                    value: Network.ipAddress
+                }
 
-            StyledPopupValueRow {
-                Layout.fillWidth: true
-                visible: Network.gateway !== ""
-                icon: "router"
-                label: Translation.tr("Gateway")
-                value: Network.gateway
-            }
+                StyledPopupValueRow {
+                    Layout.fillWidth: true
+                    visible: Network.publicIpAddress !== ""
+                    icon: "public"
+                    label: Translation.tr("Public IP")
+                    value: Network.publicIpAddress
+                }
 
-            StyledPopupValueRow {
-                Layout.fillWidth: true
-                visible: Network.macAddress !== ""
-                icon: "fingerprint"
-                label: Translation.tr("MAC address")
-                value: Network.macAddress
+                StyledPopupValueRow {
+                    Layout.fillWidth: true
+                    visible: Network.gateway !== ""
+                    icon: "router"
+                    label: Translation.tr("Gateway")
+                    value: Network.gateway
+                }
+
+                StyledPopupValueRow {
+                    Layout.fillWidth: true
+                    visible: Network.macAddress !== ""
+                    icon: "fingerprint"
+                    label: Translation.tr("MAC address")
+                    value: Network.macAddress
+                }
             }
         }
     }
