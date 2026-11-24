@@ -13,7 +13,8 @@ ContentPage {
         id: smallLightDarkPreferenceButton
         required property bool dark
         property color colText: toggled ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer2
-        padding: 5
+        buttonRadius: Appearance.rounding.large
+        padding: 8
         Layout.fillWidth: true
         toggled: Appearance.m3colors.darkmode === dark
         colBackground: Appearance.colors.colLayer2
@@ -21,10 +22,10 @@ ContentPage {
             Quickshell.execDetached(["bash", "-c", `${Directories.wallpaperSwitchScriptPath} --mode ${dark ? "dark" : "light"} --noswitch`]);
         }
         contentItem: ColumnLayout {
-            spacing: 0
+            spacing: 2
             MaterialSymbol {
                 Layout.alignment: Qt.AlignHCenter
-                iconSize: 30
+                iconSize: 28
                 text: dark ? "dark_mode" : "light_mode"
                 color: smallLightDarkPreferenceButton.colText
             }
@@ -97,11 +98,11 @@ ContentPage {
             ColumnLayout {
                 Layout.fillWidth: true
                 Layout.alignment: Qt.AlignTop
-                spacing: 4
+                spacing: 8
 
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 2
+                    spacing: 8
                     uniformCellSizes: true
                     SmallLightDarkPreferenceButton { dark: false }
                     SmallLightDarkPreferenceButton { dark: true }
@@ -110,8 +111,8 @@ ContentPage {
                     id: schemeGrid
                     Layout.fillWidth: true
                     columns: width >= 360 ? 3 : 2
-                    rowSpacing: 2
-                    columnSpacing: 2
+                    rowSpacing: 8
+                    columnSpacing: 8
                     uniformCellWidths: true
                     uniformCellHeights: true
 
@@ -133,7 +134,7 @@ ContentPage {
                             Layout.fillWidth: true
                             implicitWidth: 120
                             implicitHeight: Math.max(72, schemeIcon.implicitHeight + schemeLabel.implicitHeight + 24)
-                            radius: Appearance.rounding.normal
+                            radius: Appearance.rounding.large
 
                             property bool isSelected: Config.options.appearance.palette.type === modelData.value
                             property bool hovered: hoverArea.containsMouse
@@ -146,7 +147,7 @@ ContentPage {
                                 id: schemeIcon
                                 anchors.top: parent.top
                                 anchors.left: parent.left
-                                anchors.margins: 8
+                                anchors.margins: 10
                                 text: modelData.icon
                                 iconSize: Appearance.font.pixelSize.larger
                                 color: parent.isSelected ? Appearance.colors.colOnPrimary : Appearance.colors.colOnSecondaryContainer
@@ -157,7 +158,7 @@ ContentPage {
                                 anchors.bottom: parent.bottom
                                 anchors.left: parent.left
                                 anchors.right: parent.right
-                                anchors.margins: 8
+                                anchors.margins: 10
                                 text: modelData.displayName
                                 font.pixelSize: Appearance.font.pixelSize.smaller
                                 font.weight: Font.Medium

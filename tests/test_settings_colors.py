@@ -34,6 +34,7 @@ class SettingsColorsTests(unittest.TestCase):
         component RippleButton: Button {
             property bool toggled
             property color colBackground
+            property real buttonRadius
             background: Rectangle { implicitHeight: 30 }
         }
         component MaterialSymbol: Item {
