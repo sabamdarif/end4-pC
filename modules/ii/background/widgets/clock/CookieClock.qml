@@ -50,7 +50,7 @@ Item {
 
         StyledDropShadow {
             target: cookieShapes
-            visible: !Config.options.background.widgets.glass.enable && Config.options.background.widgets.shadow
+            visible: !Config.options.background.widgets.glass.enable
         }
 
         Item {
