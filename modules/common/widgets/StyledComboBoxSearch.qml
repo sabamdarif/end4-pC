@@ -18,13 +18,31 @@ ComboBox {
     property string searchText: ""
     property bool previewFont: false
 
-    property int visibleCount: {
-        if (!root.searchText || root.searchText.length === 0) 
-            return root.model?.length ?? 0
-        return (root.model ?? []).filter(item => {
-            const display = typeof item === "object" ? (item[root.textRole] ?? "") : String(item)
-            return display.toLowerCase().includes(root.searchText.toLowerCase())
-        }).length
+    property int visibleCount: (root.model ?? []).filter(item => root.matchesSearch(item)).length
+
+    function matchesSearch(item) {
+        const display = typeof item === "object" && item !== null ? (item[root.textRole] ?? "") : String(item)
+        return String(display).toLowerCase().includes(root.searchText.toLowerCase())
+    }
+
+    function moveSelection(step) {
+        const items = root.model ?? []
+        let index = listView.currentIndex
+        if (index < 0 && step < 0) index = items.length
+        for (index += step; index >= 0 && index < items.length; index += step) {
+            if (!root.matchesSearch(items[index])) continue
+            listView.currentIndex = index
+            listView.positionViewAtIndex(index, ListView.Contain)
+            return
+        }
+    }
+
+    function acceptSelection() {
+        const index = listView.currentIndex
+        if (index < 0 || index >= (root.model?.length ?? 0) || !root.matchesSearch(root.model[index])) return
+        root.currentIndex = index
+        root.activated(index)
+        root.popup.close()
     }
 
     implicitHeight: 40
@@ -107,11 +125,7 @@ ComboBox {
         id: itemDelegate
         width: ListView.view ? ListView.view.width : root.width
         implicitHeight: visible ? 40 : 0
-        visible: {
-            if (!root.searchText || root.searchText.length === 0) return true
-            const display = typeof model === "object" ? (model[root.textRole] ?? "") : String(model)
-            return display.toLowerCase().includes(root.searchText.toLowerCase())
-        }
+        visible: root.matchesSearch(itemDelegate.model)
 
         required property var model
         required property int index
@@ -123,7 +137,7 @@ ComboBox {
         }
 
         property color color: {
-            if (root.currentIndex === itemDelegate.index) {
+            if (listView.currentIndex === itemDelegate.index) {
                 if (itemDelegate.down) return Appearance.colors.colSecondaryContainerActive;
                 if (itemDelegate.hovered) return Appearance.colors.colSecondaryContainerHover;
                 return Appearance.colors.colSecondaryContainer;
@@ -133,7 +147,7 @@ ComboBox {
                 return ColorUtils.transparentize(Appearance.colors.colLayer3);
             }
         }
-        property color colText: (root.currentIndex === itemDelegate.index) ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnLayer3
+        property color colText: (listView.currentIndex === itemDelegate.index) ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnLayer3
 
         background: Rectangle {
             anchors.fill: parent
@@ -203,6 +217,7 @@ ComboBox {
         onVisibleChanged: {
             if (visible) {
                 searchField.forceActiveFocus();
+                listView.currentIndex = root.currentIndex;
                 if (root.currentIndex >= 0) {
                     listView.positionViewAtIndex(root.currentIndex, ListView.Center);
                 }
@@ -268,25 +283,16 @@ ComboBox {
                         background: null
                         font.family: Appearance.font.family.main
                         font.pixelSize: Appearance.font.pixelSize.normal
-                        onTextChanged: root.searchText = text
-                        Keys.onDownPressed: listView.incrementCurrentIndex()
-                        Keys.onUpPressed: listView.decrementCurrentIndex()
-                        Keys.onReturnPressed: {
-                            let targetIndex = -1;
-                            if (root.searchText.length > 0) {
-                                targetIndex = (root.model ?? []).findIndex(item => {
-                                    const display = typeof item === "object" ? (item[root.textRole] ?? "") : String(item);
-                                    return display.toLowerCase().includes(root.searchText.toLowerCase());
-                                });
-                            } else if (listView.currentIndex >= 0) {
-                                targetIndex = listView.currentIndex;
-                            }
-                            if (targetIndex >= 0) {
-                                root.currentIndex = targetIndex;
-                                root.activated(targetIndex);
-                                root.popup.close();
-                            }
+                        onTextChanged: {
+                            root.searchText = text
+                            listView.currentIndex = (root.model ?? []).findIndex(item => root.matchesSearch(item))
+                            if (listView.currentIndex >= 0)
+                                listView.positionViewAtIndex(listView.currentIndex, ListView.Contain)
                         }
+                        Keys.onDownPressed: root.moveSelection(1)
+                        Keys.onUpPressed: root.moveSelection(-1)
+                        Keys.onReturnPressed: root.acceptSelection()
+                        Keys.onEnterPressed: root.acceptSelection()
                     }
 
                     MaterialSymbol {
