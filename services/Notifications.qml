@@ -37,7 +37,7 @@ Singleton {
         property Timer timer
 
         onNotificationChanged: {
-            if (notification === null) {
+            if (notification === null && root.list.some(notif => notif === wrapper)) {
                 root.discardNotification(notificationId);
             }
         }
@@ -89,6 +89,7 @@ Singleton {
     }
     property int unread: 0
     property var filePath: Directories.notificationsPath
+    property bool storageReady: false
     property list<Notif> list: []
     property var popupList: list.filter((notif) => notif.popup);
     property bool popupInhibited: (GlobalStates?.sidebarRightOpen ?? false) || silent
@@ -104,6 +105,10 @@ Singleton {
 
     function stringifyList(list) {
         return JSON.stringify(list.map((notif) => notifToJSON(notif)), null, 2);
+    }
+
+    function saveNotifications() {
+        if (root.storageReady) notifFileView.setText(stringifyList(root.list));
     }
     
     onListChanged: {
@@ -209,7 +214,7 @@ Singleton {
             }
             root.notify(newNotifObject);
             // console.log(notifToString(newNotifObject));
-            notifFileView.setText(stringifyList(root.list));
+            root.saveNotifications();
         }
     }
 
@@ -222,8 +227,11 @@ Singleton {
         const index = root.list.findIndex((notif) => notif.notificationId === id);
         const notifServerIndex = notifServer.trackedNotifications.values.findIndex((notif) => notif.id + root.idOffset === id);
         if (index !== -1) {
+            const wrapper = root.list[index];
             root.list.splice(index, 1);
-            notifFileView.setText(stringifyList(root.list));
+            wrapper.timer?.destroy();
+            wrapper.destroy();
+            root.saveNotifications();
             triggerListChange()
         }
         if (notifServerIndex !== -1) {
@@ -233,10 +241,16 @@ Singleton {
     }
 
     function discardAllNotifications() {
+        const wrappers = root.list.slice();
+        const tracked = notifServer.trackedNotifications.values.slice();
         root.list = []
         triggerListChange()
-        notifFileView.setText(stringifyList(root.list));
-        notifServer.trackedNotifications.values.forEach((notif) => {
+        root.saveNotifications();
+        wrappers.forEach(notif => {
+            notif.timer?.destroy();
+            notif.destroy();
+        });
+        tracked.forEach((notif) => {
             notif.dismiss()
         })
         root.discardAll();
@@ -245,7 +259,7 @@ Singleton {
     function cancelTimeout(id) {
         const index = root.list.findIndex((notif) => notif.notificationId === id);
         if (root.list[index] != null)
-            root.list[index].timer?.stop();
+            root.list[index].timer?.destroy();
     }
 
     function timeoutNotification(id) {
@@ -285,6 +299,7 @@ Singleton {
     }
 
     function refresh() {
+        root.storageReady = false;
         notifFileView.reload()
     }
 
@@ -297,19 +312,39 @@ Singleton {
         path: Qt.resolvedUrl(filePath)
         onLoaded: {
             const fileContents = notifFileView.text()
-            root.list = JSON.parse(fileContents).map((notif) => {
+            let parsed;
+            try {
+                parsed = JSON.parse(fileContents);
+                const stringFields = ["appIcon", "appName", "body", "image", "summary", "urgency"];
+                if (!Array.isArray(parsed) || !parsed.every(notif => notif
+                    && Number.isInteger(notif.notificationId) && notif.notificationId > 0
+                    && Number.isFinite(notif.time)
+                    && stringFields.every(key => notif[key] === undefined || typeof notif[key] === "string")))
+                    throw new Error("Invalid notification history format");
+            } catch (e) {
+                root.storageReady = false;
+                console.error("[Notifications] Preserving unreadable file:", root.filePath, e);
+                return;
+            }
+            const previous = root.list.slice();
+            root.list = parsed.map((notif) => {
                 return notifComponent.createObject(root, {
                     "notificationId": notif.notificationId,
                     "actions": [], // Notification actions are meaningless if they're not tracked by the server or the sender is dead
                     "appIcon": root.persistentImage(notif.appIcon),
-                    "appName": notif.appName,
-                    "body": notif.body,
+                    "appName": notif.appName ?? "",
+                    "body": notif.body ?? "",
                     "image": root.persistentImage(notif.image),
-                    "summary": notif.summary,
+                    "summary": notif.summary ?? "",
                     "time": notif.time,
-                    "urgency": notif.urgency,
+                    "urgency": notif.urgency ?? "normal",
                 });
             });
+            previous.forEach(notif => {
+                notif.timer?.destroy();
+                notif.destroy();
+            });
+            root.storageReady = true;
             // Find largest notificationId
             let maxId = 0
             root.list.forEach((notif) => {
@@ -324,9 +359,11 @@ Singleton {
             if(error == FileViewError.FileNotFound) {
                 console.log("[Notifications] File not found, creating new file.")
                 root.list = []
-                notifFileView.setText(stringifyList(root.list));
+                root.storageReady = true;
+                root.saveNotifications();
             } else {
-                console.log("[Notifications] Error loading file: " + error)
+                root.storageReady = false;
+                console.error("[Notifications] Error loading file: " + error)
             }
         }
     }
