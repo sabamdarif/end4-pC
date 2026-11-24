@@ -495,7 +495,7 @@ RowLayout {
                     hoverEnabled: true
                     enabled: !row.on && !row.connecting
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: row.d?.connect()
+                    onClicked: BluetoothStatus.connectDevice(row.d)
                 }
             }
         }

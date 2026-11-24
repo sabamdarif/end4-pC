@@ -44,18 +44,60 @@ Singleton {
         return !!device && device.batteryAvailable && Number.isFinite(Number(device.battery));
     }
 
+    function isConnected(device): bool {
+        return !!device && (device.connected || device.state === BluetoothDeviceState.Connected);
+    }
+
     function togglePower() {
         const adapter = Bluetooth.defaultAdapter;
         if (!adapter) return;
         // rfkill-blocked adapter won't power on — unblock first
         Quickshell.execDetached(["bash", "-c", "rfkill unblock bluetooth"]);
         adapter.enabled = !adapter.enabled;
+        if (adapter.enabled) {
+            adapter.pairable = true;
+        }
+    }
+
+    function stopDiscovery() {
+        const adapter = Bluetooth.defaultAdapter;
+        if (adapter && adapter.discovering) {
+            adapter.discovering = false;
+        }
     }
 
     function trustDevice(device) {
         if (!device) return;
         try { device.trusted = true; } catch (e) {}
         Quickshell.execDetached(["bluetoothctl", "trust", device.address]);
+    }
+
+    function connectDevice(device) {
+        if (!device) return;
+        stopDiscovery();
+        trustDevice(device);
+        device.connect();
+        Quickshell.execDetached(["bluetoothctl", "connect", device.address]);
+    }
+
+    function disconnectDevice(device) {
+        if (!device) return;
+        device.disconnect();
+    }
+
+    Connections {
+        target: Bluetooth.defaultAdapter
+        function onEnabledChanged() {
+            if (Bluetooth.defaultAdapter?.enabled) {
+                Bluetooth.defaultAdapter.pairable = true;
+            }
+        }
+    }
+
+    Component.onCompleted: {
+        if (Bluetooth.defaultAdapter?.enabled) {
+            Bluetooth.defaultAdapter.pairable = true;
+        }
     }
 
     Instantiator {
@@ -66,6 +108,11 @@ Singleton {
             function onPairedChanged() {
                 if (modelData.paired && !modelData.trusted) {
                     root.trustDevice(modelData);
+                }
+            }
+            function onStateChanged() {
+                if (modelData.state === BluetoothDeviceState.Connecting) {
+                    root.stopDiscovery();
                 }
             }
             Component.onCompleted: {

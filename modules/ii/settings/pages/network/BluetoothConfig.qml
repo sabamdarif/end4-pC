@@ -128,7 +128,7 @@ ContentPage {
                                 if (device.pairing)
                                     device.cancelPair()
                                 else
-                                    device.pair()
+                                    BluetoothStatus.connectDevice(device)
                             }
                             StyledToolTip {
                                 text: availableRow.modelData.pairing ? Translation.tr("Click to cancel pairing") : Translation.tr("Click to pair")
@@ -228,7 +228,7 @@ ContentPage {
                                     if (device.connected)
                                         device.disconnect()
                                     else
-                                        device.connect()
+                                        BluetoothStatus.connectDevice(device)
                                 }
                                 StyledToolTip {
                                     text: savedRow.modelData.connected ? Translation.tr("Click to disconnect") : Translation.tr("Click to connect")

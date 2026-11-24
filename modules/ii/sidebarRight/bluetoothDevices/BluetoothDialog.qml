@@ -13,6 +13,28 @@ DialogSheet {
     edgeToEdge: true
     settingsPage: "bluetooth"
 
+    Timer {
+        id: discoveryTimer
+        interval: 15000
+        repeat: false
+        running: Bluetooth.defaultAdapter?.discovering ?? false
+        onTriggered: {
+            BluetoothStatus.stopDiscovery();
+        }
+    }
+
+    leadingActions: DialogButton {
+        visible: !(Bluetooth.defaultAdapter?.discovering ?? false)
+        buttonText: Translation.tr("Scan")
+        onClicked: {
+            const adapter = Bluetooth.defaultAdapter;
+            if (!adapter) return;
+            adapter.enabled = true;
+            adapter.discovering = true;
+            discoveryTimer.restart();
+        }
+    }
+
     StyledListView {
         Layout.fillHeight: true
         Layout.fillWidth: true

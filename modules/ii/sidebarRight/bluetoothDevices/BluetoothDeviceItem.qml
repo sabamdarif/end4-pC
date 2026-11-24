@@ -22,7 +22,7 @@ DialogListItem {
         function onPairedChanged() {
             const device = root.device;
             if (device && device.paired && !device.connected) {
-                device.connect();
+                BluetoothStatus.connectDevice(device);
             }
         }
     }
@@ -34,11 +34,8 @@ DialogListItem {
             device.disconnect();
         } else if (device.pairing) {
             device.cancelPair();
-        } else if (!device.paired) {
-            device.pair();
         } else {
-            BluetoothStatus.trustDevice(device);
-            device.connect();
+            BluetoothStatus.connectDevice(device);
         }
     }
     
