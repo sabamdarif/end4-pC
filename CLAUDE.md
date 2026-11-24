@@ -61,9 +61,16 @@ Use Conventional Commits: `type(scope): subject`. Choose from `fix`, `feat`, `te
 Run checks appropriate to the change:
 
 ```bash
+python3 -m unittest discover -s tests -v
+python3 scripts/niri/test_autostart_entries.py
 git diff --check
 timeout 15s qs -p .
 ```
+
+The regression suite uses temporary data, offscreen Quickshell fixtures, and private D-Bus
+sessions. Tests requiring `qs`, `dbus-run-session`, `notify-send`, `cliphist`, or Python
+PyGObject (`gi`) skip when those dependencies are absent. Shell helper tests also need
+Bash and the usual core utilities. Set `TMPDIR` to a writable scratch directory if needed.
 
 For the Quickshell check, a timeout is expected if the shell remains running. Confirm the log reaches `Configuration Loaded` and inspect new QML errors. Existing environment warnings, such as a missing compositor connection or another notification server, may be unrelated.
 
@@ -101,7 +108,8 @@ reuses it for the launcher's `settings:` search, so neither keeps its own page l
   `"<leafKey>[:<sectionTitle>]"` for deep links.
 - Leaf pages build on first visit and stay alive afterwards. `ContentPage.goTo(term)`
   scrolls to a matching section or subsection; leaf pages do not define their own copy.
-- The rail collapses to group icons below 900 px; clicking one reopens the rail on that group.
+- The rail collapses to group icons below 900 px and closes after selecting a leaf;
+  clicking a group icon reopens the rail on that group.
 
 ### Adding a setting
 

@@ -6,8 +6,9 @@
 
 # 💠 end4-pC
 
-**A personal fork of [illogical-impulse](https://github.com/end-4/dots-hyprland) by [@end-4](https://github.com/end-4)**  
-Customized and maintained by **pctrade**
+**A niri-only personal fork of [pctrade/end4-pC](https://github.com/pctrade/end4-pC), based on [illogical-impulse](https://github.com/end-4/dots-hyprland)**
+
+Customized and maintained by **[sabamdarif](https://github.com/sabamdarif)**
 
 [English](README.md) | [简体中文](README.zh-CN.md) | [日本語](README.ja.md)
 
@@ -49,7 +50,7 @@ Customized and maintained by **pctrade**
 
 ```bash
 cd ~/.config/quickshell/
-git clone https://github.com/pctrade/end4-pC.git
+git clone https://github.com/sabamdarif/end4-pC.git
 killall qs 2>/dev/null; qs -c end4-pC > /dev/null 2>&1 & disown
 ```
 
@@ -77,6 +78,27 @@ Mod+Escape { spawn "qs" "-c" "end4-pC" "ipc" "call" "settings" "toggle"; }
 ```
 
 > **Note:** Settings is an overlay panel, not a regular window — `Mod + Q` won't close it. Use the same keybind to toggle it or press `Escape`.
+
+### Updating this fork
+
+The old **Update Dots** button has been removed because it deleted the checkout and replaced it with a different fork. Update through Git instead, after preserving any local changes and commits:
+
+```bash
+cd ~/.config/quickshell/end4-pC
+git status --short
+git pull --ff-only
+```
+
+Only pull when the working tree is clean and there are no unpushed local commits. If Git cannot fast-forward, stop and reconcile your branch rather than resetting or recloning over it.
+
+### Usage and migration notes
+
+- **Settings:** Below 900 px, the navigation rail collapses after selecting a page. Click a group icon to reopen it. Keyboard selection scrolls search results into view, and searchable dropdowns select the highlighted filtered item.
+- **Clipboard history:** In **Apps → Clipboard**, use **Update autostart entry** to correct existing watchers, then restart those watchers or your session. The supported command is `wl-paste --type text --watch cliphist -max-items N store`, with flags before `store`. This also applies to image watchers. Updating the command cannot restore history already discarded under the old limit.
+- **Audio mixer:** The default now prefers `pavucontrol-qt`, then `pavucontrol`. Existing saved `apps.volumeMixer` commands are not migrated. If yours still points into a Hyprland checkout, replace it in `~/.config/illogical-impulse/config.json` with an installed mixer command.
+- **Saved data:** Unreadable desktop notes and task files are preserved, and edits are blocked until the data is repaired and the shell reloaded. Unreadable notification history is also preserved; new notifications still work, but history writes stay disabled until reload. Notification images supplied as process-local Quickshell handles are not saved across restarts.
+- **Dynamic Island:** Link downloads, fallback chat replies, file-download tracking, and per-process traffic attribution require helpers under `scripts/island/`, which are not included in this checkout. Unavailable actions and watchers stay disabled; total network traffic display remains available. A failed download watcher is not immediately relaunched.
+- **Terminal colors:** Wallpaper-based terminal theming uses this checkout's templates and no longer requires a separate `quickshell/ii` directory.
 
 ---
 
@@ -117,6 +139,7 @@ Only the core list is needed for the shell to start and work. Feature-gated pack
 | Screenshot | `grim`, `satty` | grim, satty |
 | Color picker | `slurp` | slurp |
 | Audio visualizer | `cava` | cava |
+| Stop an existing screen recording | `wf-recorder` | wf-recorder |
 | System sound fallbacks | `paplay`, `pw-play`, `canberra-gtk-play` (first available wins) | libpulse, pipewire-audio, libcanberra |
 | Mic mute quick toggle | `wpctl` | wireplumber |
 | Brightness control | `brightnessctl`, `ddcutil` | brightnessctl, ddcutil |
@@ -140,6 +163,7 @@ A few programs are user-configurable app defaults in the settings rather than ha
 Huge thanks to the people who made this possible:
 
 - **[@end-4](https://github.com/end-4)** — for creating the original [dots-hyprland](https://github.com/end-4/dots-hyprland) / illogical-impulse shell. An absolute masterpiece of a dotfiles project 🫡
+- **[@pctrade](https://github.com/pctrade)** for the Material 3 Expressive fork this checkout builds on.
 - **[@gh0stzk](https://github.com/gh0stzk)** — for providing the weather API integration that made the weather widget possible 🙌
 - **[@StarS2112](https://github.com/StarS2112)** — for showcasing this fork 🙌
 
