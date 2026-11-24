@@ -51,7 +51,8 @@ class FeatureComponentTests(unittest.TestCase):
                 + ('width: item ? item.implicitWidth : 0; height: item ? item.implicitHeight : 0;' if path.endswith("ScreenTimeWidget.qml") else 'anchors.fill: parent;')
                 + ' Component.onCompleted: setSource("' + path + '", '
                 + ('{screenWidth: 1920, screenHeight: 1080, scaledScreenWidth: 1920, scaledScreenHeight: 1080, wallpaperScale: 1, x: 0, y: 0}'
-                   if path.endswith("ScreenTimeWidget.qml") else '{}')
+                   if path.endswith("ScreenTimeWidget.qml") else '{partition: {device: "/dev/ui-test", label: "USMAN", size: 42948624384, filesystem: "exfat", mountPoint: "", total: null}}'
+                   if path.endswith("DrivePartitionRow.qml") else '{}')
                 + '); onLoaded: { console.log("LOADED", source); '
                 + ('item.show = true;' if path.endswith("Dialog.qml") and "sidebarRight" in path else '') + '} }' for index, path in enumerate(paths))
             (root / "shell.qml").write_text('''import QtQuick
@@ -239,6 +240,10 @@ ShellRoot {
                 content.height = Qt.binding(() => content.implicitHeight);
                 GlobalStates.sidebarRightOpen = false;
                 fixtureWindow.check(content.width === 340, "removable view has a stable width");
+                const layout = content.children[0];
+                fixtureWindow.check(layout.x === 12 && layout.y === 12, "popup content has an extra inset on top and left");
+                fixtureWindow.check(layout.width === content.width - 24, "popup content stays inset from the right border");
+                fixtureWindow.check(content.implicitHeight === layout.implicitHeight + 24, "popup keeps bottom padding too");
                 Drives.lastError = "Drive operation failed: " + "x".repeat(200);
                 fixtureWindow.check(content.implicitWidth === 340, "long errors cannot stretch the popup");
                 const button = fixtureWindow.findButton(content, Translation.tr("Storage manager"));
@@ -247,9 +252,34 @@ ShellRoot {
                 fixtureWindow.check(loader0.item.showStorageManager, "button switches the popup to storage details");
                 fixtureWindow.check(content.implicitWidth === 420, "storage view provides more room inside the dropdown");
                 fixtureWindow.check(!GlobalStates.sidebarRightOpen, "storage details do not open quick settings");
-                button.clicked();
-                fixtureWindow.check(!loader0.item.showStorageManager, "back returns to removable devices");
-                content.destroy();
+                Qt.callLater(() => {
+                    fixtureWindow.check(layout.width === content.width - 24, "storage manager preserves the inset too");
+                    button.clicked();
+                    fixtureWindow.check(!loader0.item.showStorageManager, "back returns to removable devices");
+                    content.destroy();
+                });
+            }
+        }
+''')
+
+    def test_storage_rows_distinguish_mountable_and_mounted_volumes(self):
+        self.load_components(["modules/ii/sidebarRight/drives/DrivePartitionRow.qml"], '''
+        function check(condition, message) { if (!condition) console.error("ASSERTION_FAILED", message); }
+        Timer {
+            interval: 400; running: true
+            onTriggered: {
+                const row = loader0.item;
+                row.width = 316;
+                row.height = Qt.binding(() => row.implicitHeight);
+                row.partition = {device: "/dev/ui-test", label: "USMAN", size: 42948624384,
+                    filesystem: "exfat", mountPoint: "", total: null, used: null, free: null, usage: 0};
+                const action = row.children[0].children.find(child => "materialIcon" in child);
+                fixtureWindow.check(!row.mounted && row.canMount, "detected volume is not assumed to be mounted");
+                fixtureWindow.check(action.visible && action.mainText === Translation.tr("Mount"), "unmounted volume offers an explicit mount action");
+                row.partition = Object.assign({}, row.partition, {mountPoint: "/media/USMAN", total: 100, used: 30, free: 70, usage: 0.3});
+                fixtureWindow.check(row.mounted && action.materialIcon === "eject" && action.mainText === "", "mounted volume offers unmount instead");
+                row.partition = Object.assign({}, row.partition, {mountPoint: "", filesystem: "crypto_LUKS", total: null});
+                fixtureWindow.check(!row.canMount && !action.visible, "encrypted volume does not offer an unsupported mount action");
             }
         }
 ''')

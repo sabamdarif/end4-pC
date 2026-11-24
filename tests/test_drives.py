@@ -72,6 +72,18 @@ class DriveInfoTests(unittest.TestCase):
             path.write_text('/dev/sda1 /media/My\\040Disk ext4 rw 0 0\n/dev/sda1 /other ext4 rw 0 0\n')
             self.assertEqual(drives.mount_points(path)["/dev/sda1"], ["/media/My Disk", "/other"])
 
+    def test_detected_usb_volumes_are_not_assumed_to_be_mounted(self):
+        data = {"blockdevices": [{"name": "sda", "type": "disk", "path": "/dev/sda", "tran": "usb", "children": [
+            {"name": "sda1", "path": "/dev/sda1", "type": "part", "fstype": "exfat", "label": "Ventoy"},
+            {"name": "sda2", "path": "/dev/sda2", "type": "part", "fstype": "vfat", "label": "VTOYEFI"},
+            {"name": "sda3", "path": "/dev/sda3", "type": "part", "fstype": "exfat", "label": "USMAN"}]}]}
+        with patch.object(drives, "usage", return_value={"used": 30, "free": 70, "total": 100, "usage": 0.3}) as usage:
+            disk = drives.parse_drives(data, {"/dev/sda1": ["/media/Ventoy"]})["removableDrives"][0]
+        self.assertEqual([part["label"] for part in disk["partitions"]], ["Ventoy", "VTOYEFI", "USMAN"])
+        self.assertEqual([part["mountPoint"] for part in disk["partitions"]], ["/media/Ventoy", "", ""])
+        self.assertTrue(all(part["total"] is None for part in disk["partitions"][1:]))
+        usage.assert_called_once_with("/media/Ventoy")
+
     def test_smart_health_thresholds(self):
         healthy = {"smart_status": {"passed": True}, "nvme_smart_health_information_log":
             {"percentage_used": 12, "temperature": 40, "power_on_hours": 100}}

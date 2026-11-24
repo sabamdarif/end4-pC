@@ -147,6 +147,10 @@ to mount it or open its folder, unmount it with its eject button, or safely ejec
 the whole drive after all its volumes have been unmounted. Failed unmounts stop
 ejection; nothing is forcibly unmounted.
 
+Detected volumes appear even when they are not mounted, just as in Files.
+**Mount** connects an unmounted volume; its eject icon then unmounts it. The
+drive-level **Safely eject** action disconnects the whole USB device.
+
 The popup's **Storage manager** switches to a detailed view in the same dropdown,
 without opening Quick Settings. **Back** returns to the removable-device list.
 It shows internal and removable disks, partition

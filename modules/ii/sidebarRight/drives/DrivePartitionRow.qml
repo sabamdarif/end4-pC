@@ -7,6 +7,8 @@ import qs.modules.common.widgets
 ColumnLayout {
     id: root
     required property var partition
+    readonly property bool mounted: !!partition.mountPoint
+    readonly property bool canMount: !!partition.filesystem && !["crypto_LUKS", "swap"].includes(partition.filesystem)
     Layout.fillWidth: true
     spacing: 4
     RowLayout {
@@ -35,12 +37,15 @@ ColumnLayout {
             }
         }
         RippleButtonWithIcon {
-            visible: root.partition.mountPoint !== ""
-            materialIcon: "eject"
-            mainText: ""
+            visible: root.mounted || root.canMount
+            materialIcon: root.mounted ? "eject" : "add"
+            mainText: root.mounted ? "" : Translation.tr("Mount")
             enabled: !Drives.busy
-            onClicked: Drives.unmountPartition(root.partition.device)
-            StyledToolTip { text: root.partition.kind === "mtp" ? Translation.tr("Disconnect phone") : Translation.tr("Unmount") }
+            onClicked: root.mounted ? Drives.unmountPartition(root.partition.device) : Drives.mountPartition(root.partition.device)
+            StyledToolTip {
+                text: !root.mounted ? Translation.tr("Mount volume")
+                    : root.partition.kind === "mtp" ? Translation.tr("Disconnect phone") : Translation.tr("Unmount")
+            }
         }
     }
     StyledProgressBar {

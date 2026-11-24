@@ -13,11 +13,14 @@ StyledPopup {
     dismissOnOutsideClick: true
     onDismissRequested: root.closeRequested()
     Item {
+        readonly property int padding: 12
         implicitWidth: root.showStorageManager ? 420 : 340
-        implicitHeight: content.implicitHeight
+        implicitHeight: content.implicitHeight + padding * 2
         ColumnLayout {
             id: content
-            width: parent.width
+            x: parent.padding
+            y: parent.padding
+            width: parent.width - parent.padding * 2
             spacing: 12
             StyledText {
                 text: root.showStorageManager ? Translation.tr("Storage manager") : Translation.tr("Removable drives")
@@ -76,6 +79,7 @@ StyledPopup {
                 color: Appearance.m3colors.m3error
             }
             RowLayout {
+                Layout.fillWidth: true
                 DialogButton {
                     buttonText: root.showStorageManager ? Translation.tr("Back") : Translation.tr("Storage manager")
                     onClicked: root.showStorageManager = !root.showStorageManager
