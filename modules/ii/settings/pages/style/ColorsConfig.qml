@@ -24,29 +24,24 @@ ContentPage {
         property color colText: toggled ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer2
         padding: 5
         Layout.fillWidth: true
-        Layout.fillHeight: true
         toggled: Appearance.m3colors.darkmode === dark
         colBackground: Appearance.colors.colLayer2
         onClicked: {
             Quickshell.execDetached(["bash", "-c", `${Directories.wallpaperSwitchScriptPath} --mode ${dark ? "dark" : "light"} --noswitch`]);
         }
-        contentItem: Item {
-            anchors.centerIn: parent
-            ColumnLayout {
-                anchors.centerIn: parent
-                spacing: 0
-                MaterialSymbol {
-                    Layout.alignment: Qt.AlignHCenter
-                    iconSize: 30
-                    text: dark ? "dark_mode" : "light_mode"
-                    color: smallLightDarkPreferenceButton.colText
-                }
-                StyledText {
-                    Layout.alignment: Qt.AlignHCenter
-                    text: dark ? Translation.tr("Dark") : Translation.tr("Light")
-                    font.pixelSize: Appearance.font.pixelSize.smaller
-                    color: smallLightDarkPreferenceButton.colText
-                }
+        contentItem: ColumnLayout {
+            spacing: 0
+            MaterialSymbol {
+                Layout.alignment: Qt.AlignHCenter
+                iconSize: 30
+                text: dark ? "dark_mode" : "light_mode"
+                color: smallLightDarkPreferenceButton.colText
+            }
+            StyledText {
+                Layout.alignment: Qt.AlignHCenter
+                text: dark ? Translation.tr("Dark") : Translation.tr("Light")
+                font.pixelSize: Appearance.font.pixelSize.smaller
+                color: smallLightDarkPreferenceButton.colText
             }
         }
     }
@@ -57,13 +52,20 @@ ContentPage {
         shape: MaterialShape.Shape.Puffy
         Layout.fillWidth: true
 
-        RowLayout {
+        GridLayout {
+            id: themeLayout
             Layout.fillWidth: true
-            spacing: 4
+            columns: width >= 800 ? 2 : 1
+            columnSpacing: 16
+            rowSpacing: 16
 
             Rectangle {
+                id: wallpaperPreview
+                Layout.fillWidth: true
                 Layout.preferredWidth: 420
-                Layout.preferredHeight: 280
+                Layout.maximumWidth: 420
+                Layout.preferredHeight: width * 2 / 3
+                Layout.alignment: Qt.AlignTop | Qt.AlignHCenter
                 radius: Appearance.rounding.large - 3
                 color: Appearance.colors.colLayer2
                 clip: true
@@ -80,7 +82,8 @@ ContentPage {
                     layer.enabled: true
                     layer.effect: OpacityMask {
                         maskSource: Rectangle {
-                            width: 420; height: 280
+                            width: wallpaperPreview.width
+                            height: wallpaperPreview.height
                             radius: Appearance.rounding.large - 3
                         }
                     }
@@ -95,28 +98,31 @@ ContentPage {
                         Quickshell.execDetached([Directories.wallpaperSwitchScriptPath, "--noswitch", "--color"]);
                     }
                     StyledToolTip {
-                        text: "Change accent color"
+                        text: Translation.tr("Change accent color")
                     }
                 }
             }
 
             ColumnLayout {
                 Layout.fillWidth: true
+                Layout.alignment: Qt.AlignTop
                 spacing: 4
 
                 RowLayout {
                     Layout.fillWidth: true
-                    Layout.fillHeight: true
                     spacing: 2
                     uniformCellSizes: true
                     SmallLightDarkPreferenceButton { dark: false }
                     SmallLightDarkPreferenceButton { dark: true }
                 }
                 GridLayout {
+                    id: schemeGrid
                     Layout.fillWidth: true
-                    columns: 3
+                    columns: width >= 360 ? 3 : 2
                     rowSpacing: 2
                     columnSpacing: 2
+                    uniformCellWidths: true
+                    uniformCellHeights: true
 
                     Repeater {
                         model: [
@@ -134,33 +140,39 @@ ContentPage {
                         delegate: Rectangle {
                             required property var modelData
                             Layout.fillWidth: true
-                            Layout.preferredHeight: width * 0.6
+                            implicitWidth: 120
+                            implicitHeight: Math.max(72, schemeIcon.implicitHeight + schemeLabel.implicitHeight + 24)
                             radius: Appearance.rounding.normal
 
                             property bool isSelected: Config.options.appearance.palette.type === modelData.value
                             property bool hovered: hoverArea.containsMouse
 
-                            color: isSelected ? Appearance.colors.colPrimary 
-                                : hovered ? Appearance.colors.colSecondaryContainerHover 
+                            color: isSelected ? Appearance.colors.colPrimary
+                                : hovered ? Appearance.colors.colSecondaryContainerHover
                                 : Appearance.colors.colSecondaryContainer
 
                             MaterialSymbol {
+                                id: schemeIcon
                                 anchors.top: parent.top
                                 anchors.left: parent.left
                                 anchors.margins: 8
                                 text: modelData.icon
                                 iconSize: Appearance.font.pixelSize.larger
-                                color: parent.isSelected ? Appearance.colors.colOnPrimary : Appearance.colors.colOnPrimaryContainer
+                                color: parent.isSelected ? Appearance.colors.colOnPrimary : Appearance.colors.colOnSecondaryContainer
                             }
 
                             StyledText {
+                                id: schemeLabel
                                 anchors.bottom: parent.bottom
+                                anchors.left: parent.left
                                 anchors.right: parent.right
                                 anchors.margins: 8
                                 text: modelData.displayName
                                 font.pixelSize: Appearance.font.pixelSize.smaller
                                 font.weight: Font.Medium
-                                color: parent.isSelected ? Appearance.colors.colOnPrimary : Appearance.colors.colOnPrimaryContainer
+                                horizontalAlignment: Text.AlignRight
+                                wrapMode: Text.Wrap
+                                color: parent.isSelected ? Appearance.colors.colOnPrimary : Appearance.colors.colOnSecondaryContainer
                             }
 
                             MouseArea {

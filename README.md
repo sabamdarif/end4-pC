@@ -94,6 +94,7 @@ Only pull when the working tree is clean and there are no unpushed local commits
 ### Usage and migration notes
 
 - **Settings:** Below 900 px, the navigation rail collapses after selecting a page. Click a group icon to reopen it. Keyboard selection scrolls search results into view, and searchable dropdowns select the highlighted filtered item.
+- **Colors and Theme:** The wallpaper preview and compact scheme selector stack on narrow windows. Light and dark mode labels stay inside their buttons.
 - **Clipboard history:** In **Apps → Clipboard**, use **Update autostart entry** to correct existing watchers, then restart those watchers or your session. The supported command is `wl-paste --type text --watch cliphist -max-items N store`, with flags before `store`. This also applies to image watchers. Updating the command cannot restore history already discarded under the old limit.
 - **Audio mixer:** The default now prefers `pavucontrol-qt`, then `pavucontrol`. Existing saved `apps.volumeMixer` commands are not migrated. If yours still points into a Hyprland checkout, replace it in `~/.config/qssettings/config.json` with an installed mixer command.
 - **Saved data:** Unreadable desktop notes and task files are preserved, and edits are blocked until the data is repaired and the shell reloaded. Unreadable notification history is also preserved; new notifications still work, but history writes stay disabled until reload. Notification images supplied as process-local Quickshell handles are not saved across restarts.
