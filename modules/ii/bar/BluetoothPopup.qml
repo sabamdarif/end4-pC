@@ -38,7 +38,7 @@ StyledPopup {
             implicitWidth: 280
             implicitHeight: visible ? emptyText.implicitHeight + 24 : 0
             radius: Appearance.rounding.normal
-            color: Appearance.colors.colLayer1Base
+            color: Appearance.colors.colLayer1
 
             StyledText {
                 id: emptyText

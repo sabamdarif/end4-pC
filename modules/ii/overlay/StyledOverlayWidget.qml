@@ -197,11 +197,17 @@ AbstractOverlayWidget {
 
     Rectangle {
         id: border
+        WindowGlass {
+            anchors.fill: parent
+            glassEnabled: root.fancyBorders && GlobalStates.overlayOpen && (parent?.color.a ?? 0) > 0
+            cardRadius: parent?.radius ?? 0
+            tint: parent?.color ?? 'transparent'
+        }
         anchors {
             fill: parent
             margins: root.resizeMargin
         }
-        color: ColorUtils.transparentize(Appearance.colors.colLayer1Base, (root.fancyBorders && GlobalStates.overlayOpen) ? 0 : 1)
+        color: ColorUtils.transparentize(Appearance.colors.colLayer0Blurred, (root.fancyBorders && GlobalStates.overlayOpen) ? 0 : 1)
         radius: root.radius
         border.color: ColorUtils.transparentize(Appearance.colors.colOutlineVariant, GlobalStates.overlayOpen ? 0 : 1)
         border.width: 1
@@ -228,7 +234,7 @@ AbstractOverlayWidget {
                 Layout.fillWidth: true
                 implicitWidth: titleBarRow.implicitWidth + root.padding * 2
                 implicitHeight: titleBarRow.implicitHeight + root.padding * 2
-                color: root.fancyBorders ? "transparent" : Appearance.colors.colLayer1Base
+                color: root.fancyBorders ? "transparent" : Appearance.colors.colLayer1
                 // border.color: Appearance.colors.colOutlineVariant
                 // border.width: 1
                 

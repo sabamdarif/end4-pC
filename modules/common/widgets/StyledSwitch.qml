@@ -1,4 +1,5 @@
 import qs.modules.common
+import qs.modules.common.functions
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Effects
@@ -10,7 +11,7 @@ Switch {
     implicitWidth: 52 * root.scale
 
     property color activeColor: Appearance?.colors.colPrimaryContainer ?? "#cbc4cb"
-    property color inactiveColor: Appearance?.m3colors.m3surfaceBright ?? "#3a3939"
+    property color inactiveColor: Appearance ? ColorUtils.transparentize(Appearance.m3colors.m3surfaceBright, Appearance.contentTransparency * 0.78) : "#3a3939"
 
     PointingHandInteraction {}
 

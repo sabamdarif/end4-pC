@@ -12,7 +12,7 @@ Flow {
 
     property list<string> options: []
     property var currentValue: null
-    property color shapeColor: Appearance.colors.colPrimaryContainer
+    property color shapeColor: Appearance.colors.colOnSecondaryContainer
     property color backgroundColor: Appearance.colors.colLayer1
 
     signal selected(var newValue)

@@ -385,11 +385,18 @@ Item {
                             visible: settingsSearchField.activeFocus && root.settingsSearchQuery.trim() !== ""
                             anchors { top: settingsSearchField.bottom; left: parent.left; right: parent.right; topMargin: 4 }
                             implicitHeight: Math.min(Math.max(40, root.settingsSearchResults.length * 44) + 8, 300)
-                            color: Appearance.m3colors.m3surfaceContainerHigh
+                            color: Appearance.colors.colLayer1Blurred
                             radius: Appearance.rounding.small
                             border.width: 1
-                            border.color: Appearance.m3colors.m3outlineVariant
+                            border.color: Appearance.colors.colLayer0Border
                             clip: true
+
+                            WindowGlass {
+                                anchors.fill: parent
+                                glassEnabled: (parent?.color.a ?? 0) > 0
+                                cardRadius: parent?.radius ?? 0
+                                tint: parent?.color ?? 'transparent'
+                            }
 
                             StyledListView {
                                 id: settingsSearchResultsView

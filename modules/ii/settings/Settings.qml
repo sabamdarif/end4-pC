@@ -53,7 +53,7 @@ Scope {
                     visible: !NiriConfig.preferNoCsd
                     Layout.fillWidth: true
                     implicitHeight: 44
-                    color: Appearance.m3colors.m3surfaceContainerLow
+                    color: Appearance.colors.colLayer1
                     readonly property var backingWindow: Window.window
 
                     DragHandler {

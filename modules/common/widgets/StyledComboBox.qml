@@ -192,7 +192,15 @@ ComboBox {
                 id: popupBackground
                 anchors.fill: parent
                 radius: Appearance.rounding.normal
-                color: Appearance.m3colors.m3surfaceContainerHigh
+                color: Appearance.colors.colLayer1Blurred
+                border.width: 1
+                border.color: Appearance.colors.colLayer0Border
+                WindowGlass {
+                    anchors.fill: parent
+                    glassEnabled: (parent?.color.a ?? 0) > 0
+                    cardRadius: parent?.radius ?? 0
+                    tint: parent?.color ?? 'transparent'
+                }
             }
         }
 

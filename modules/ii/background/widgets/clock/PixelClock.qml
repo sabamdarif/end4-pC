@@ -21,7 +21,7 @@ Item {
     readonly property string glyphTopRight: DateTime.digitH1
     readonly property string glyphBottomLeft: DateTime.digitM0
     readonly property string glyphBottomRight: DateTime.digitM1
-    readonly property color tintSoft: Appearance.colors.colPrimaryContainer
+    readonly property color tintSoft: Appearance.m3colors.m3primaryContainer
     readonly property color tintBold: Appearance.colors.colPrimary
 
     readonly property real fringeSize: isVertical ? root.width * 0.026 : root.height * 0.03

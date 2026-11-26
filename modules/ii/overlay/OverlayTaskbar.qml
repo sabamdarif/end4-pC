@@ -17,10 +17,17 @@ Rectangle {
     opacity: GlobalStates.overlayOpen ? 1 : 0
     implicitWidth: contentRow.implicitWidth + (padding * 2)
     implicitHeight: contentRow.implicitHeight + (padding * 2)
-    color: Appearance.m3colors.m3surfaceContainer
+    color: Appearance.colors.colLayer1Blurred
     radius: Appearance.rounding.large
     border.color: Appearance.colors.colOutlineVariant
     border.width: 1
+
+    WindowGlass {
+        anchors.fill: parent
+        glassEnabled: (parent?.color.a ?? 0) > 0
+        cardRadius: parent?.radius ?? 0
+        tint: parent?.color ?? 'transparent'
+    }
 
     Behavior on opacity {
         animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)

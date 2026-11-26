@@ -210,8 +210,16 @@ Scope {
 
                     Rectangle {
                         id: placeholderBackground
+                        WindowGlass {
+                            anchors.fill: parent
+                            glassEnabled: (parent?.color.a ?? 0) > 0
+                            cardRadius: parent?.radius ?? 0
+                            tint: parent?.color ?? 'transparent'
+                        }
                         anchors.centerIn: parent
-                        color: Appearance.colors.colLayer0
+                        color: Appearance.colors.colLayer0Blurred
+                        border.width: 1
+                        border.color: Appearance.colors.colLayer0Border
                         radius: root.popupRounding
                         property real padding: 20
                         implicitWidth: placeholderLayout.implicitWidth + padding * 2

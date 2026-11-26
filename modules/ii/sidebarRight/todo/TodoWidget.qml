@@ -144,13 +144,21 @@ Item {
 
         Rectangle { // The dialog
             id: dialog
+            WindowGlass {
+                anchors.fill: parent
+                glassEnabled: (parent?.color.a ?? 0) > 0
+                cardRadius: parent?.radius ?? 0
+                tint: parent?.color ?? 'transparent'
+            }
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
             anchors.margins: root.dialogMargins
             implicitHeight: dialogColumnLayout.implicitHeight
 
-            color: Appearance.m3colors.m3surfaceContainerHigh
+            color: Appearance.colors.colLayer1Blurred
+            border.width: 1
+            border.color: Appearance.colors.colLayer0Border
             radius: Appearance.rounding.normal
 
             function addTask() {

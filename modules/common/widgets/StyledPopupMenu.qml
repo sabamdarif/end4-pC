@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
+import qs.modules.common
 import qs.modules.common.widgets // Para las sombras y estilos
 
 Item {
@@ -37,6 +38,13 @@ Item {
                 if (!active) root.visible = false
             }
 
+            BackgroundEffect.blurRegion: Appearance.blurActive ? popupBlurRegion : null
+            Region {
+                id: popupBlurRegion
+                item: container
+                radius: container.radius
+            }
+
             // Sombras usando tus widgets existentes
             StyledRectangularShadow {
                 target: container
@@ -44,12 +52,18 @@ Item {
 
             Rectangle {
                 id: container
+                WindowGlass {
+                    anchors.fill: parent
+                    glassEnabled: (parent?.color.a ?? 0) > 0
+                    cardRadius: parent?.radius ?? 0
+                    tint: parent?.color ?? 'transparent'
+                }
                 anchors.centerIn: parent
                 implicitWidth: 200 
                 implicitHeight: layout.implicitHeight + 16
                 
                 radius: Appearance.rounding.normal
-                color: Appearance.m3colors.m3surfaceContainer
+                color: Appearance.colors.colLayer1Blurred
                 border.width: 1
                 border.color: Appearance.colors.colLayer0Border
 
