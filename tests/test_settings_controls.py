@@ -11,6 +11,96 @@ REPOSITORY = Path(__file__).resolve().parents[1]
 
 @unittest.skipUnless(shutil.which("qs"), "Quickshell is required")
 class SettingsControlTests(unittest.TestCase):
+    def test_spinbox_only_reports_user_input_and_keeps_external_binding(self):
+        with tempfile.TemporaryDirectory(prefix="config-spinbox-") as directory:
+            root = Path(directory)
+            common = root / "modules/common"
+            widgets = common / "widgets"
+            widgets.mkdir(parents=True)
+            functions = common / "functions"
+            functions.mkdir()
+            (functions / "Unused.qml").write_text("import QtQuick\nQtObject {}")
+            for name in ("ConfigSpinBox.qml", "StyledSpinBox.qml", "StyledTextInput.qml"):
+                shutil.copy(REPOSITORY / "modules/common/widgets" / name, widgets)
+            (common / "Appearance.qml").write_text('''pragma Singleton
+import Quickshell
+Singleton {
+    property var font: ({ pixelSize: { small: 14 }, family: { main: "Sans", numbers: "Sans" }, variableAxes: { main: {}, numbers: {} } })
+    property var rounding: ({ small: 10, unsharpen: 3 })
+    property var colors: ({ colOnSecondaryContainer: "white", colOnLayer1: "white", colOnLayer2: "white", colLayer2: "gray", colLayer2Hover: "gray", colLayer2Active: "gray", colSecondaryContainer: "gray" })
+    property var m3colors: ({ m3outline: "gray", m3onSecondaryContainer: "white" })
+    property var animation: ({ elementMoveFast: { colorAnimation: null } })
+}
+''')
+            # Keep the real input/control behavior without requiring appearance animation factories.
+            for name, contents in {
+                "StyledText.qml": 'import QtQuick\nText {}',
+                "OptionalMaterialSymbol.qml": 'import QtQuick\nItem { property string icon }',
+                "MaterialSymbol.qml": 'import QtQuick\nText { property real iconSize }',
+            }.items():
+                (widgets / name).write_text(contents)
+            spinbox = widgets / "StyledSpinBox.qml"
+            source = spinbox.read_text()
+            source = source.replace('Behavior on color {\n            animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)\n        }', '')
+            source = source.replace('ColorUtils.transparentize(Appearance.colors.colLayer2)', 'Appearance.colors.colLayer2')
+            spinbox.write_text(source)
+            (root / "shell.qml").write_text('''import QtQuick
+import QtQuick.Window
+import QtTest
+import Quickshell
+import "modules/common/widgets"
+ShellRoot {
+    Window {
+        id: window
+        visible: true; width: 600; height: 200
+        property int externalValue: 20
+        property int modifications: 0
+        function check(condition, message) { if (!condition) console.error("ASSERTION_FAILED", message); }
+        ConfigSpinBox {
+            id: control
+            anchors.centerIn: parent
+            value: window.externalValue
+            from: 0; to: 100
+            onValueModified: { window.modifications++; window.externalValue = value; }
+        }
+        TestCase {
+            name: "SpinboxInput"
+            when: window.visible
+            function test_input() {
+                wait(100);
+                window.externalValue = 30;
+                window.check(control.value === 30 && window.modifications === 0, "external updates are not user input");
+                const spin = control.children[1];
+                spin.forceActiveFocus();
+                keyClick(Qt.Key_Up);
+                window.check(window.externalValue === 31 && window.modifications === 1, "arrow keys report user input");
+                window.externalValue = 40;
+                window.check(control.value === 40, "binding survives arrow input");
+                spin.contentItem.forceActiveFocus();
+                spin.contentItem.selectAll();
+                keyClick(Qt.Key_4);
+                keyClick(Qt.Key_2);
+                keyClick(Qt.Key_Return);
+                wait(20);
+                window.check(window.externalValue === 42 && window.modifications === 2, "typed input uses native SpinBox editing");
+                window.externalValue = 50;
+                window.check(control.value === 50, "binding survives typed input");
+                console.log("SPINBOX_TEST_DONE");
+                Qt.quit();
+            }
+        }
+    }
+    Timer { interval: 2000; running: true; onTriggered: { console.error("ASSERTION_FAILED", "test timed out"); Qt.quit(); } }
+}
+''')
+            result = subprocess.run(["qs", "-p", str(root)], capture_output=True, text=True,
+                                    timeout=8, env=dict(os.environ, QT_QPA_PLATFORM="offscreen", QT_QUICK_CONTROLS_STYLE="Basic"))
+            output = result.stdout + result.stderr
+            self.assertEqual(result.returncode, 0, output)
+            self.assertIn("SPINBOX_TEST_DONE", output)
+            for error in ("ASSERTION_FAILED", "TypeError", "ReferenceError", "FAIL!"):
+                self.assertNotIn(error, output)
+
     def test_switch_clicks_preserve_external_binding(self):
         with tempfile.TemporaryDirectory(prefix="config-switch-", dir=os.environ.get("TMPDIR")) as directory:
             root = Path(directory)
@@ -89,7 +179,7 @@ Singleton { readonly property bool isNiri: false }
 ''')
             (services / "NiriConfig.qml").write_text('''pragma Singleton
 import Quickshell
-Singleton { function generateOutputsKdl(monitors) {} }
+Singleton { signal configReloaded(); function generateOutputsKdl(monitors) {} }
 ''')
             (root / "shell.qml").write_text('''import QtQuick
 import Quickshell

@@ -118,6 +118,24 @@ reuses it for the launcher's `settings:` search, so neither keeps its own page l
 - The rail collapses to group icons below 900 px and closes after selecting a leaf;
   clicking a group icon reopens the rail on that group.
 
+### Niri settings synchronization
+
+- `NiriConfig` reads effective scalar settings from `config.kdl` and its includes through
+  `scripts/niri/config-settings.py`. The helper follows include order and niri's merge rules,
+  validates with `niri validate`, and reports both symlink paths and targets for `FileView`
+  watchers. It never writes user files. JSON remains the store for shell-managed lists,
+  not the authority for scalar compositor values.
+- Loading or refreshing settings must not generate overrides. Scalar edits update only
+  changed KDL nodes; pointing-device and XKB edits retain their complete effective blocks
+  because niri replaces those sections. Existing generated overrides are preserved.
+  `configReloaded` refreshes shortcuts, autostart and connected-output views.
+- Niri number controls save through `ConfigSpinBox.valueModified`, not `valueChanged`.
+  Binding updates and UI range clamping must never rewrite compositor settings.
+  `StyledSpinBox` uses a direct text-input content item so Qt handles user editing.
+- `externalWindowRules` lists full rules and their source files separately from the
+  shell-managed editor. Never flatten multiple match groups or drop unknown properties
+  when displaying user rules; source-file editing preserves those constructs.
+
 ### Wallpaper colors
 
 - `scripts/colors/switchwall.sh` owns wallpaper changes and invokes `scripts/colors/matugen.py`.

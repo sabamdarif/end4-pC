@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Io
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
@@ -17,10 +16,6 @@ ContentPage {
         "ru", "ua", "pl", "tr", "in", "jp", "kr", "cn", "ara"
     ]
     readonly property bool layoutIsPreset: layoutPresets.includes(NiriConfig.options.input.kbLayout)
-    // True when focus-follows-mouse came from the user's own niri config. niri
-    // has no way to turn the flag back off from a later include, so the switch
-    // is read-only then (a hint explains how to disable it by hand).
-    property bool focusFollowsMouseOwnedByConfig: false
 
     // niri reads `numlock` only at startup, so the config write alone never
     // lights the LED. Tap Num_Lock through a virtual keyboard to toggle it now.
@@ -28,27 +23,6 @@ ContentPage {
         if (KeyLocks.ready && KeyLocks.numLock === enable) return
         Quickshell.execDetached(["wtype", "-k", "Num_Lock"])
     }
-
-    // The shell only persists its own JSON, so the switch can't see a
-    // focus-follows-mouse set by hand in config.kdl / config.d. Read the last
-    // uncommented one (niri merges includes in order) so the switch shows the
-    // real state, and keep any max-scroll-amount parameter it carries.
-    Process {
-        id: ffmProbeProc
-        command: ["sh", "-c", `grep -hE '^[ \\t]*focus-follows-mouse' "$HOME/.config/niri/config.kdl" "$HOME/.config/niri/config.d"/*.kdl 2>/dev/null | grep -v '^[ \\t]*//' | tail -1`]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const line = text.trim()
-                page.focusFollowsMouseOwnedByConfig = line !== ""
-                if (line === "") return
-                const m = line.match(/max-scroll-amount\s*=\s*"([^"]*)"/)
-                if (m) NiriConfig.options.input.focusFollowsMouseMaxScroll = m[1]
-                NiriConfig.options.input.focusFollowsMouse = true
-            }
-        }
-    }
-
-    Component.onCompleted: ffmProbeProc.running = true
 
     ContentSection {
         icon: "keyboard"
@@ -89,7 +63,7 @@ ContentPage {
                     text: Translation.tr("Repeat delay (ms)")
                     value: NiriConfig.options.input.repeatDelay
                     from: 100; to: 1000; stepSize: 10
-                    onValueChanged: {
+                    onValueModified: {
                         if (value === NiriConfig.options.input.repeatDelay) return
                         NiriConfig.options.input.repeatDelay = value
                     }
@@ -100,7 +74,7 @@ ContentPage {
                     text: Translation.tr("Repeat rate")
                     value: NiriConfig.options.input.repeatRate
                     from: 10; to: 100; stepSize: 1
-                    onValueChanged: {
+                    onValueModified: {
                         if (value === NiriConfig.options.input.repeatRate) return
                         NiriConfig.options.input.repeatRate = value
                     }
@@ -111,7 +85,7 @@ ContentPage {
                     text: Translation.tr("Focus follows mouse")
                     // Already enabled by the user's own niri config, which the
                     // shell cannot turn back off.
-                    enabled: !page.focusFollowsMouseOwnedByConfig
+                    enabled: !NiriConfig.focusFollowsMouseOwnedByConfig
                     checked: NiriConfig.options.input.focusFollowsMouse
                     onCheckedChanged: {
                         if (checked === NiriConfig.options.input.focusFollowsMouse) return
@@ -128,8 +102,10 @@ ContentPage {
             buttonIcon: "keyboard"
             text: Translation.tr("Keyboard layout (custom)")
             placeholderText: Translation.tr("e.g., us, es, latam")
-            Component.onCompleted: value = NiriConfig.options.input.kbLayout
-            onValueChanged: kbLayoutDebounceTimer.restart()
+            value: NiriConfig.options.input.kbLayout
+            onValueChanged: {
+                if (value !== NiriConfig.options.input.kbLayout) kbLayoutDebounceTimer.restart()
+            }
 
             Timer {
                 id: kbLayoutDebounceTimer
@@ -142,7 +118,7 @@ ContentPage {
         }
 
         StyledText {
-            visible: page.focusFollowsMouseOwnedByConfig
+            visible: NiriConfig.focusFollowsMouseOwnedByConfig
             Layout.fillWidth: true
             Layout.leftMargin: 16
             Layout.rightMargin: 16

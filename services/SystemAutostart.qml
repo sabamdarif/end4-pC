@@ -38,6 +38,17 @@ Singleton {
         listProc.running = true
     }
 
+    Connections {
+        target: NiriConfig
+        function onConfigReloaded() { refreshDelay.restart() }
+    }
+
+    Timer {
+        id: refreshDelay
+        interval: 600
+        onTriggered: root.refresh()
+    }
+
     function setNiriEnabled(entry, enabled) {
         if ((entry?.enabled ?? true) === enabled) return
         root.run(["niri-toggle", "--file", entry.file, "--line", String(entry.line), "--expect", entry.raw])

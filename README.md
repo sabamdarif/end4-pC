@@ -150,6 +150,24 @@ Niri settings remain separate in **`~/.config/niri/qssettings/`**, including `se
 
 The shell and its helper scripts use only this new folder. There is no automatic migration or fallback to `illogical-impulse/`.
 
+### Niri configuration in Settings
+
+Settings reads `~/.config/niri/config.kdl` and follows its includes in order,
+including nested files and symlinked dotfiles. Supported input, keyboard, layout,
+decoration, blur, animation and cursor controls show the effective KDL values,
+not stale values from the shell's JSON. Changes to included files refresh the UI.
+
+Opening Settings does not generate niri overrides. Changing a control updates
+only its override, preserving unrelated settings and additional pointing-device
+or XKB fields. Niri validates generated shell fragments before they are saved.
+Existing generated overrides remain in force: when `qssettings` is included last,
+its conflicting values still take precedence over earlier user files, just as in niri.
+
+The Window rules page also lists rules from your own files under **From your niri
+config**, with their full configuration and an **Edit source** button. These rules
+are not imported into the simpler rule editor, so multiple match groups, exclusions
+and advanced properties remain intact. Rules added in Settings retain their own editor.
+
 ---
 
 ## Feature usage

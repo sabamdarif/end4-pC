@@ -14,7 +14,7 @@ REPOSITORY = Path(__file__).resolve().parents[1]
 
 @unittest.skipUnless(shutil.which("qs"), "Quickshell is required")
 class FeatureComponentTests(unittest.TestCase):
-    def load_components(self, paths, interaction=""):
+    def load_components(self, paths, interaction="", niri_config=""):
         with tempfile.TemporaryDirectory(prefix="feature-qml-") as directory:
             root = Path(directory)
             for name in ("modules", "scripts", "assets", "translations", "GlobalStates.qml"):
@@ -46,6 +46,11 @@ Singleton {
             config = root / "config"
             (config / "qssettings").mkdir(parents=True)
             (config / "niri/qssettings").mkdir(parents=True)
+            if niri_config:
+                parts = config / "niri/config.d"
+                parts.mkdir()
+                (parts / "custom.kdl").write_text(niri_config)
+                (config / "niri/config.kdl").write_text('include "config.d/custom.kdl"')
             (config / "qssettings/config.json").write_text(json.dumps({"wellbeing": {"enable": False}}))
             (config / "qssettings/screentime.json").write_text(json.dumps({"version": 1, "days": [
                 {"date": datetime.date.today().isoformat(), "active": 3600, "apps": {"kitty": 3600}}]}))
@@ -109,6 +114,8 @@ ShellRoot {
             self.assertEqual(output.count("qml: LOADED"), len(paths), output)
             for error in ("ASSERTION_FAILED", "TypeError", "ReferenceError", "Cannot assign", "is not a type", "is unavailable"):
                 self.assertNotIn(error, output)
+            if niri_config:
+                self.assertFalse((config / "niri/qssettings/shell.kdl").exists(), output)
 
     def test_wifi_sharing_components_load(self):
         self.load_components(["modules/ii/settings/pages/network/WifiQrDialog.qml",
@@ -118,6 +125,57 @@ ShellRoot {
     def test_window_rule_components_load(self):
         self.load_components(["modules/ii/settings/pages/compositor/WindowRuleEditorDialog.qml",
                               "modules/ii/settings/pages/compositor/WindowRulesConfig.qml"])
+
+    def test_custom_window_rules_are_visible_with_full_advanced_configuration(self):
+        self.load_components(["modules/ii/settings/pages/compositor/WindowRulesConfig.qml"], '''
+        function check(condition, message) { if (!condition) console.error("ASSERTION_FAILED", message); }
+        function descendants(node, found, visited) {
+            if (visited.has(node)) return;
+            visited.add(node);
+            found.push(node);
+            for (const child of [...(node.children || []), ...(node.data || [])]) descendants(child, found, visited);
+        }
+        Timer {
+            interval: 700; running: true
+            onTriggered: {
+                fixtureWindow.check(NiriConfig.externalWindowRules.length === 1, "custom rule is discovered");
+                const nodes = [];
+                fixtureWindow.descendants(loader0.item, nodes, new Set());
+                const rule = nodes.find(node => typeof node.text === "string" && node.text.includes("background-effect"));
+                fixtureWindow.check(!!rule && rule.visible, "full advanced rule is displayed");
+                fixtureWindow.check(rule.text.includes('exclude title="secret"'), "exclusions stay intact");
+                const empty = nodes.find(node => node.text === "No window rules yet");
+                fixtureWindow.check(!empty.visible, "custom rules suppress the empty state");
+            }
+        }
+''', niri_config='window-rule { match app-id=r#"^org\\.example$"#; match app-id="kitty"; exclude title="secret"; background-effect { blur true; }; }')
+
+    def test_niri_pages_do_not_save_clamped_or_rounded_custom_values_on_load(self):
+        self.load_components([
+            "modules/ii/settings/pages/input/NiriPointerConfig.qml",
+            "modules/ii/settings/pages/input/NiriKeyboardConfig.qml",
+            "modules/ii/settings/pages/compositor/NiriLayoutConfig.qml",
+            "modules/ii/settings/pages/style/WindowsEffectsConfig.qml",
+            "modules/ii/settings/pages/style/IconThemesConfig.qml",
+        ], '''
+        function check(condition, message) { if (!condition) console.error("ASSERTION_FAILED", message); }
+        Timer {
+            interval: 700; running: true
+            onTriggered: {
+                fixtureWindow.check(NiriConfig.ready, "niri settings loaded");
+                fixtureWindow.check(NiriConfig.options.decoration.border.width === 1.5, "fractional border is not rounded on load");
+                fixtureWindow.check(NiriConfig.options.input.repeatDelay === 1500, "repeat delay outside UI range is preserved");
+                fixtureWindow.check(NiriConfig.options.cursor.size === 80, "cursor size outside UI range is preserved");
+                fixtureWindow.check(NiriConfig.options.cursor.theme === "custom-theme", "niri cursor theme is authoritative");
+                fixtureWindow.check(NiriConfig.options.decoration.blur.noise === 0.2345, "noise is not rounded on load");
+                fixtureWindow.check(Object.keys(NiriConfig.pendingChanges).length === 0, "loading settings queues no changes");
+            }
+        }
+''', niri_config='''input { keyboard { repeat-delay 1500; repeat-rate 120; }; mouse { natural-scroll; accel-speed 0.45; }; }
+layout { border { on; width 1.5; }; default-column-width { fixed 1000; }; }
+blur { passes 10; noise 0.2345; }
+cursor { xcursor-theme "custom-theme"; xcursor-size 80; }
+animations { slowdown 0.75; }''')
 
     def test_storage_components_load(self):
         self.load_components(["modules/ii/sidebarRight/drives/DrivesDialog.qml"])

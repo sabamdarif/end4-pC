@@ -12,6 +12,8 @@ SpinBox {
     property real baseHeight: 35
     property real radius: Appearance.rounding.small
     property real innerButtonRadius: Appearance.rounding.unsharpen
+    implicitHeight: root.baseHeight
+    implicitWidth: Math.max(contentItem.implicitWidth, 40) + leftPadding + rightPadding
     editable: true
 
     opacity: root.enabled ? 1 : 0.4
@@ -21,23 +23,17 @@ SpinBox {
         radius: root.radius
     }
 
-    contentItem: Item {
-        implicitHeight: root.baseHeight
-        implicitWidth: Math.max(labelText.implicitWidth, 40)
-
-        StyledTextInput {
-            id: labelText
-            anchors.centerIn: parent
-            text: root.value // displayText would make the numbers weird like 1,000 instead of 1000
-            color: Appearance.colors.colOnLayer2
-            font.family: Appearance.font.family.numbers
-            font.variableAxes: Appearance.font.variableAxes.numbers
-            font.pixelSize: Appearance.font.pixelSize.small
-            validator: root.validator
-            onTextChanged: {
-                root.value = parseFloat(text);
-            }
-        }
+    contentItem: StyledTextInput {
+        text: root.value
+        horizontalAlignment: TextInput.AlignHCenter
+        verticalAlignment: TextInput.AlignVCenter
+        color: Appearance.colors.colOnLayer2
+        font.family: Appearance.font.family.numbers
+        font.variableAxes: Appearance.font.variableAxes.numbers
+        font.pixelSize: Appearance.font.pixelSize.small
+        validator: root.validator
+        readOnly: !root.editable
+        inputMethodHints: Qt.ImhFormattedNumbersOnly
     }
 
     down.indicator: Rectangle {

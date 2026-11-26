@@ -53,7 +53,7 @@ ContentPage {
                     text: Translation.tr("Scroll factor")
                     value: Math.round(NiriConfig.options.input.touchpad.scrollFactor * 10)
                     from: 1; to: 30; stepSize: 1
-                    onValueChanged: {
+                    onValueModified: {
                         const newVal = value / 10.0
                         if (newVal === NiriConfig.options.input.touchpad.scrollFactor) return
                         NiriConfig.options.input.touchpad.scrollFactor = newVal
@@ -65,7 +65,7 @@ ContentPage {
                     text: Translation.tr("Acceleration speed")
                     value: Math.round(NiriConfig.options.input.touchpad.accelSpeed * 10)
                     from: -10; to: 10; stepSize: 1
-                    onValueChanged: {
+                    onValueModified: {
                         const newVal = value / 10.0
                         if (newVal === NiriConfig.options.input.touchpad.accelSpeed) return
                         NiriConfig.options.input.touchpad.accelSpeed = newVal
@@ -92,7 +92,7 @@ ContentPage {
                     text: Translation.tr("Acceleration speed")
                     value: Math.round(NiriConfig.options.input.mouse.accelSpeed * 10)
                     from: -10; to: 10; stepSize: 1
-                    onValueChanged: {
+                    onValueModified: {
                         const newVal = value / 10.0
                         if (newVal === NiriConfig.options.input.mouse.accelSpeed) return
                         NiriConfig.options.input.mouse.accelSpeed = newVal

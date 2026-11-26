@@ -1,10 +1,32 @@
 import os
+import json
 from pathlib import Path
+import shutil
 import subprocess
 import tempfile
 
 
 REPOSITORY = Path(__file__).resolve().parents[1]
+
+
+def prepare_niri_config_fixture(root):
+    services = root / "services"
+    services.mkdir()
+    shutil.copy(REPOSITORY / "services/NiriConfig.qml", services)
+    scripts = root / "scripts/niri"
+    scripts.mkdir(parents=True)
+    shutil.copy(REPOSITORY / "scripts/niri/config-settings.py", scripts)
+    common = root / "modules/common"
+    functions = common / "functions"
+    functions.mkdir(parents=True)
+    config = root / "config"
+    managed = config / "niri/qssettings"
+    managed.mkdir(parents=True)
+    (managed / "settings.json").write_text('{"windowRules": []}')
+    (common / "Directories.qml").write_text('pragma Singleton\nimport Quickshell\nSingleton { property string config: ' + json.dumps(str(config)) + ' }')
+    (common / "Translation.qml").write_text('pragma Singleton\nimport Quickshell\nSingleton { function tr(text) { return text; } }')
+    (functions / "FileUtils.qml").write_text('pragma Singleton\nimport Quickshell\nSingleton { function trimFileProtocol(text) { return text; } }')
+    return managed
 
 
 def qml_block(path, start, end):

@@ -18,6 +18,11 @@ NestableObject {
 
     Component.onCompleted: { if (NiriData.isNiri) fetchProc.running = true }
 
+    Connections {
+        target: NiriConfig
+        function onConfigReloaded() { if (NiriData.isNiri && !fetchProc.running) fetchProc.running = true }
+    }
+
     function updateMonitor(index, changes) {
         let m = root.monitors.slice()
         m[index] = Object.assign({}, m[index], changes)

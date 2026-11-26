@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
@@ -37,7 +38,7 @@ ContentPage {
             onClicked: editorLoader.item.edit(-1, null, null)
         }
         StyledText {
-            visible: NiriConfig.options.windowRules.length === 0
+            visible: NiriConfig.options.windowRules.length === 0 && NiriConfig.externalWindowRules.length === 0
             text: Translation.tr("No window rules yet")
         }
         Repeater {
@@ -102,6 +103,58 @@ ContentPage {
             text: NiriConfig.windowRuleError
             wrapMode: Text.Wrap
             color: Appearance.m3colors.m3error
+        }
+    }
+
+    ContentSection {
+        icon: "description"
+        title: Translation.tr("From your niri config")
+        visible: NiriConfig.externalWindowRules.length > 0
+        StyledText {
+            Layout.fillWidth: true
+            text: Translation.tr("These rules are read from config.kdl and its included files. Open the source file to edit them without losing advanced matchers or properties.")
+            color: Appearance.colors.colSubtext
+            wrapMode: Text.Wrap
+        }
+        Repeater {
+            model: NiriConfig.externalWindowRules
+            delegate: Rectangle {
+                id: externalRow
+                required property var modelData
+                Layout.fillWidth: true
+                implicitHeight: externalContent.implicitHeight + 24
+                radius: Appearance.rounding.normal
+                color: Appearance.colors.colLayer1
+                ColumnLayout {
+                    id: externalContent
+                    anchors { fill: parent; margins: 12 }
+                    spacing: 8
+                    RowLayout {
+                        Layout.fillWidth: true
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: externalRow.modelData.source
+                            textFormat: Text.PlainText
+                            font.pixelSize: Appearance.font.pixelSize.smaller
+                            color: Appearance.colors.colSubtext
+                            elide: Text.ElideMiddle
+                        }
+                        RippleButtonWithIcon {
+                            materialIcon: "edit_document"
+                            mainText: Translation.tr("Edit source")
+                            onClicked: Quickshell.execDetached(["xdg-open", externalRow.modelData.source])
+                        }
+                    }
+                    StyledText {
+                        Layout.fillWidth: true
+                        text: externalRow.modelData.kdl
+                        textFormat: Text.PlainText
+                        font.family: Appearance.font.family.monospace
+                        font.pixelSize: Appearance.font.pixelSize.smaller
+                        wrapMode: Text.WrapAnywhere
+                    }
+                }
+            }
         }
     }
 }

@@ -91,6 +91,12 @@ Singleton {
     }
 
     Connections {
+        target: NiriConfig
+        enabled: NiriData.isNiri
+        function onConfigReloaded() { refreshDelay.restart() }
+    }
+
+    Connections {
         target: NiriConfig.options
         enabled: NiriData.isNiri
 

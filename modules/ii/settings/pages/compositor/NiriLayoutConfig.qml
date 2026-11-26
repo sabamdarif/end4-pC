@@ -1,32 +1,12 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Io
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 
 ContentPage {
     id: page
-
-    property bool focusFollowsMouseOwnedByConfig: false
-
-    Process {
-        id: ffmProbeProc
-        command: ["sh", "-c", `grep -hE '^[ \\t]*focus-follows-mouse' "$HOME/.config/niri/config.kdl" "$HOME/.config/niri/config.d"/*.kdl 2>/dev/null | grep -v '^[ \\t]*//' | tail -1`]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const line = text.trim()
-                page.focusFollowsMouseOwnedByConfig = line !== ""
-                if (line === "") return
-                const m = line.match(/max-scroll-amount\s*=\s*"([^"]*)"/)
-                if (m) NiriConfig.options.input.focusFollowsMouseMaxScroll = m[1]
-                NiriConfig.options.input.focusFollowsMouse = true
-            }
-        }
-    }
-
-    Component.onCompleted: ffmProbeProc.running = true
 
     NiriIncludeNotice {}
 
@@ -41,7 +21,7 @@ ContentPage {
                 text: Translation.tr("Gaps")
                 value: NiriConfig.options.layout.gaps
                 from: 0; to: 60; stepSize: 1
-                onValueChanged: {
+                onValueModified: {
                     if (value === NiriConfig.options.layout.gaps) return
                     NiriConfig.options.layout.gaps = value
                 }
@@ -75,6 +55,14 @@ ContentPage {
                 ]
             }
         }
+        StyledText {
+            Layout.fillWidth: true
+            visible: NiriConfig.options.layout.defaultColumnWidth < 0
+            text: Translation.tr("Custom column width: %1").arg(NiriConfig.defaultColumnWidthKdl)
+            textFormat: Text.PlainText
+            color: Appearance.colors.colSubtext
+            wrapMode: Text.Wrap
+        }
     }
 
     ContentSection {
@@ -86,7 +74,7 @@ ContentPage {
             ConfigSwitch {
                 buttonIcon: "mouse"
                 text: Translation.tr("Focus follows mouse")
-                enabled: !page.focusFollowsMouseOwnedByConfig
+                enabled: !NiriConfig.focusFollowsMouseOwnedByConfig
                 checked: NiriConfig.options.input.focusFollowsMouse
                 onCheckedChanged: {
                     if (checked === NiriConfig.options.input.focusFollowsMouse) return
@@ -96,7 +84,7 @@ ContentPage {
         }
 
         StyledText {
-            visible: page.focusFollowsMouseOwnedByConfig
+            visible: NiriConfig.focusFollowsMouseOwnedByConfig
             Layout.fillWidth: true
             Layout.leftMargin: 16
             Layout.rightMargin: 16

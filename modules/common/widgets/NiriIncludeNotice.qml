@@ -15,9 +15,9 @@ NoticeBox {
     // "ok" | "misplaced" | "missing"
     property string includeStatus: "ok"
 
-    visible: root.includeStatus !== "ok"
+    visible: NiriConfig.configError !== "" || root.includeStatus !== "ok"
     Layout.fillWidth: true
-    text: root.includeStatus === "misplaced"
+    text: NiriConfig.configError !== "" ? NiriConfig.configError : root.includeStatus === "misplaced"
         ? Translation.tr("The qssettings include lines are in your config.kdl but not at the end. Later config wins in niri, so your own settings currently override these. Fix moves them to the bottom (a backup of config.kdl is made first).")
         : Translation.tr("These settings are saved to ~/.config/niri/qssettings/. Setup adds the include lines at the end of your config.kdl (a backup is made first):") + "\n\n" + NiriConfig.includeLines
 

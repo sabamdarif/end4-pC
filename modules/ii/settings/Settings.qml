@@ -14,21 +14,8 @@ import qs.modules.common.widgets
 Scope {
     id: root
 
-    // True when an uncommented prefer-no-csd is found in the niri config.
-    // In that case the window draws no titlebar, like every other no-csd client.
-    property bool preferNoCsd: false
-
     Component.onCompleted: {
         GlobalStates.settingsOpen = false;
-        csdCheckProc.running = true;
-    }
-
-    Process {
-        id: csdCheckProc
-        command: ["sh", "-c", "grep -hsE '^\\s*prefer-no-csd\\s*$' ~/.config/niri/config.kdl ~/.config/niri/config.d/*.kdl"]
-        stdout: StdioCollector {
-            onStreamFinished: root.preferNoCsd = text.trim().length > 0
-        }
     }
 
     Loader {
@@ -57,17 +44,13 @@ Scope {
                 if (!visible) GlobalStates.settingsOpen = false;
             }
 
-            Component.onCompleted: {
-                csdCheckProc.running = true;
-            }
-
             ColumnLayout {
                 anchors.fill: parent
                 spacing: 0
 
                 Rectangle {
                     id: titleBar
-                    visible: !root.preferNoCsd
+                    visible: !NiriConfig.preferNoCsd
                     Layout.fillWidth: true
                     implicitHeight: 44
                     color: Appearance.m3colors.m3surfaceContainerLow
