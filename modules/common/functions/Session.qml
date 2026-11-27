@@ -13,7 +13,11 @@ Singleton {
     }
 
     function changePassword() {
-        Quickshell.execDetached(["bash", "-c", `${Config.options.apps.changePassword}`]);
+        Quickshell.execDetached([
+            Config.options.apps.terminal, "-e",
+            "fish", "-i", "-c",
+            "passwd; echo; read -P 'Press Enter to close '"
+        ]);
     }
 
     function lock() {

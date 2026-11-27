@@ -140,13 +140,11 @@ Singleton {
 
             property JsonObject apps: JsonObject {
                 property string bluetooth: "kcmshell6 kcm_bluetooth"
-                property string changePassword: "kitty -1 --hold=yes fish -i -c 'passwd'"
                 property string network: "kcmshell6 kcm_networkmanagement"
                 property string manageUser: "kcmshell6 kcm_users"
                 property string networkEthernet: "kcmshell6 kcm_networkmanagement"
                 property string taskManager: "plasma-systemmonitor --page-name Processes"
                 property string terminal: "ghostty" // This is only for shell actions
-                property string update: "kitty -1 --hold=yes fish -i -c 'pkexec pacman -Syu'"
                 property string volumeMixer: "if command -v pavucontrol-qt >/dev/null 2>&1; then exec pavucontrol-qt; else exec pavucontrol; fi"
                 // [{from, to}] — window app IDs remapped before bar/dock icon lookup
                 property list<var> idSubstitutions: [{ "from": "", "to": "" }]

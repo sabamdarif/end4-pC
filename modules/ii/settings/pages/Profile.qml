@@ -451,8 +451,7 @@ ContentPage {
             }
 
             GroupedList {
-                // Change password (current user) — reuses the existing
-                // Config.options.apps.changePassword terminal flow
+                // Change password (current user) in the configured terminal
                 RowLayout {
                     spacing: 10
                     Layout.leftMargin: 8

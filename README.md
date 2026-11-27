@@ -302,7 +302,7 @@ Only the core list is needed for the shell to start and work. Feature-gated pack
 | Cloudflare WARP toggle | `warp-cli` | cloudflare-warp-bin (AUR) |
 | Optional wallpaper upscale | `upscayl` | upscayl-bin (AUR) |
 
-A few programs are user-configurable app defaults in the settings rather than hardcoded dependencies: `kitty`, `fish`, `dolphin`, `pavucontrol` (or `pavucontrol-qt`), `plasma-systemmonitor` and the `kcmshell6` Plasma settings modules (packages `kitty`, `fish`, `dolphin`, `pavucontrol`, `pavucontrol-qt`, `plasma-systemmonitor`, `kcmutils`), which open system monitors, mixer, user and Bluetooth settings. Gnome keyring sync (`gnome-keyring`) and `gvfs` are strictly optional.
+A few programs are user-configurable app defaults in the settings rather than hardcoded dependencies: the terminal emulator (chosen from installed terminals), `fish`, `dolphin`, `pavucontrol` (or `pavucontrol-qt`), `plasma-systemmonitor` and the `kcmshell6` Plasma settings modules (packages `fish`, `dolphin`, `pavucontrol`, `pavucontrol-qt`, `plasma-systemmonitor`, `kcmutils`), which open system monitors, mixer, user and Bluetooth settings. Gnome keyring sync (`gnome-keyring`) and `gvfs` are strictly optional.
 
 ## 🙏 Credits
 

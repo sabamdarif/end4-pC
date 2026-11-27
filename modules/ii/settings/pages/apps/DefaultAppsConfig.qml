@@ -21,6 +21,18 @@ ContentPage {
         { key: "video",   icon: "movie",          label: Translation.tr("Video player") }
     ]
 
+    readonly property var terminalOptions: {
+        const current = Config.options.apps.terminal ?? ""
+        const options = AppService.list
+            .filter(entry => !entry.noDisplay && Array.from(entry.categories ?? []).includes("TerminalEmulator"))
+            .map(entry => ({ displayName: entry.name, value: (entry.command ?? [])[0] ?? "" }))
+            .filter(option => option.value !== "")
+        if (current !== "" && !options.some(option => option.value === current))
+            options.push({ displayName: current, value: current })
+        options.sort((a, b) => a.displayName.localeCompare(b.displayName))
+        return options
+    }
+
     Component.onCompleted: DefaultApps.refresh()
 
     function defaultAppModel(key) {
@@ -60,7 +72,13 @@ ContentPage {
 
                     ConfigComboBox {
                         id: roleCombo
-                        anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; margins: 8 }
+                        anchors {
+                            left: parent.left
+                            right: parent.right
+                            verticalCenter: parent.verticalCenter
+                            leftMargin: 16
+                            rightMargin: 16
+                        }
                         buttonIcon: modelData.icon
                         text: modelData.label
                         model: page.defaultAppModel(modelData.key)
@@ -75,20 +93,16 @@ ContentPage {
         }
 
         GroupedList {
-            ConfigTextArea {
-                id: terminalField
+            ConfigComboBox {
+                Layout.fillWidth: true
                 buttonIcon: "terminal"
                 text: Translation.tr("Terminal")
                 description: Translation.tr("Used by shell actions (not an xdg default)")
-                value: Config.options.apps.terminal
-                onValueChanged: terminalDebounceTimer.restart()
-                Timer {
-                    id: terminalDebounceTimer
-                    interval: 1500
-                    onTriggered: {
-                        if (terminalField.value !== Config.options.apps.terminal)
-                            Config.options.apps.terminal = terminalField.value
-                    }
+                model: page.terminalOptions
+                currentValue: Config.options.apps.terminal
+                onSelected: newValue => {
+                    if (newValue !== "" && newValue !== Config.options.apps.terminal)
+                        Config.options.apps.terminal = newValue
                 }
             }
         }

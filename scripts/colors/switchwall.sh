@@ -8,6 +8,17 @@ STATE_DIR="$XDG_STATE_HOME/quickshell"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SHELL_CONFIG_FILE="$XDG_CONFIG_HOME/qssettings/config.json"
 
+run_in_terminal() {
+    local term
+    term=$(jq -r '.apps.terminal // empty' "$SHELL_CONFIG_FILE" 2>/dev/null)
+    if [[ -z "$term" || "$term" == "null" ]] || ! command -v "${term%% *}" >/dev/null 2>&1; then
+        term="kitty"
+    fi
+    local -a term_cmd
+    read -r -a term_cmd <<< "$term"
+    "${term_cmd[@]}" -e bash -c "$*"
+}
+
 pre_process() {
     local mode_flag="$1"
     local theme="adw-gtk3"
@@ -68,7 +79,7 @@ check_and_prompt_upscale() {
                         "Install Upscayl?" \
                         "yay -S upscayl-bin")
                     if [[ "$action2" == "install_upscayl" ]]; then
-                        kitty -1 yay -S upscayl-bin
+                        run_in_terminal 'yay -S upscayl-bin'
                         if command -v upscayl &>/dev/null; then
                             nohup upscayl > /dev/null 2>&1 &
                         fi
@@ -208,7 +219,7 @@ switch() {
                     "Can't switch to video wallpaper" \
                     "Missing dependencies: ${missing_deps[*]}")
                 if [[ "$action" == "install_arch" ]]; then
-                    kitty -1 sudo pacman -S "${missing_deps[*]}"
+                    run_in_terminal "sudo pacman -S ${missing_deps[*]}"
                     if command -v mpvpaper &>/dev/null && command -v ffmpeg &>/dev/null; then
                         notify-send 'Wallpaper switcher' 'Alright, try again!' -a "Wallpaper switcher"
                     fi

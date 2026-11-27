@@ -1070,7 +1070,8 @@ Singleton {
 
     function rerunCommand(data) {
         if (!data?.command) return
-        Quickshell.execDetached(["foot", "--working-directory", data.cwd || Quickshell.env("HOME"), "fish", "-C", data.command])
+        const cwd = StringUtils.shellSingleQuoteEscape(data.cwd || Quickshell.env("HOME"))
+        Quickshell.execDetached([Config.options.apps.terminal, "-e", "fish", "-C", `cd '${cwd}'; ${data.command}`])
     }
 
     function runSystemUpdate() {
@@ -1080,7 +1081,7 @@ Singleton {
 
     Process {
         id: updateProc
-        command: ["kitty", "--class", "ilha-update", "--title", "Atualizações do sistema", "fish", "-c", "yay -Syu; echo; read -P 'Enter para fechar '"]
+        command: [Config.options.apps.terminal, "-e", "fish", "-c", "yay -Syu; echo; read -P 'Enter para fechar '"]
         onExited: (exitCode, exitStatus) => Updates.refresh()
     }
 

@@ -14,9 +14,9 @@ ContentPage {
 
     function runSystemUpdate() {
         Quickshell.execDetached([
-            "kitty", "--hold",
+            Config.options.apps.terminal, "-e",
             "fish", "-i", "-l", "-c",
-            "yay -Syu --combinedupgrade=false"
+            "yay -Syu --combinedupgrade=false; echo; read -P 'Press Enter to close '"
         ])
         Qt.callLater(() => GlobalStates.settingsOpen = false)
     }

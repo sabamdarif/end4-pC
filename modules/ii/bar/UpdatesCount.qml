@@ -42,9 +42,9 @@ MouseArea {
     Process {
         id: updateProc
         command: [
-            "kitty", "--hold",
+            Config.options.apps.terminal, "-e",
             "fish", "-i", "-l", "-c",
-            "yay -Syu --combinedupgrade=false"
+            "yay -Syu --combinedupgrade=false; echo; read -P 'Press Enter to close '"
         ]
         onExited: (exitCode, exitStatus) => {
             Updates.refresh()

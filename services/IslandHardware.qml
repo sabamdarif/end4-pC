@@ -801,12 +801,12 @@ Singleton {
                 break
             case "diskLow":
                 if (id === "diskUsage") {
-                    Quickshell.execDetached(["kitty", "--class", "ilha-disk", "--title", "Uso do disco",
+                    Quickshell.execDetached([Config.options.apps.terminal, "-e",
                         "fish", "-c", "dust -n 40 -d 3 ~; echo; read -P 'Enter para fechar '"])
                 } else if (id === "trash") {
                     Quickshell.execDetached(["dolphin", "trash:/"])
                 } else if (id === "pkgCache") {
-                    Quickshell.execDetached(["kitty", "--class", "ilha-disk", "--title", "Cache de pacotes",
+                    Quickshell.execDetached([Config.options.apps.terminal, "-e",
                         "fish", "-c", "echo 'Mantendo só a versão instalada de cada pacote:'; sudo paccache -rk1; sudo paccache -ruk0; echo; df -h /; read -P 'Enter para fechar '"])
                 }
                 break
@@ -820,7 +820,7 @@ Singleton {
                 break
             case "wakeShort":
                 if (id === "wakeSources") {
-                    Quickshell.execDetached(["kitty", "--class", "ilha-wakeups", "--title", "Fontes de wake",
+                    Quickshell.execDetached([Config.options.apps.terminal, "-e",
                         "fish", "-c", "cat /proc/acpi/wakeup; echo; echo 'IRQ do último wake:'; cat /sys/power/pm_wakeup_irq; echo; read -P 'Enter para fechar '"])
                 }
                 break
