@@ -4,6 +4,7 @@ import Quickshell
 import Quickshell.Io
 import qs.modules.common
 import qs.modules.common.functions
+import "NiriShortcuts.js" as Shortcuts
 
 Singleton {
     id: root
@@ -38,6 +39,14 @@ Singleton {
     property var candidateWindowRules: []
     property string originalWindowRules: ""
     signal windowRuleSaved()
+    property bool validatingBind: false
+    property bool publishingBind: false
+    readonly property bool savingBind: root.validatingBind || root.publishingBind
+    property string bindError: ""
+    property var candidateBinds: []
+    property string originalBinds: ""
+    property string candidateBindsKdl: ""
+    signal bindSaveCompleted(bool success)
     // Must go at the END of config.kdl: later includes override earlier sections.
     readonly property string includeLines: 'include optional=true "qssettings/shell.kdl"\ninclude optional=true "qssettings/outputs.kdl"\ninclude optional=true "qssettings/autostart.kdl"\ninclude optional=true "qssettings/binds.kdl"\ninclude optional=true "qssettings/windowrules.kdl"'
 
@@ -291,26 +300,96 @@ Singleton {
         autostartKdlFile.setText(kdl)
     }
 
-    // Keybind overrides live in adapter.bindOverrides as {key, action, title}.
-    // binds.kdl is included at the END of config.kdl and in niri the last
-    // bind for a key wins, so these shadow the user's own binds per-key
-    // without ever touching keybinding.kdl. The action is raw KDL bind
-    // syntax (e.g. `spawn "foo"` or `focus-workspace 1`), emitted verbatim.
-    function generateBindsKdl() {
-        let kdl = root.generatedHeader
-        kdl += "binds {\n"
-        for (const entry of (adapter.bindOverrides ?? [])) {
+    function bindsKdl(entries) {
+        let kdl = "binds {\n"
+        for (const entry of entries) {
             const key = String(entry?.key ?? "").trim()
             const action = String(entry?.action ?? "").trim().replace(/;\s*$/, "")
-            // Modifiers + XKB keysym name only — a malformed key would break
-            // the whole generated file for niri
-            if (!/^[A-Za-z0-9_]+(\+[A-Za-z0-9_]+)*$/.test(key) || action === "") continue
+            if (!/^[A-Za-z0-9_]+(\+[A-Za-z0-9_]+)*$/.test(key) || action === "")
+                throw new Error("Invalid shortcut key or action")
             const title = String(entry?.title ?? "").trim()
-            const titleProp = title !== "" ? ` hotkey-overlay-title="${root.kdlEscape(title)}"` : ""
-            kdl += `    ${key}${titleProp} { ${action}; }\n`
+            let properties = title !== "" ? ` hotkey-overlay-title="${root.kdlEscape(title)}"` : ""
+            for (const [name, value] of Object.entries(entry.properties ?? {})) {
+                if (name === "hotkey-overlay-title") continue
+                if (!/^[a-z][a-z0-9-]*$/.test(name)) throw new Error("Invalid shortcut property")
+                if (typeof value === "string") properties += ` ${name}="${root.kdlEscape(value)}"`
+                else if (typeof value === "boolean" || (typeof value === "number" && isFinite(value)))
+                    properties += ` ${name}=${value}`
+                else throw new Error("Invalid shortcut property value")
+            }
+            kdl += `    ${key}${properties} {\n${action.split("\n").map(line => "        " + line).join("\n")}\n    }\n`
         }
-        kdl += "}\n"
-        bindsKdlFile.setText(kdl)
+        return kdl + "}\n"
+    }
+
+    function generateBindsKdl() {
+        try { bindsKdlFile.setText(root.generatedHeader + root.bindsKdl(adapter.bindOverrides)) }
+        catch (error) {
+            root.bindError = Translation.tr("Could not save shortcuts: %1").arg(error.message)
+            root.publishingBind = false
+            root.bindSaveCompleted(false)
+        }
+    }
+
+    function saveBindOverride(originalKey, entry, modKey) {
+        if (!root.ready || root.savingBind) return
+        root.validateBindOverrides(Shortcuts.updatedOverrides(Array.from(adapter.bindOverrides), originalKey, entry, modKey))
+    }
+
+    function removeBindOverride(key, modKey) {
+        if (!root.ready || root.savingBind) return
+        const normalized = Shortcuts.normalizeKey(key, modKey)
+        root.validateBindOverrides(Array.from(adapter.bindOverrides).filter(b => Shortcuts.normalizeKey(b.key, modKey) !== normalized))
+    }
+
+    function validateBindOverrides(entries) {
+        root.bindError = ""
+        if (JSON.stringify(entries) === JSON.stringify(adapter.bindOverrides)) {
+            root.bindSaveCompleted(true)
+            return
+        }
+        try {
+            root.candidateBindsKdl = root.bindsKdl(entries)
+            root.originalBinds = JSON.stringify(adapter.bindOverrides)
+            root.candidateBinds = entries
+            root.validatingBind = true
+            bindValidationProc.stdinEnabled = true
+            bindValidationProc.running = true
+        } catch (error) {
+            root.bindError = Translation.tr("Invalid shortcut: %1").arg(error.message)
+            root.bindSaveCompleted(false)
+        }
+    }
+
+    Process {
+        id: bindValidationProc
+        command: ["python3", Quickshell.shellPath("scripts/niri/list-binds.py"), "--validate"]
+        onStarted: {
+            write(JSON.stringify({kdl: root.candidateBindsKdl, actions: root.candidateBinds.map(b => b.action)}))
+            stdinEnabled = false
+        }
+        stderr: StdioCollector { id: bindValidationError }
+        onExited: code => {
+            const entries = root.candidateBinds
+            root.candidateBinds = []
+            root.candidateBindsKdl = ""
+            root.validatingBind = false
+            if (code !== 0) {
+                root.bindError = Translation.tr("Niri rejected this shortcut: %1").arg(bindValidationError.text.trim())
+                root.bindSaveCompleted(false)
+            } else if (JSON.stringify(adapter.bindOverrides) !== root.originalBinds) {
+                root.bindError = Translation.tr("Shortcuts changed while saving. Please try again.")
+                root.bindSaveCompleted(false)
+            } else {
+                root.publishingBind = true
+                adapter.bindOverrides = entries
+                // A self-write may still be reloading the adapter. This validated
+                // edit must not depend on the passive change tracker's reload guard.
+                root.pendingChanges.bindOverrides = entries
+                root.knownValues.bindOverrides = JSON.parse(JSON.stringify(entries))
+                fileWriteTimer.restart()
+            }
+        }
     }
 
     // monitors: array in MonitorConfigOption shape ({name, currentMode, x, y, scale, transform, disabled, vrr})
@@ -377,6 +456,16 @@ Singleton {
     FileView {
         id: bindsKdlFile
         path: root.bindsKdlPath
+        onSaved: {
+            if (!root.publishingBind) return
+            root.publishingBind = false
+            root.bindSaveCompleted(true)
+        }
+        onSaveFailed: {
+            root.bindError = Translation.tr("Could not write the shortcuts file.")
+            root.publishingBind = false
+            root.bindSaveCompleted(false)
+        }
     }
 
     FileView {

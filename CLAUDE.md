@@ -71,6 +71,8 @@ The regression suite uses temporary data, offscreen Quickshell fixtures, and pri
 sessions. Tests requiring `qs`, `dbus-run-session`, `notify-send`, `cliphist`, or Python
 PyGObject (`gi`) skip when those dependencies are absent. Shell helper tests also need
 Bash and the usual core utilities. Set `TMPDIR` to a writable scratch directory if needed.
+The shortcuts page loading check uses an isolated config on a running Wayland compositor
+and skips when no compositor is available.
 
 For the Quickshell check, a timeout is expected if the shell remains running. Confirm the log reaches `Configuration Loaded` and inspect new QML errors. Existing environment warnings, such as a missing compositor connection or another notification server, may be unrelated.
 
@@ -115,6 +117,7 @@ reuses it for the launcher's `settings:` search, so neither keeps its own page l
   `"<leafKey>[:<sectionTitle>]"` for deep links.
 - Leaf pages build on first visit and stay alive afterwards. `ContentPage.goTo(term)`
   scrolls to a matching section or subsection; leaf pages do not define their own copy.
+- URL-loaded leaf pages must explicitly import `"."` to use sibling QML components.
 - The rail collapses to group icons below 900 px and closes after selecting a leaf;
   clicking a group icon reopens the rail on that group.
 
@@ -135,6 +138,20 @@ reuses it for the launcher's `settings:` search, so neither keeps its own page l
 - `externalWindowRules` lists full rules and their source files separately from the
   shell-managed editor. Never flatten multiple match groups or drop unknown properties
   when displaying user rules; source-file editing preserves those constructs.
+
+### Keyboard shortcuts
+
+- `NiriKeybinds` reads included shortcuts through `scripts/niri/list-binds.py`.
+  `services/NiriShortcuts.js` normalizes keys using niri's configured Mod key,
+  groups actions, filters search and converts capture events. The settings leaf
+  keeps dux-shell's grouped rows and lazy modal editor with local Material widgets.
+- Shortcut edits retain bind properties and go through `NiriConfig` validation
+  before updating `bindOverrides`. The helper checks the candidate's structure
+  and runs `niri validate` on a temporary file. Never persist raw action text
+  without this validation, or modify user-owned bind files.
+- Removing an override restores any original config bind. Moving an override
+  changes only shell-managed entries; `New key` adds a separate key for the action.
+  Keep the dux-shell MIT notice in `assets/licenses/dux-shell.txt`.
 
 ### Wallpaper colors
 

@@ -13,9 +13,11 @@ def prepare_niri_config_fixture(root):
     services = root / "services"
     services.mkdir()
     shutil.copy(REPOSITORY / "services/NiriConfig.qml", services)
+    shutil.copy(REPOSITORY / "services/NiriShortcuts.js", services)
     scripts = root / "scripts/niri"
     scripts.mkdir(parents=True)
     shutil.copy(REPOSITORY / "scripts/niri/config-settings.py", scripts)
+    shutil.copy(REPOSITORY / "scripts/niri/list-binds.py", scripts)
     common = root / "modules/common"
     functions = common / "functions"
     functions.mkdir(parents=True)

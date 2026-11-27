@@ -1,213 +1,113 @@
 #!/usr/bin/env python3
-"""
-List niri keybinds as JSON.
-
-Parses a niri config.kdl, follows `include` lines (quoted paths, glob
-patterns, relative to the including file's directory, `optional=true`
-supported), collects every bind inside `binds { }` sections and prints a
-JSON array:
-
-    [{"key": "Mod+Return", "action": "spawn \"ghostty\"",
-      "title": "Open Terminal (Ghostty)", "source": "/path/to/file.kdl"}]
-
-- title: hotkey-overlay-title="..." if present, else a cleaned first
-  action token (same heuristic as the rofi settings-menu script:
-  drop spawn/exec, strip quotes, keep the first word).
-- Repeated keys are ALL kept, in file traversal order (includes expanded
-  in place). The consumer decides the effective one (in niri the last
-  bind for a key wins).
-- qssettings/binds.kdl (the settings app's override file) is parsed even
-  when its include line is missing from config.kdl, appended last, so
-  overrides are always visible.
-
-Usage: list-binds.py [--path ~/.config/niri/config.kdl]
-Stdlib only. Read-only: never writes any config file.
-"""
+"""Read niri shortcuts, preserving actions, properties and include order."""
 
 import argparse
 import glob
+import importlib.util
 import json
 import os
+from pathlib import Path
 import re
+import subprocess
 import sys
-
-# First token of a bind node: modifiers/key joined with '+'
-# (letters, digits, underscore — niri key names never contain '-')
-KEY_RE = re.compile(r'^[A-Za-z0-9_]+(\+[A-Za-z0-9_]+)*$')
-TITLE_RE = re.compile(r'hotkey-overlay-title="((?:[^"\\]|\\.)*)"')
-INCLUDE_RE = re.compile(r'^include\s+(?:optional=(?:true|#true)\s+)?"((?:[^"\\]|\\.)*)"')
+import tempfile
 
 
-def strip_comments(text):
-    """Remove // line comments and /* */ block comments (string-aware)."""
-    out = []
-    i, n = 0, len(text)
-    in_string = False
-    while i < n:
-        c = text[i]
-        if in_string:
-            out.append(c)
-            if c == '\\' and i + 1 < n:
-                out.append(text[i + 1])
-                i += 2
-                continue
-            if c == '"':
-                in_string = False
-            i += 1
-        elif c == '"':
-            in_string = True
-            out.append(c)
-            i += 1
-        elif text.startswith('//', i):
-            while i < n and text[i] != '\n':
-                i += 1
-        elif text.startswith('/*', i):
-            depth = 1
-            i += 2
-            while i < n and depth:
-                if text.startswith('/*', i):
-                    depth += 1
-                    i += 2
-                elif text.startswith('*/', i):
-                    depth -= 1
-                    i += 2
-                else:
-                    i += 1
-        else:
-            out.append(c)
-            i += 1
-    return ''.join(out)
+SPEC = importlib.util.spec_from_file_location("niri_settings", Path(__file__).with_name("config-settings.py"))
+KDL = importlib.util.module_from_spec(SPEC)
+sys.modules[SPEC.name] = KDL
+SPEC.loader.exec_module(KDL)
+KEY_RE = re.compile(r"^[A-Za-z0-9_]+(\+[A-Za-z0-9_]+)*$")
 
 
-def split_nodes(body):
-    """Split the inside of a KDL block into top-level nodes.
-
-    A node is everything up to and including its balanced { } block,
-    or up to a newline/; if it has no block. String-aware.
-    """
-    nodes = []
-    cur = []
-    depth = 0
-    in_string = False
-    i, n = 0, len(body)
-    while i < n:
-        c = body[i]
-        cur.append(c)
-        if in_string:
-            if c == '\\' and i + 1 < n:
-                cur.append(body[i + 1])
-                i += 2
-                continue
-            if c == '"':
-                in_string = False
-        elif c == '"':
-            in_string = True
-        elif c == '{':
-            depth += 1
-        elif c == '}':
-            depth -= 1
-            if depth == 0:
-                nodes.append(''.join(cur))
-                cur = []
-        elif (c == '\n' or c == ';') and depth == 0:
-            chunk = ''.join(cur).strip(' \t\n;')
-            if chunk:
-                nodes.append(chunk)
-            cur = []
-        i += 1
-    tail = ''.join(cur).strip(' \t\n;')
-    if tail:
-        nodes.append(tail)
-    return nodes
-
-
-def clean_action_title(action):
-    """Rofi settings-menu fallback: first meaningful token of the action."""
-    a = re.sub(r'\b(spawn-sh|spawn|exec)\b', ' ', action)
-    a = a.replace('"', ' ').strip()
-    return a.split()[0] if a.split() else action.strip()
-
-
-def parse_binds_body(body, source, binds):
-    for node in split_nodes(body):
-        stripped = node.strip()
-        if not stripped or stripped.startswith('/-'):
-            continue  # node commented out
-        head, brace, block = stripped.partition('{')
-        head_tokens = head.split()
-        if not head_tokens or not KEY_RE.match(head_tokens[0]):
-            continue
-        key = head_tokens[0]
-        m = TITLE_RE.search(head)
-        title = m.group(1).replace('\\"', '"') if m else ''
-        action = ''
-        if brace:
-            action = ' '.join(block.rsplit('}', 1)[0].split()).strip(' ;')
-        if not title:
-            title = clean_action_title(action) if action else key
-        binds.append({
-            'key': key,
-            'action': action,
-            'title': title,
-            'source': source,
-        })
-
-
-def parse_file(path, binds, visited):
-    path = os.path.realpath(path)
-    if path in visited or not os.path.isfile(path):
-        return
-    visited.add(path)
-    try:
-        with open(path, encoding='utf-8', errors='replace') as f:
-            raw = f.read()
-    except OSError as e:
-        print(f'list-binds: cannot read {path}: {e}', file=sys.stderr)
-        return
-    text = strip_comments(raw)
-    base = os.path.dirname(path)
-
-    # Walk top-level nodes in document order so includes expand in place
-    # and "last bind for a key wins" matches what niri actually applies.
-    for node in split_nodes(text):
-        stripped = node.strip()
-        if stripped.startswith('/-'):
-            continue  # commented-out node
-        m = INCLUDE_RE.match(stripped)
-        if m:
-            pattern = os.path.expanduser(m.group(1).replace('\\"', '"'))
+def parse_file(path, binds, visited, stack=(), state=None):
+    path = Path(path).resolve()
+    if path in stack or len(stack) >= 10:
+        raise ValueError(f"Recursive or too deeply nested include: {path}")
+    visited.add(str(path))
+    for node in KDL.parse(path.read_text()):
+        name = KDL.scalar(node.name)
+        if name == "include":
+            include = node.argument()
+            if not isinstance(include, str):
+                raise ValueError(f"Invalid include in {path}")
+            pattern = os.path.expanduser(include)
             if not os.path.isabs(pattern):
-                pattern = os.path.join(base, pattern)
-            for inc in sorted(glob.glob(pattern)):
-                parse_file(inc, binds, visited)
+                pattern = str(path.parent / pattern)
+            matches = sorted(glob.glob(pattern))
+            if not glob.has_magic(pattern):
+                visited.add(str(Path(pattern).resolve()))
+            if not matches and node.property("optional", False) is not True:
+                raise FileNotFoundError(pattern)
+            for included in matches:
+                parse_file(included, binds, visited, (*stack, path), state)
             continue
-        head, brace, body = stripped.partition('{')
-        if brace and head.split() and head.split()[0] == 'binds':
-            parse_binds_body(body.rsplit('}', 1)[0], path, binds)
+        if name == "input" and state is not None:
+            mod = KDL.find(node.children or [], "mod-key")
+            if mod is not None:
+                state["modKey"] = mod.argument("Super")
+        if name != "binds":
+            continue
+        for bind in node.children or []:
+            key = KDL.scalar(bind.name)
+            if not isinstance(key, str) or not KEY_RE.fullmatch(key):
+                continue
+            properties = {}
+            for index in range(len(bind.entries) - 2):
+                if bind.entries[index + 1] == "=":
+                    properties[KDL.scalar(bind.entries[index])] = KDL.scalar(bind.entries[index + 2])
+            action = "".join(child.render() for child in bind.children or []).strip()
+            title = properties.pop("hotkey-overlay-title", "")
+            binds.append({"key": key, "action": action, "title": title or action.split("\n")[0] or key,
+                          "source": str(path), "properties": properties})
+
+
+def read_binds(config):
+    config = Path(config).expanduser()
+    binds, visited = [], set()
+    state = {"modKey": "Super"}
+    parse_file(config, binds, visited, state=state)
+    overrides = config.parent / "qssettings/binds.kdl"
+    included = str(overrides.resolve()) in visited
+    if not included and overrides.is_file():
+        parse_file(overrides, binds, visited)
+    return {"binds": binds, "included": included, "modKey": state["modKey"]}
 
 
 def main():
-    ap = argparse.ArgumentParser(description='List niri keybinds as JSON')
-    ap.add_argument('--path',
-                    default=os.path.expanduser('~/.config/niri/config.kdl'),
-                    help='niri config file (default: ~/.config/niri/config.kdl)')
-    args = ap.parse_args()
-
-    binds = []
-    visited = set()
-    config = os.path.expanduser(args.path)
-    parse_file(config, binds, visited)
-
-    # Always include the settings app's override file, even if its include
-    # line hasn't been added to config.kdl yet. It's included at the END of
-    # config.kdl, so appending keeps "last occurrence wins" correct.
-    overrides = os.path.join(os.path.dirname(config), 'qssettings', 'binds.kdl')
-    if os.path.realpath(overrides) not in visited:
-        parse_file(overrides, binds, visited)
-
-    json.dump(binds, sys.stdout)
-    print()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--path", default=os.path.join(os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")), "niri/config.kdl"))
+    parser.add_argument("--validate", action="store_true")
+    args = parser.parse_args()
+    try:
+        if args.validate:
+            candidate = json.load(sys.stdin)
+            validate_binds(candidate["kdl"], candidate["actions"])
+            return 0
+        print(json.dumps(read_binds(args.path)))
+    except (OSError, ValueError, IndexError, KeyError, TypeError, subprocess.SubprocessError) as error:
+        print(f"list-binds: {error}", file=sys.stderr)
+        return 1
+    return 0
 
 
-if __name__ == '__main__':
-    main()
+def validate_binds(text, actions=None):
+    for action in actions or []:
+        if len(KDL.parse(action)) != 1:
+            raise ValueError("Each shortcut needs exactly one action")
+    nodes = KDL.parse(text)
+    if len(nodes) != 1 or KDL.scalar(nodes[0].name) != "binds" or nodes[0].entries or nodes[0].children is None:
+        raise ValueError("Only a binds block is allowed")
+    for bind in nodes[0].children:
+        if not KEY_RE.fullmatch(str(KDL.scalar(bind.name))) or len(bind.children or []) != 1:
+            raise ValueError("Each shortcut needs one key and one action")
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".kdl", encoding="utf-8") as candidate:
+        candidate.write(text)
+        candidate.flush()
+        result = subprocess.run(["niri", "validate", "-c", candidate.name], capture_output=True, text=True, timeout=10)
+        if result.returncode:
+            raise ValueError(re.sub(r"\x1b\[[0-9;]*m", "", result.stderr).strip())
+
+
+if __name__ == "__main__":
+    sys.exit(main())
