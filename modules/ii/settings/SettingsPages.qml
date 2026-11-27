@@ -112,7 +112,6 @@ Singleton {
             children: [
                 { key: "desktop-clock",   name: Translation.tr("Clock"),        icon: "nest_clock_farsight_analog", component: root.page("desktop/ClockConfig.qml") },
                 { key: "desktop-widgets", name: Translation.tr("Widgets"),      icon: "widgets",         component: root.page("desktop/WidgetsConfig.qml") },
-                { key: "custom-image",    name: Translation.tr("Custom Image"), icon: "image",           component: root.page("desktop/CustomImageConfig.qml") },
                 { key: "overlay",         name: Translation.tr("Overlay"),      icon: "layers",          component: root.page("desktop/OverlayConfig.qml") },
             ]
         },

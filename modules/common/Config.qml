@@ -280,16 +280,6 @@ Singleton {
                         property int ringSize: 380
                     }
 
-                    property JsonObject customImage: JsonObject {
-                        property bool enable: false
-                        property string placementStrategy: "free"
-                        property real x: 516
-                        property real y: 168
-                        property string path: ""
-                        property string shape: "Cookie4Sided"
-                        property real size: 750.13671875
-                    }
-
                     property JsonObject resources: JsonObject {
                         property bool enable: false
                         property string placementStrategy: "free"

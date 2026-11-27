@@ -53,18 +53,6 @@ WidgetCanvas {
         }
     }
     FadeLoader {
-        shown: Config.options.background.widgets.customImage.enable
-            && (Config.options.background.screenList.length === 0
-                || Config.options.background.screenList.includes(root.panel.screen.name))
-        sourceComponent: CustomImage {
-            screenWidth:        root.panel.screen.width
-            screenHeight:       root.panel.screen.height
-            scaledScreenWidth:  root.panel.screen.width
-            scaledScreenHeight: root.panel.screen.height
-            wallpaperScale:     1
-        }
-    }
-    FadeLoader {
         shown: Config.options.background.widgets.customText.enable
             && (Config.options.background.screenList.length === 0
                 || Config.options.background.screenList.includes(root.panel.screen.name))
