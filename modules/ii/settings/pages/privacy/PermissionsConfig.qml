@@ -1,7 +1,7 @@
 import QtQuick
 import qs.modules.common.widgets
 
-SettingsPage {
+ContentPage {
     id: root
     wipFeature: "permissions"
 }

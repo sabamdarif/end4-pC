@@ -79,6 +79,10 @@ RowLayout {
                 onClicked: {
                     root.selected(modelData.value);
                 }
+                StyledToolTip {
+                    extraVisibleCondition: Boolean(modelData.tooltip ?? "") || (modelData.displayName === "" && String(modelData.value ?? "") !== "")
+                    text: modelData.tooltip ?? String(modelData.value ?? "")
+                }
             }
         }
     }

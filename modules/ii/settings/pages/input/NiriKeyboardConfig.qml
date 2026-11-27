@@ -95,24 +95,29 @@ ContentPage {
             }
         }
 
-        ConfigTextArea {
-            id: customKbField
-            visible: !page.layoutIsPreset
+        Revealer {
+            vertical: true
+            reveal: !page.layoutIsPreset
             Layout.fillWidth: true
-            buttonIcon: "keyboard"
-            text: Translation.tr("Keyboard layout (custom)")
-            placeholderText: Translation.tr("e.g., us, es, latam")
-            value: NiriConfig.options.input.kbLayout
-            onValueChanged: {
-                if (value !== NiriConfig.options.input.kbLayout) kbLayoutDebounceTimer.restart()
-            }
 
-            Timer {
-                id: kbLayoutDebounceTimer
-                interval: 1000
-                repeat: false
-                onTriggered: {
-                    NiriConfig.options.input.kbLayout = customKbField.value
+            ConfigTextArea {
+                id: customKbField
+                width: parent.width
+                buttonIcon: "keyboard"
+                text: Translation.tr("Keyboard layout (custom)")
+                placeholderText: Translation.tr("e.g., us, es, latam")
+                value: NiriConfig.options.input.kbLayout
+                onValueChanged: {
+                    if (value !== NiriConfig.options.input.kbLayout) kbLayoutDebounceTimer.restart()
+                }
+
+                Timer {
+                    id: kbLayoutDebounceTimer
+                    interval: 1000
+                    repeat: false
+                    onTriggered: {
+                        NiriConfig.options.input.kbLayout = customKbField.value
+                    }
                 }
             }
         }

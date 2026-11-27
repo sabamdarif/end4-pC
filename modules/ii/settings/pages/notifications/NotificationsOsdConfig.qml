@@ -45,7 +45,7 @@ ContentPage {
                 from: 1000
                 to: 60000
                 stepSize: 1000
-                onValueChanged: {
+                onValueModified: {
                     Config.options.notifications.timeout = value;
                 }
             }
@@ -65,7 +65,7 @@ ContentPage {
                 from: 100
                 to: 3000
                 stepSize: 100
-                onValueChanged: {
+                onValueModified: {
                     Config.options.osd.timeout = value;
                 }
             }

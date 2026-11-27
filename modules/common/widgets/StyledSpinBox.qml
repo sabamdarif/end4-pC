@@ -21,6 +21,8 @@ SpinBox {
     background: Rectangle {
         color: Appearance.colors.colLayer2
         radius: root.radius
+        border.width: root.activeFocus ? 2 : 0
+        border.color: Appearance.colors.colPrimary
     }
 
     contentItem: StyledTextInput {
@@ -31,6 +33,7 @@ SpinBox {
         font.family: Appearance.font.family.numbers
         font.variableAxes: Appearance.font.variableAxes.numbers
         font.pixelSize: Appearance.font.pixelSize.small
+        font.features: ({ "tnum": 1 })
         validator: root.validator
         readOnly: !root.editable
         inputMethodHints: Qt.ImhFormattedNumbersOnly
@@ -43,8 +46,8 @@ SpinBox {
         }
         implicitHeight: root.baseHeight
         implicitWidth: root.baseHeight
-        topLeftRadius: root.radius
-        bottomLeftRadius: root.radius
+        topLeftRadius: root.down.pressed ? Appearance.rounding.verysmall : root.radius
+        bottomLeftRadius: root.down.pressed ? Appearance.rounding.verysmall : root.radius
         topRightRadius: root.innerButtonRadius
         bottomRightRadius: root.innerButtonRadius
 
@@ -55,10 +58,16 @@ SpinBox {
             animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
         }
 
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.NoButton
+            cursorShape: Qt.PointingHandCursor
+        }
+
         MaterialSymbol {
             anchors.centerIn: parent
             text: "remove"
-            iconSize: 20
+            iconSize: Appearance.font.pixelSize.larger
             color: Appearance.colors.colOnLayer2
         }
     }
@@ -70,8 +79,8 @@ SpinBox {
         }
         implicitHeight: root.baseHeight
         implicitWidth: root.baseHeight
-        topRightRadius: root.radius
-        bottomRightRadius: root.radius
+        topRightRadius: root.up.pressed ? Appearance.rounding.verysmall : root.radius
+        bottomRightRadius: root.up.pressed ? Appearance.rounding.verysmall : root.radius
         topLeftRadius: root.innerButtonRadius
         bottomLeftRadius: root.innerButtonRadius
 
@@ -82,10 +91,16 @@ SpinBox {
             animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
         }
 
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.NoButton
+            cursorShape: Qt.PointingHandCursor
+        }
+
         MaterialSymbol {
             anchors.centerIn: parent
             text: "add"
-            iconSize: 20
+            iconSize: Appearance.font.pixelSize.larger
             color: Appearance.colors.colOnLayer2
         }
     }

@@ -123,19 +123,19 @@ ContentSubsection {
                 property int targetIndex: -1
                 visible: false
                 width: 3
-                height: 32 
-                radius: 2
+                height: 32
+                radius: Appearance.rounding.unsharpen
                 color: Appearance.colors.colPrimary
 
-                Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-                Behavior on y { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-                Behavior on opacity { NumberAnimation { duration: 150 } }
+                Behavior on x { animation: Appearance.animation.elementMoveSmall.numberAnimation.createObject(this) }
+                Behavior on y { animation: Appearance.animation.elementMoveSmall.numberAnimation.createObject(this) }
+                Behavior on opacity { animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this) }
 
                 Rectangle {
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
                     anchors.topMargin: -4
-                    width: 8; height: 8; radius: 4
+                    width: 8; height: 8; radius: Appearance.rounding.full
                     color: Appearance.colors.colPrimary
                 }
 
@@ -143,7 +143,7 @@ ContentSubsection {
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.bottom: parent.bottom
                     anchors.bottomMargin: -4
-                    width: 8; height: 8; radius: 4
+                    width: 8; height: 8; radius: Appearance.rounding.full
                     color: Appearance.colors.colPrimary
                 }
             }
@@ -155,6 +155,10 @@ ContentSubsection {
             Layout.alignment: Qt.AlignVCenter
             iconText: dropdown.dropdownOpen ? "keyboard_arrow_up" : "add"
             onClicked: dropdown.dropdownOpen = !dropdown.dropdownOpen
+
+            StyledToolTip {
+                text: dropdown.dropdownOpen ? Translation.tr("Close widget picker") : Translation.tr("Add widget")
+            }
         }
     }
 
@@ -173,7 +177,7 @@ ContentSubsection {
             animation: Appearance.animation.elementMoveEnter.numberAnimation.createObject(this)
         }
         Behavior on opacity {
-            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
         }
 
         Rectangle {

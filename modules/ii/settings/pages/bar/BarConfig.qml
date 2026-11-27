@@ -63,10 +63,13 @@ ContentPage {
         visible: page.activeWidgets.includes("removableDrive")
         icon: "usb"
         title: Translation.tr("Removable drives")
-        ConfigSwitch {
-            text: Translation.tr("Show even when no drives are connected")
-            checked: Config.options.bar.removableDrive.alwaysShow
-            onCheckedChanged: Config.options.bar.removableDrive.alwaysShow = checked
+        GroupedList {
+            ConfigSwitch {
+                buttonIcon: "usb"
+                text: Translation.tr("Show even when no drives are connected")
+                checked: Config.options.bar.removableDrive.alwaysShow
+                onCheckedChanged: Config.options.bar.removableDrive.alwaysShow = checked
+            }
         }
     }
 
@@ -112,7 +115,7 @@ ContentPage {
                 currentValue: Config.options.bar.borderless
                 onSelected: newValue => { Config.options.bar.borderless = newValue; }
                 options: [
-                    { displayName: Translation.tr(""),          icon: "block",          value: "transparent" },
+                    { displayName: "",                          icon: "block",          value: "transparent" },
                     { displayName: Translation.tr("Pills"),     icon: "pill",           value: "pills" },
                     { displayName: Translation.tr("Separated"), icon: "view_column_2",  value: "separated" }
                 ]
@@ -268,7 +271,7 @@ ContentPage {
                 from: 100
                 to: 10000
                 stepSize: 100
-                onValueChanged: {
+                onValueModified: {
                     Config.options.resources.updateInterval = value;
                 }
             }
@@ -321,7 +324,7 @@ ContentPage {
                 from: 100
                 to: 500
                 stepSize: 10
-                onValueChanged: {
+                onValueModified: {
                     Config.options.bar.media.maxWidth = value;
                 }
             }
@@ -537,7 +540,7 @@ ContentPage {
                     currentValue: Config.options.bar.dynamicIsland.visualizerStyle
                     onSelected: newValue => { Config.options.bar.dynamicIsland.visualizerStyle = newValue; }
                     options: [
-                        { displayName: Translation.tr(""),     icon: "block",      value: "none" },
+                        { displayName: "",                     icon: "block",      value: "none" },
                         { displayName: Translation.tr("Dots"), icon: "steppers",   value: "dots" },
                         { displayName: Translation.tr("Wave"), icon: "ssid_chart", value: "wave" }
                     ]
@@ -613,7 +616,7 @@ ContentPage {
                     from: 5
                     to: 100
                     stepSize: 5
-                    onValueChanged: { Config.options.bar.dynamicIsland.slowChargerWatts = value; }
+                    onValueModified: { Config.options.bar.dynamicIsland.slowChargerWatts = value; }
                 }
                 ConfigSpinBox {
                     icon: "device_thermostat"
@@ -622,7 +625,7 @@ ContentPage {
                     from: 60
                     to: 105
                     stepSize: 1
-                    onValueChanged: { Config.options.bar.dynamicIsland.hotTemperature = value; }
+                    onValueModified: { Config.options.bar.dynamicIsland.hotTemperature = value; }
                 }
             }
         }

@@ -18,12 +18,14 @@ class SettingsColorsTests(unittest.TestCase):
 
         run_qml(self, '''
         property QtObject appearance: QtObject {
-            property var colors: ({ colPrimary: "tan", colOnPrimary: "black", colOnLayer2: "white",
+            property var colors: ({ colPrimary: "tan", colPrimaryHover: "tan", colPrimaryActive: "tan",
+                colOnPrimary: "black", colOnLayer2: "white",
                 colLayer2: "gray", colSecondaryContainer: "gray", colSecondaryContainerHover: "silver",
-                colOnSecondaryContainer: "white" })
-            property var rounding: ({ large: 24, normal: 16 })
+                colSecondaryContainerActive: "silver", colOnSecondaryContainer: "white" })
+            property var rounding: ({ large: 24, normal: 16, small: 12 })
             property var font: ({ pixelSize: { smaller: 12, larger: 18 } })
             property var m3colors: ({ darkmode: true })
+            property var animation: ({ elementMoveFast: { colorAnimation: null } })
         }
         property QtObject config: QtObject {
             property var options: ({ background: { wallpaperPath: "", thumbnailPath: "" },
@@ -34,13 +36,20 @@ class SettingsColorsTests(unittest.TestCase):
         component RippleButton: Button {
             property bool toggled
             property color colBackground
+            property color colBackgroundHover
+            property color colBackgroundToggled
+            property color colBackgroundToggledHover
+            property color colRipple
+            property color colRippleToggled
             property real buttonRadius
+            property real buttonRadiusPressed
             background: Rectangle { implicitHeight: 30 }
         }
         component MaterialSymbol: Item {
             property string text
             property color color
             property real iconSize
+            property real fill
             implicitWidth: iconSize
             implicitHeight: iconSize
         }
@@ -85,8 +94,9 @@ class SettingsColorsTests(unittest.TestCase):
                     if (card.isSelected === undefined) continue;
                     root.check(card.height >= 72 && card.height <= 90, "scheme card stays compact");
                     root.check(card.x + card.width <= schemeGrid.width + 1, "scheme card fits grid");
-                    const icon = card.children[0];
-                    const label = card.children[1];
+                    const body = card.contentItem ?? card;
+                    const icon = body.children[0];
+                    const label = body.children[1];
                     root.check(label.y >= icon.y + icon.height, "scheme icon and label do not overlap");
                     root.check(label.y + label.height <= card.height, "scheme label stays inside card");
                 }

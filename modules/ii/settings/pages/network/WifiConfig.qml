@@ -65,6 +65,7 @@ ContentPage {
                     text: Network.wifiScanning
                         ? Translation.tr("Scanning for networks…")
                         : Translation.tr("%1 networks found").arg(Network.wifiNetworks.length)
+                    animateChange: true
                     color: Appearance.colors.colOnSecondaryContainer
                 }
                 RippleButtonWithIcon {
@@ -113,6 +114,7 @@ ContentPage {
                             Layout.fillWidth: true
                             implicitHeight: 44
                             buttonRadius: Appearance.rounding.small
+                            buttonRadiusPressed: Appearance.rounding.verysmall
                             colBackground: "transparent"
                             onClicked: {
                                 if (wifiRow.modelData.active)
@@ -269,6 +271,7 @@ ContentPage {
                             Layout.fillWidth: true
                             implicitHeight: 48
                             buttonRadius: Appearance.rounding.small
+                            buttonRadiusPressed: Appearance.rounding.verysmall
                             colBackground: "transparent"
                             onClicked: root.openEditor(savedRow.modelData.uuid)
                             StyledToolTip {
@@ -366,9 +369,10 @@ ContentPage {
         Layout.fillWidth: true
         spacing: 14
 
-        StyledIndeterminateProgressBar {
-            Layout.fillWidth: true
+        MaterialLoadingIndicator {
+            Layout.alignment: Qt.AlignHCenter
             visible: WifiProfile.lastError === ""
+            loading: root.editing && !editorLoader.active && WifiProfile.lastError === ""
         }
         StyledText {
             Layout.fillWidth: true

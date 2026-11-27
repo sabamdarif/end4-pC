@@ -23,7 +23,7 @@ ContentPage {
                     from: 0
                     to: 100
                     stepSize: 5
-                    onValueChanged: {
+                    onValueModified: {
                         Config.options.battery.low = value;
                     }
                 }
@@ -34,7 +34,7 @@ ContentPage {
                     from: 0
                     to: 100
                     stepSize: 5
-                    onValueChanged: {
+                    onValueModified: {
                         Config.options.battery.critical = value;
                     }
                 }
@@ -56,7 +56,7 @@ ContentPage {
                     from: 0
                     to: 100
                     stepSize: 5
-                    onValueChanged: {
+                    onValueModified: {
                         Config.options.battery.suspend = value;
                     }
                 }
@@ -70,7 +70,7 @@ ContentPage {
                     from: 0
                     to: 101
                     stepSize: 5
-                    onValueChanged: {
+                    onValueModified: {
                         Config.options.battery.full = value;
                     }
                 }

@@ -25,6 +25,7 @@ RippleButton {
     padding: 0
     implicitHeight: baseSize
     buttonRadius: Appearance.rounding.full
+    buttonRadiusPressed: Appearance.rounding.small
     // Same palette as NavigationRailButton, so a childless group highlights
     // exactly like a leaf under an expanded group.
     colBackground: ColorUtils.transparentize(Appearance.colors.colLayer1Hover, 1)
@@ -41,7 +42,7 @@ RippleButton {
             Layout.leftMargin: 10
             text: root.groupIcon
             rotation: root.groupIconRotation
-            iconSize: 24
+            iconSize: Appearance.font.pixelSize.huge
             fill: root.toggled ? 1 : 0
             font.weight: (root.toggled || root.hovered) ? Font.DemiBold : Font.Normal
             color: root.toggled ? Appearance.m3colors.m3onSecondaryContainer : Appearance.colors.colOnLayer1
@@ -55,8 +56,8 @@ RippleButton {
             visible: root.showLabel
             Layout.fillWidth: true
             text: root.groupName
-            font.pixelSize: 14
-            font.weight: Font.Medium
+            font.pixelSize: Appearance.font.pixelSize.small
+            font.weight: root.toggled ? Font.DemiBold : Font.Medium
             elide: Text.ElideRight
             color: root.toggled ? Appearance.m3colors.m3onSecondaryContainer : Appearance.colors.colOnLayer1
         }
@@ -65,12 +66,15 @@ RippleButton {
             Layout.rightMargin: 8
             visible: root.showLabel && root.hasChildren
             text: "keyboard_arrow_down"
-            iconSize: 20
+            iconSize: Appearance.font.pixelSize.larger
             color: Appearance.colors.colSubtext
             rotation: root.expanded ? 180 : 0
 
             Behavior on rotation {
-                animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                NumberAnimation {
+                    duration: Appearance.animation.menuDecel.duration
+                    easing.type: Appearance.animation.menuDecel.type
+                }
             }
         }
     }

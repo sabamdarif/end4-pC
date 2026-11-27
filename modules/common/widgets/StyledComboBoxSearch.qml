@@ -51,6 +51,8 @@ ComboBox {
     background: Rectangle {
         radius: root.buttonRadius
         color: (root.down && !root.popup.visible) ? root.colBackgroundActive : root.hovered ? root.colBackgroundHover : root.colBackground
+        border.width: root.visualFocus ? 2 : 0
+        border.color: Appearance.colors.colPrimary
 
         Behavior on color {
             animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
@@ -72,7 +74,10 @@ ComboBox {
 
         rotation: root.popup.visible ? 180 : 0
         Behavior on rotation {
-            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+            NumberAnimation {
+                duration: Appearance.animation.menuDecel.duration
+                easing.type: Appearance.animation.menuDecel.type
+            }
         }
     }
 
@@ -89,7 +94,7 @@ ComboBox {
 
             Loader {
                 Layout.alignment: Qt.AlignVCenter
-                active: root.buttonIcon.length > 0 || (root.currentIndex >= 0 && typeof root.model[root.currentIndex] === 'object' && root.model[root.currentIndex]?.icon)
+                active: root.buttonIcon.length > 0 || !!(root.currentIndex >= 0 && typeof root.model[root.currentIndex] === 'object' && root.model[root.currentIndex]?.icon)
                 visible: active
                 sourceComponent: MaterialSymbol {
                     text: {
@@ -301,21 +306,37 @@ ComboBox {
                         Keys.onUpPressed: root.moveSelection(-1)
                         Keys.onReturnPressed: root.acceptSelection()
                         Keys.onEnterPressed: root.acceptSelection()
-                    }
 
-                    MaterialSymbol {
-                        visible: searchField.text.length > 0
-                        text: "close"
-                        iconSize: Appearance.font.pixelSize.normal
-                        color: Appearance.colors.colSubtext
-                        Layout.rightMargin: 6
                         MouseArea {
                             anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                searchField.text = ""
-                                searchField.forceActiveFocus()
-                            }
+                            acceptedButtons: Qt.NoButton
+                            cursorShape: Qt.IBeamCursor
+                        }
+                    }
+
+                    RippleButton {
+                        visible: searchField.text.length > 0
+                        implicitWidth: 32
+                        implicitHeight: 32
+                        buttonRadius: Appearance.rounding.full
+                        buttonRadiusPressed: Appearance.rounding.verysmall
+                        colBackground: "transparent"
+                        colBackgroundHover: Appearance.colors.colLayer3Hover
+                        colRipple: Appearance.colors.colLayer3Active
+                        onClicked: {
+                            searchField.text = ""
+                            searchField.forceActiveFocus()
+                        }
+
+                        contentItem: MaterialSymbol {
+                            anchors.centerIn: parent
+                            text: "close"
+                            iconSize: Appearance.font.pixelSize.normal
+                            color: Appearance.colors.colSubtext
+                        }
+
+                        StyledToolTip {
+                            text: Translation.tr("Clear search")
                         }
                     }
                 }

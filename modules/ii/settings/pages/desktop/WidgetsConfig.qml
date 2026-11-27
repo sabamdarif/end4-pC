@@ -150,8 +150,12 @@ ContentPage {
                         }
                         StyledText {
                             text: modelData.enabled ? Translation.tr("Enabled") : Translation.tr("Disabled")
+                            animateChange: true
                             font.pixelSize: Appearance.font.pixelSize.small
-                            color: Appearance.colors.colSubtext
+                            color: modelData.enabled ? Appearance.colors.colPrimary : Appearance.colors.colSubtext
+                            Behavior on color {
+                                animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                            }
                         }
                     }
                 }
@@ -338,23 +342,27 @@ ContentPage {
                 text: Translation.tr("Double-click the text on your desktop to edit it, drag its corner to resize it")
             }
 
-            MaterialTextArea {
-                Layout.fillWidth: true
-                placeholderText: Translation.tr("Text to display")
-                text: settingsCustomText.entry.content
-                wrapMode: TextEdit.Wrap
+            GroupedList {
+                ConfigTextArea {
+                    id: customTextContentField
+                    Layout.fillWidth: true
+                    buttonIcon: "text_fields"
+                    text: Translation.tr("Text")
+                    placeholderText: Translation.tr("Text to display")
+                    value: settingsCustomText.entry.content
 
-                Timer {
-                    id: customTextContentDebounce
-                    interval: 500
-                    repeat: false
-                    onTriggered: {
-                        settingsCustomText.entry.content = parent.text
+                    Timer {
+                        id: customTextContentDebounce
+                        interval: 500
+                        repeat: false
+                        onTriggered: {
+                            settingsCustomText.entry.content = customTextContentField.value
+                        }
                     }
-                }
 
-                onTextChanged: {
-                    if (activeFocus) customTextContentDebounce.restart()
+                    onValueChanged: {
+                        if (textArea.activeFocus) customTextContentDebounce.restart()
+                    }
                 }
             }
 
@@ -372,25 +380,29 @@ ContentPage {
                     }))
                 }
 
-                MaterialTextArea {
-                    Layout.fillWidth: true
+                GroupedList {
                     Layout.topMargin: 6
-                    placeholderText: Translation.tr("Other font (any installed font family)")
-                    text: Fonts.handwritingFamilies.includes(settingsCustomText.entry.fontFamily) ? "" : settingsCustomText.entry.fontFamily
-                    wrapMode: TextEdit.Wrap
+                    ConfigTextArea {
+                        id: customTextFontField
+                        Layout.fillWidth: true
+                        buttonIcon: "font_download"
+                        text: Translation.tr("Other font")
+                        placeholderText: Translation.tr("Any installed font family")
+                        value: Fonts.handwritingFamilies.includes(settingsCustomText.entry.fontFamily) ? "" : settingsCustomText.entry.fontFamily
 
-                    Timer {
-                        id: customTextFontDebounce
-                        interval: 500
-                        repeat: false
-                        onTriggered: {
-                            if (parent.text.trim() !== "")
-                                settingsCustomText.entry.fontFamily = parent.text.trim()
+                        Timer {
+                            id: customTextFontDebounce
+                            interval: 500
+                            repeat: false
+                            onTriggered: {
+                                if (customTextFontField.value.trim() !== "")
+                                    settingsCustomText.entry.fontFamily = customTextFontField.value.trim()
+                            }
                         }
-                    }
 
-                    onTextChanged: {
-                        if (activeFocus) customTextFontDebounce.restart()
+                        onValueChanged: {
+                            if (textArea.activeFocus) customTextFontDebounce.restart()
+                        }
                     }
                 }
             }
@@ -469,55 +481,24 @@ ContentPage {
             visible: Config.options.background.widgets.github.enable
 
             GroupedList {
-                RowLayout {
+                ConfigTextArea {
+                    id: githubUsernameField
                     Layout.fillWidth: true
-                    Layout.margins: 10
-                    spacing: 12
-
-                    MaterialSymbol {
-                        text: "account_circle"
-                        iconSize: Appearance.font.pixelSize.normal + 6
-                        color: Appearance.colors.colPrimary
+                    buttonIcon: "account_circle"
+                    text: Translation.tr("GitHub Username")
+                    description: Translation.tr("Username for heatmaps and contribution stats")
+                    placeholderText: Translation.tr("Username")
+                    value: Config.options.background.widgets.github.username || ""
+                    onValueChanged: {
+                        if (textArea.activeFocus) githubDebounce.restart();
                     }
 
-                    ColumnLayout {
-                        spacing: 2
-                        Layout.fillWidth: true
-
-                        StyledText {
-                            text: Translation.tr("GitHub Username")
-                            font.pixelSize: Appearance.font.pixelSize.normal
-                            font.weight: Font.DemiBold
-                            color: Appearance.colors.colOnLayer1
-                        }
-
-                        StyledText {
-                            text: Translation.tr("Username for heatmaps and contribution stats")
-                            font.pixelSize: Appearance.font.pixelSize.small
-                            color: Appearance.colors.colSubtext
-                        }
-                    }
-
-                    Rectangle {
-                        implicitWidth: 170
-                        implicitHeight: 32
-                        radius: 8
-                        color: Appearance.colors.colLayer0
-                        border.width: 1
-                        border.color: Appearance.colors.colLayer0Border
-
-                        StyledTextInput {
-                            anchors {
-                                fill: parent
-                                leftMargin: 10
-                                rightMargin: 10
-                                topMargin: 4
-                                bottomMargin: 4
-                            }
-                            text: Config.options.background.widgets.github.username || ""
-                            onEditingFinished: {
-                                Config.options.background.widgets.github.username = text.trim();
-                            }
+                    Timer {
+                        id: githubDebounce
+                        interval: 500
+                        repeat: false
+                        onTriggered: {
+                            Config.options.background.widgets.github.username = githubUsernameField.value.trim();
                         }
                     }
                 }

@@ -54,7 +54,23 @@ Dialog {
         target: NiriConfig
         function onWindowRuleSaved() { if (root.visible) root.close(); }
     }
-    background: Rectangle { color: Appearance.colors.colLayer1; radius: Appearance.rounding.large }
+    enter: Transition {
+        NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
+    }
+    exit: Transition {
+        NumberAnimation { property: "opacity"; from: 1; to: 0; duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
+    }
+    background: Item {
+        StyledRectangularShadow { target: ruleEditorBg }
+        Rectangle {
+            id: ruleEditorBg
+            anchors.fill: parent
+            color: Appearance.colors.colLayer1
+            radius: Appearance.rounding.large
+            border.width: 1
+            border.color: Appearance.colors.colLayer0Border
+        }
+    }
 
     component BooleanField: ConfigComboBox {
         required property string section

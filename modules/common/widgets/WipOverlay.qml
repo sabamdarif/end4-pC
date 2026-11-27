@@ -37,7 +37,7 @@ Item {
         StyledText {
             anchors.centerIn: parent
             text: "WIP"
-            font.pixelSize: 96
+            font.pixelSize: Appearance.font.pixelSize.hugeass * 4
             font.weight: Font.Black
             color: Appearance.colors.colOnLayer0
             opacity: 0.15

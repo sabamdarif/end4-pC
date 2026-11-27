@@ -68,10 +68,11 @@ Rectangle {
                     implicitWidth: 32
                     implicitHeight: 32
                     buttonRadius: height / 2
+                    buttonRadiusPressed: Appearance.rounding.verysmall
                     colBackground: "transparent"
                     Accessible.name: Translation.tr("Edit shortcut")
                     Accessible.description: root.bindData.title + ", " + keyLine.modelData.key
-                    contentItem: MaterialSymbol { text: "edit"; iconSize: 20; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                    contentItem: MaterialSymbol { text: "edit"; iconSize: Appearance.font.pixelSize.larger; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
                     onClicked: root.editRequested(keyLine.index)
                     StyledToolTip { text: keyLine.modelData.source }
                 }
@@ -83,11 +84,13 @@ Rectangle {
                         visible: keyLine.modelData.isOverride
                         enabled: !NiriConfig.savingBind
                         buttonRadius: height / 2
+                        buttonRadiusPressed: Appearance.rounding.verysmall
                         colBackground: "transparent"
                         Accessible.name: Translation.tr("Remove shortcut")
                         Accessible.description: root.bindData.title + ", " + keyLine.modelData.key
-                        contentItem: MaterialSymbol { text: "delete"; color: Appearance.m3colors.m3error; iconSize: 20; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                        contentItem: MaterialSymbol { text: "delete"; color: Appearance.m3colors.m3error; iconSize: Appearance.font.pixelSize.larger; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
                         onClicked: root.removeRequested(keyLine.modelData.key)
+                        StyledToolTip { text: Translation.tr("Remove shortcut override") }
                     }
                 }
             }

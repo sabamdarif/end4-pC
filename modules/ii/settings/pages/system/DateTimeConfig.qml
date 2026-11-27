@@ -25,15 +25,12 @@ ContentPage {
             id: previewCard
             Layout.fillWidth: true
             implicitHeight: 180
-            radius: Appearance.rounding.normal
+            topLeftRadius: Appearance.rounding.normal
+            topRightRadius: Appearance.rounding.normal
+            bottomLeftRadius: Appearance.rounding.unsharpenmore
+            bottomRightRadius: Appearance.rounding.unsharpenmore
+            color: Appearance.colors.colLayer1
             clip: true
-
-            gradient: Gradient { // I didn't like how it turned out but in case I regret it 
-                orientation: Gradient.Horizontal
-                GradientStop { position: 0.0; color: Appearance.colors.colLayer1  }
-                GradientStop { position: 0.6; color: Appearance.colors.colLayer1  }
-                GradientStop { position: 1.0; color: Appearance.colors.colLayer1  }
-            }
 
             property date now: new Date()
 
@@ -54,10 +51,10 @@ ContentPage {
                     StyledText {
                         Layout.fillWidth: true
                         horizontalAlignment: Text.AlignHCenter
-                        font.family: Appearance.font.family.expressive
-                        font.pixelSize: 42
+                        font.family: Appearance.font.family.numbers
+                        font.pixelSize: Appearance.font.pixelSize.hugeass * 1.8
                         font.letterSpacing: 1
-                        font.features: { "tnum": 1 }
+                        tabularNums: true
                         font.weight: Font.Medium
                         color: Appearance.colors.colPrimary
                         text: {
@@ -74,7 +71,7 @@ ContentPage {
                         Layout.fillWidth: true
                         text: DateTime.longDate
                         horizontalAlignment: Text.AlignHCenter
-                        font.pixelSize: 32
+                        font.pixelSize: Appearance.font.pixelSize.huge * 1.4
                         font.weight: Font.Normal
                         opacity: 0.6
                         color: Appearance.colors.colPrimary
@@ -116,8 +113,6 @@ ContentPage {
                 }
             }
 
-            // GroupedList's Repeater ignores `visible`, so the custom-format
-            // fallback lives outside the list instead of as a hidden row.
             ConfigComboBox {
                 Layout.fillWidth: true
                 buttonIcon: "calendar_month"
@@ -128,17 +123,26 @@ ContentPage {
                     Config.options.time.dateFormat = value;
                 }
             }
-        }
 
-        ConfigTextArea {
-            visible: !page.dateFormatIsPreset
-            Layout.fillWidth: true
-            buttonIcon: "calendar_month"
-            text: Translation.tr("Date format (custom)")
-            placeholderText: Translation.tr("e.g. ddd, dd/MM")
-            Component.onCompleted: value = Config.options.time.dateFormat
-            onValueChanged: {
-                Config.options.time.dateFormat = value;
+            ConfigTextArea {
+                id: customDateFormatField
+                visible: !page.dateFormatIsPreset
+                Layout.fillWidth: true
+                buttonIcon: "calendar_month"
+                text: Translation.tr("Date format (custom)")
+                placeholderText: Translation.tr("e.g. ddd, dd/MM")
+                value: Config.options.time.dateFormat
+                onValueChanged: customDateDebounce.restart()
+
+                Timer {
+                    id: customDateDebounce
+                    interval: 350
+                    repeat: false
+                    onTriggered: {
+                        if (customDateFormatField.value !== Config.options.time.dateFormat)
+                            Config.options.time.dateFormat = customDateFormatField.value;
+                    }
+                }
             }
         }
     }

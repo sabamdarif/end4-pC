@@ -18,35 +18,47 @@ ContentPage {
         shape: MaterialShape.Shape.Arch
         title: Translation.tr("Ethernet")
 
-        Rectangle {
+        ColumnLayout {
             Layout.fillWidth: true
-            implicitHeight: Math.max(64, ethCol.implicitHeight + 28)
-            radius: Appearance.rounding.normal
-            color: Appearance.colors.colLayer1
+            spacing: 2
 
-            ColumnLayout {
-                id: ethCol
-                anchors { fill: parent; margins: 14 }
-                spacing: 10
+            Rectangle {
+                visible: NetworkExtras.ethernetDevices.length === 0
+                Layout.fillWidth: true
+                implicitHeight: 64
+                radius: Appearance.rounding.normal
+                color: Appearance.colors.colLayer1
 
                 StyledText {
-                    visible: NetworkExtras.ethernetDevices.length === 0
-                    Layout.leftMargin: 8
-                    Layout.fillHeight: NetworkExtras.ethernetDevices.length === 0
-                    verticalAlignment: Text.AlignVCenter
+                    anchors { left: parent.left; leftMargin: 16; verticalCenter: parent.verticalCenter }
                     text: Translation.tr("No wired network devices")
                     color: Appearance.colors.colSubtext
                 }
+            }
 
-                Repeater {
-                    model: NetworkExtras.ethernetDevices
-                    delegate: ColumnLayout {
+            Repeater {
+                model: NetworkExtras.ethernetDevices
+                delegate: Rectangle {
+                    id: ethCard
+                    required property var modelData
+                    required property int index
+                    readonly property bool isFirst: index === 0
+                    readonly property bool isLast: index === NetworkExtras.ethernetDevices.length - 1
+                    // Read-only native state (Quickshell.Networking),
+                    // matched to the nmcli device by interface name
+                    readonly property var nativeDev: QsNetworking.Networking.devices.values.find(d => d.name === ethCard.modelData.iface) ?? null
+
+                    Layout.fillWidth: true
+                    implicitHeight: ethRow.implicitHeight + 28
+                    color: Appearance.colors.colLayer1
+                    topLeftRadius: isFirst ? Appearance.rounding.normal : Appearance.rounding.unsharpenmore
+                    topRightRadius: topLeftRadius
+                    bottomLeftRadius: isLast ? Appearance.rounding.normal : Appearance.rounding.unsharpenmore
+                    bottomRightRadius: bottomLeftRadius
+
+                    ColumnLayout {
                         id: ethRow
-                        required property var modelData
-                        // Read-only native state (Quickshell.Networking),
-                        // matched to the nmcli device by interface name
-                        readonly property var nativeDev: QsNetworking.Networking.devices.values.find(d => d.name === ethRow.modelData.iface) ?? null
-                        Layout.fillWidth: true
+                        anchors { fill: parent; margins: 14 }
                         spacing: 2
 
                         RowLayout {
@@ -57,34 +69,35 @@ ContentPage {
                                 color: Appearance.colors.colOnSecondaryContainer
                             }
                             StyledText {
-                                text: ethRow.modelData.iface
+                                text: ethCard.modelData.iface
                                 font.weight: Font.Medium
                                 color: Appearance.colors.colOnSecondaryContainer
                             }
                             StyledText {
                                 Layout.fillWidth: true
-                                text: ethRow.modelData.connection !== ""
-                                    ? "• " + ethRow.modelData.connection
+                                text: ethCard.modelData.connection !== ""
+                                    ? "• " + ethCard.modelData.connection
                                     : ""
                                 elide: Text.ElideRight
                                 color: Appearance.colors.colSubtext
                             }
                             StyledText {
-                                text: ethRow.modelData.state
-                                color: ethRow.modelData.state === "connected" ? Appearance.colors.colPrimary : Appearance.colors.colSubtext
+                                text: ethCard.modelData.state
+                                animateChange: true
+                                color: ethCard.modelData.state === "connected" ? Appearance.colors.colPrimary : Appearance.colors.colSubtext
                             }
                         }
                         StyledText {
                             Layout.leftMargin: 34
-                            visible: ethRow.modelData.ip4.length > 0
-                            text: Translation.tr("IPv4: %1").arg(ethRow.modelData.ip4.join(", "))
+                            visible: ethCard.modelData.ip4.length > 0
+                            text: Translation.tr("IPv4: %1").arg(ethCard.modelData.ip4.join(", "))
                             font.pixelSize: Appearance.font.pixelSize.smaller
                             color: Appearance.colors.colSubtext
                         }
                         StyledText {
                             Layout.leftMargin: 34
-                            visible: ethRow.modelData.ip6.length > 0
-                            text: Translation.tr("IPv6: %1").arg(ethRow.modelData.ip6.join(", "))
+                            visible: ethCard.modelData.ip6.length > 0
+                            text: Translation.tr("IPv6: %1").arg(ethCard.modelData.ip6.join(", "))
                             font.pixelSize: Appearance.font.pixelSize.smaller
                             color: Appearance.colors.colSubtext
                             elide: Text.ElideRight
@@ -92,16 +105,17 @@ ContentPage {
                         }
                         StyledText {
                             Layout.leftMargin: 34
-                            visible: ethRow.modelData.mac !== ""
-                            text: Translation.tr("MAC: %1").arg(ethRow.modelData.mac)
+                            visible: ethCard.modelData.mac !== ""
+                            text: Translation.tr("MAC: %1").arg(ethCard.modelData.mac)
                             font.pixelSize: Appearance.font.pixelSize.smaller
                             color: Appearance.colors.colSubtext
                         }
                         StyledText {
                             Layout.leftMargin: 34
-                            visible: ethRow.nativeDev !== null && ethRow.nativeDev.linkSpeed > 0
-                            text: Translation.tr("Link speed: %1 Mb/s").arg(ethRow.nativeDev !== null ? ethRow.nativeDev.linkSpeed : 0)
+                            visible: ethCard.nativeDev !== null && ethCard.nativeDev.linkSpeed > 0
+                            text: Translation.tr("Link speed: %1 Mb/s").arg(ethCard.nativeDev !== null ? ethCard.nativeDev.linkSpeed : 0)
                             font.pixelSize: Appearance.font.pixelSize.smaller
+                            tabularNums: true
                             color: Appearance.colors.colSubtext
                         }
                     }

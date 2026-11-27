@@ -16,7 +16,7 @@ Button {
     property real buttonRadius: Appearance?.rounding?.small ?? 4
     property real buttonRadiusPressed: buttonRadius
     property real buttonEffectiveRadius: root.down ? root.buttonRadiusPressed : root.buttonRadius
-    property int rippleDuration: 1200
+    property int rippleDuration: 550
     property bool rippleEnabled: true
     property var downAction // When left clicking (down)
     property var releaseAction // When left clicking (release)
@@ -140,10 +140,13 @@ Button {
         implicitHeight: 30
 
         color: root.buttonColor
-        border.width: root.border ? root.borderWidth : 0
-        border.color: root.colBorder
+        border.width: root.visualFocus ? 2 : (root.border ? root.borderWidth : 0)
+        border.color: root.visualFocus ? (Appearance?.colors.colPrimary ?? "#65558F") : root.colBorder
         Behavior on color {
             animation: Appearance?.animation.elementMoveFast.colorAnimation.createObject(this)
+        }
+        Behavior on radius {
+            animation: Appearance?.animation.elementMoveSmall.numberAnimation.createObject(this)
         }
 
         layer.enabled: true
@@ -151,7 +154,7 @@ Button {
             maskSource: Rectangle {
                 width: buttonBackground.width
                 height: buttonBackground.height
-                radius: root.buttonEffectiveRadius
+                radius: buttonBackground.radius
             }
         }
 

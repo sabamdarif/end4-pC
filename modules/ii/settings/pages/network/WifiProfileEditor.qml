@@ -195,16 +195,20 @@ ColumnLayout {
             implicitWidth: 36
             implicitHeight: 36
             buttonRadius: Appearance.rounding.full
+            buttonRadiusPressed: Appearance.rounding.verysmall
+            colBackground: toggled ? Appearance.colors.colSecondaryContainer : "transparent"
+            colBackgroundHover: toggled ? Appearance.colors.colSecondaryContainerHover : Appearance.colors.colLayer1Hover
+            colRipple: toggled ? Appearance.colors.colSecondaryContainerActive : Appearance.colors.colLayer1Active
             onClicked: toggled = !toggled
             contentItem: MaterialSymbol {
                 anchors.centerIn: parent
                 horizontalAlignment: Text.AlignHCenter
                 text: revealButton.toggled ? "visibility_off" : "visibility"
                 iconSize: Appearance.font.pixelSize.larger
-                color: Appearance.colors.colOnLayer1
+                color: revealButton.toggled ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnLayer1
             }
             StyledToolTip {
-                text: Translation.tr("Show password")
+                text: revealButton.toggled ? Translation.tr("Hide password") : Translation.tr("Show password")
             }
         }
     }
@@ -217,6 +221,7 @@ ColumnLayout {
             implicitWidth: 40
             implicitHeight: 40
             buttonRadius: Appearance.rounding.full
+            buttonRadiusPressed: Appearance.rounding.verysmall
             onClicked: editor.closeRequested()
             contentItem: MaterialSymbol {
                 anchors.centerIn: parent

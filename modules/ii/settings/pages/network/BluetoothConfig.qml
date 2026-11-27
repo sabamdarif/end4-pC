@@ -72,6 +72,7 @@ ContentPage {
                     text: !BluetoothStatus.available ? Translation.tr("No Bluetooth adapter")
                         : page.scanning ? Translation.tr("Scanning for devices…")
                         : Translation.tr("%1 devices found").arg(BluetoothStatus.unpairedDevices.length)
+                    animateChange: true
                     color: Appearance.colors.colOnSecondaryContainer
                 }
                 RippleButtonWithIcon {

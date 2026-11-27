@@ -15,6 +15,7 @@ RippleButton {
     implicitWidth: expanded ? (Math.max(contentRowLayout.implicitWidth + 10 * 2, baseSize)) : baseSize
     implicitHeight: baseSize
     buttonRadius: baseSize / 14 * 4
+    buttonRadiusPressed: Appearance.rounding.small
     colBackground: Appearance.colors.colPrimaryContainer
     colBackgroundHover: Appearance.colors.colPrimaryContainerHover
     colRipple: Appearance.colors.colPrimaryContainerActive
@@ -55,8 +56,8 @@ RippleButton {
                     }
                     text: root.buttonText
                     color: Appearance.colors.colOnPrimaryContainer
-                    font.pixelSize: 14
-                    font.weight: 450
+                    font.pixelSize: Appearance.font.pixelSize.small
+                    font.weight: 500
                 }
             }
         }

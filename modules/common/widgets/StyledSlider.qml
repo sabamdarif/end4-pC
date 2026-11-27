@@ -29,8 +29,8 @@ Slider {
 
     property var configuration: StyledSlider.Configuration.S
 
-    property real handleDefaultWidth: 3
-    property real handlePressedWidth: 1.5
+    property real handleDefaultWidth: 4
+    property real handlePressedWidth: 2.5
     property color highlightColor: Appearance.colors.colPrimary
     property color trackColor: Appearance.colors.colSecondaryContainer
     property color handleColor: Appearance.colors.colPrimary
@@ -38,16 +38,16 @@ Slider {
     property color dotColorHighlighted: Appearance.m3colors.m3onPrimary
     property real unsharpenRadius: Appearance.rounding.unsharpen
     property real trackWidth: configuration
-    property real trackRadius: trackWidth >= StyledSlider.Configuration.XL ? 21
-        : trackWidth >= StyledSlider.Configuration.L ? 12
-        : trackWidth >= StyledSlider.Configuration.M ? 9
-        : trackWidth >= StyledSlider.Configuration.S ? 6
-        : height / 2
-    property real handleHeight: (configuration === StyledSlider.Configuration.Wavy) ? 24 : Math.max(33, trackWidth + 9)
+    property real trackRadius: trackWidth >= StyledSlider.Configuration.XL ? Appearance.rounding.verylarge
+        : trackWidth >= StyledSlider.Configuration.L ? Appearance.rounding.large
+        : trackWidth / 2
+    property real baseHandleHeight: (configuration === StyledSlider.Configuration.Wavy) ? 28 : Math.max(36, trackWidth + 18)
+    property real handleHeight: root.pressed ? baseHandleHeight + 4 : baseHandleHeight
     property real handleWidth: root.pressed ? handlePressedWidth : handleDefaultWidth
-    property real handleMargins: 4
+    property real handleMargins: 6
     property real dividerMargins: 2
-    property real trackDotSize: 3
+    property real trackDotSize: 4
+    implicitHeight: Math.max(trackWidth, baseHandleHeight + 4)
     property bool usePercentTooltip: true
     property string tooltipContent: usePercentTooltip ? `${Math.round(((value - from) / (to - from)) * 100)}%` : `${Math.round(value)}`
     property bool wavy: configuration === StyledSlider.Configuration.Wavy // If true, the progress bar will have a wavy fill effect
@@ -202,13 +202,18 @@ Slider {
 
         implicitWidth: root.handleWidth
         implicitHeight: root.handleHeight
-        x: root.leftPadding + (root.visualPosition * root.effectiveDraggingWidth) - (root.handleWidth / 2)
+        x: root.leftPadding + (root.visualPosition * root.effectiveDraggingWidth) - (implicitWidth / 2)
         anchors.verticalCenter: parent.verticalCenter
         radius: Appearance.rounding.full
         color: root.handleColor
+        border.width: root.visualFocus ? 2 : 0
+        border.color: Appearance.colors.colOnSurface
 
         Behavior on implicitWidth {
             animation: Appearance?.animation.elementMoveFast.numberAnimation.createObject(this)
+        }
+        Behavior on implicitHeight {
+            animation: Appearance?.animation.elementMoveSmall.numberAnimation.createObject(this)
         }
 
         StyledToolTip {

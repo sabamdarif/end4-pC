@@ -57,7 +57,6 @@ ContentPage {
                 ConfigSelectionArray {
                     text: Translation.tr("Style")
                     icon: "toggle_on"
-                    Layout.fillWidth: false
                     currentValue: Config.options.sidebar.quickToggles.style
                     onSelected: newValue => {
                         Config.options.sidebar.quickToggles.style = newValue;
@@ -83,7 +82,7 @@ ContentPage {
                     from: 1
                     to: 8
                     stepSize: 1
-                    onValueChanged: {
+                    onValueModified: {
                         Config.options.sidebar.quickToggles.android.columns = value;
                     }
                 }
@@ -181,21 +180,21 @@ ContentPage {
                     text: Translation.tr("Vertical offset")
                     value: Config.options.sidebar.cornerOpen.clicklessCornerVerticalOffset
                     from: 0; to: 20; stepSize: 1
-                    onValueChanged: { Config.options.sidebar.cornerOpen.clicklessCornerVerticalOffset = value }
+                    onValueModified: { Config.options.sidebar.cornerOpen.clicklessCornerVerticalOffset = value }
                 }
                 ConfigSpinBox {
                     icon: "arrow_range"
                     text: Translation.tr("Region width")
                     value: Config.options.sidebar.cornerOpen.cornerRegionWidth
                     from: 1; to: 300; stepSize: 1
-                    onValueChanged: { Config.options.sidebar.cornerOpen.cornerRegionWidth = value }
+                    onValueModified: { Config.options.sidebar.cornerOpen.cornerRegionWidth = value }
                 }
                 ConfigSpinBox {
                     icon: "height"
                     text: Translation.tr("Region height")
                     value: Config.options.sidebar.cornerOpen.cornerRegionHeight
                     from: 1; to: 300; stepSize: 1
-                    onValueChanged: { Config.options.sidebar.cornerOpen.cornerRegionHeight = value }
+                    onValueModified: { Config.options.sidebar.cornerOpen.cornerRegionHeight = value }
                 }
             }
         }

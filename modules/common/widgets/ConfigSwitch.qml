@@ -9,13 +9,9 @@ RippleButton {
     property string buttonIcon
     property string description: ""
     property alias iconSize: iconWidget.iconSize
-    colBackgroundHover: "transparent"
-    colRipple: "transparent"
-    rippleEnabled: false
 
     Layout.fillWidth: true
-    Layout.bottomMargin: 6 //Visually it works and I don't know why this should be handled by the parent.
-    implicitHeight: contentItem.implicitHeight + 8 
+    implicitHeight: contentItem.implicitHeight + 8
     font.pixelSize: Appearance.font.pixelSize.small
     
     checkable: true

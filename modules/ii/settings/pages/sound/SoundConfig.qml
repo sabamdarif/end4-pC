@@ -203,7 +203,7 @@ ContentPage {
                     from: 0
                     to: 100
                     stepSize: 2
-                    onValueChanged: {
+                    onValueModified: {
                         Config.options.audio.protection.maxAllowedIncrease = value;
                     }
                 }
@@ -214,7 +214,7 @@ ContentPage {
                     from: 0
                     to: 154
                     stepSize: 2
-                    onValueChanged: {
+                    onValueModified: {
                         Config.options.audio.protection.maxAllowed = value;
                     }
                 }

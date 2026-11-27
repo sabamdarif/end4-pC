@@ -36,7 +36,7 @@ ContentPage {
                 from: 5
                 to: 50
                 stepSize: 5
-                onValueChanged: {
+                onValueModified: {
                     Config.options.bar.weather.fetchInterval = value;
                 }
             }

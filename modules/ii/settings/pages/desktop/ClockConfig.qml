@@ -31,7 +31,6 @@ ContentPage {
 
         GroupedList {
             ConfigSwitch {
-                Layout.fillWidth: false
                 buttonIcon: "check"
                 text: Translation.tr("Enable")
                 checked: Config.options.background.widgets.clock.enable
@@ -188,27 +187,29 @@ ContentPage {
                 }
             }
 
-            MaterialTextArea {
-                Layout.fillWidth: true
-                placeholderText: Translation.tr("Font family")
-                text: Config.options.background.widgets.clock.digital.font.family
-                wrapMode: TextEdit.Wrap
-
-                Timer {
-                    id: debounceTimer
-                    interval: 500
-                    repeat: false
-                    onTriggered: {
-                        Config.options.background.widgets.clock.digital.font.family = parent.text
-                    }
-                }
-
-                onTextChanged: {
-                    debounceTimer.restart()
-                }
-            }
             GroupedList {
                 Layout.topMargin: 10
+                ConfigTextArea {
+                    Layout.fillWidth: true
+                    buttonIcon: "font_download"
+                    text: Translation.tr("Font family")
+                    placeholderText: Translation.tr("Font family")
+                    value: Config.options.background.widgets.clock.digital.font.family
+
+                    Timer {
+                        id: debounceTimer
+                        interval: 500
+                        repeat: false
+                        onTriggered: {
+                            Config.options.background.widgets.clock.digital.font.family = fontFamilyField.value
+                        }
+                    }
+
+                    id: fontFamilyField
+                    onValueChanged: {
+                        debounceTimer.restart()
+                    }
+                }
                 ConfigSlider {
                     text: Translation.tr("Font weight")
                     value: Config.options.background.widgets.clock.digital.font.weight
@@ -281,7 +282,7 @@ ContentPage {
                     from: 0
                     to: 40
                     stepSize: 1
-                    onValueChanged: {
+                    onValueModified: {
                         Config.options.background.widgets.clock.cookie.sides = value;
                     }
                 }
@@ -330,7 +331,7 @@ ContentPage {
             Layout.topMargin: 10
             visible: settingsClock.cookiePresent
             ConfigSelectionArray {
-                text: "Dial Style"
+                text: Translation.tr("Dial Style")
                 icon: "graph_6"
                 currentValue: Config.options.background.widgets.clock.cookie.dialNumberStyle
                 onSelected: newValue => {
@@ -345,6 +346,7 @@ ContentPage {
                 options: [
                     {
                         displayName: "",
+                        tooltip: Translation.tr("None"),
                         icon: "block",
                         value: "none"
                     },

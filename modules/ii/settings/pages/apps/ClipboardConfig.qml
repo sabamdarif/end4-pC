@@ -47,7 +47,7 @@ ContentPage {
                 from: 10
                 to: 10000
                 stepSize: 50
-                onValueChanged: {
+                onValueModified: {
                     Config.options.cliphist.maxEntries = value
                     Cliphist.refresh()
                 }
@@ -95,6 +95,8 @@ ContentPage {
                 StyledText {
                     Layout.fillWidth: true
                     text: Translation.tr("%1 entries in clipboard history").arg(Cliphist.entries.length)
+                    animateChange: true
+                    tabularNums: true
                     color: Appearance.colors.colOnSecondaryContainer
                 }
                 RippleButtonWithIcon {
@@ -146,7 +148,7 @@ ContentPage {
                 from: 50
                 to: 300
                 stepSize: 10
-                onValueChanged: {
+                onValueModified: {
                     Config.options.clipboard.imagePreviewHeight = value
                 }
             }

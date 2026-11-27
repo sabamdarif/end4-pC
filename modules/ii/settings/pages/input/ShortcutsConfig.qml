@@ -106,19 +106,16 @@ ContentPage {
     RowLayout {
         Layout.fillWidth: true
         spacing: 8
-        MaterialTextField {
+        ToolbarTextField {
             id: searchField
             objectName: "shortcutSearchField"
             Layout.fillWidth: true
-            leftPadding: 36
-            rightPadding: 12
-            selectByMouse: true
-            MaterialSymbol {
-                anchors { left: parent.left; leftMargin: 11; verticalCenter: parent.verticalCenter }
-                text: "search"
-                iconSize: 18
-                color: Appearance.colors.colSubtext
-            }
+            Layout.fillHeight: false
+            implicitHeight: 44
+            leadingIcon: "search"
+            clearable: true
+            colBackground: Appearance.colors.colLayer2
+            colBackgroundFocused: Appearance.colors.colLayer3
             placeholderText: searchInhibitor.active
                 ? Translation.tr("Search or press a shortcut…") : Translation.tr("Search shortcuts…")
             onTextChanged: {
@@ -134,20 +131,21 @@ ContentPage {
         }
         RippleButton {
             objectName: "shortcutReloadButton"
-            implicitWidth: searchField.implicitBackgroundHeight
-            implicitHeight: searchField.implicitBackgroundHeight
-            Layout.preferredWidth: searchField.background.height
-            Layout.preferredHeight: searchField.background.height
-            Layout.alignment: Qt.AlignBottom
+            implicitWidth: searchField.height
+            implicitHeight: searchField.height
+            Layout.preferredWidth: searchField.height
+            Layout.preferredHeight: searchField.height
+            Layout.alignment: Qt.AlignVCenter
             padding: 0
-            buttonRadius: Appearance.rounding.unsharpenmore
-            border: true
-            colBorder: Appearance.colors.colOutline
-            colBackground: "transparent"
+            buttonRadius: Appearance.rounding.full
+            buttonRadiusPressed: Appearance.rounding.small
+            colBackground: Appearance.colors.colLayer2
+            colBackgroundHover: Appearance.colors.colLayer2Hover
+            colRipple: Appearance.colors.colLayer2Active
             contentItem: MaterialSymbol {
                 text: "refresh"
-                iconSize: 24
-                color: Appearance.colors.colOnLayer1
+                iconSize: Appearance.font.pixelSize.huge
+                color: Appearance.colors.colOnLayer2
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
@@ -155,6 +153,20 @@ ContentPage {
             Accessible.name: Translation.tr("Reload shortcuts")
             onClicked: NiriKeybinds.refresh()
             StyledToolTip { text: Translation.tr("Reload shortcuts") }
+        }
+        RippleButtonWithIcon {
+            Layout.preferredHeight: searchField.height
+            Layout.alignment: Qt.AlignVCenter
+            materialIcon: "keyboard"
+            mainText: page.width > 640 ? Translation.tr("Cheatsheet") : ""
+            buttonRadius: Appearance.rounding.full
+            buttonRadiusPressed: Appearance.rounding.small
+            colBackground: Appearance.colors.colLayer2
+            colBackgroundHover: Appearance.colors.colLayer2Hover
+            colRipple: Appearance.colors.colLayer2Active
+            Accessible.name: Translation.tr("Cheatsheet")
+            onClicked: Quickshell.execDetached(["niri", "msg", "action", "show-hotkey-overlay"])
+            StyledToolTip { text: Translation.tr("Show niri hotkey cheatsheet") }
         }
     }
 
@@ -169,8 +181,14 @@ ContentPage {
                 implicitWidth: chipLabel.implicitWidth + 28
                 implicitHeight: 36
                 buttonRadius: height / 2
-                colBackground: page.selectedCategory === modelData.key
-                    ? Appearance.colors.colSecondaryContainer : Appearance.colors.colLayer1
+                buttonRadiusPressed: Appearance.rounding.small
+                toggled: page.selectedCategory === modelData.key
+                colBackground: Appearance.colors.colLayer1
+                colBackgroundHover: Appearance.colors.colLayer1Hover
+                colRipple: Appearance.colors.colLayer1Active
+                colBackgroundToggled: Appearance.colors.colSecondaryContainer
+                colBackgroundToggledHover: Appearance.colors.colSecondaryContainerHover
+                colRippleToggled: Appearance.colors.colSecondaryContainerActive
                 Accessible.name: modelData.title
                 Accessible.role: Accessible.RadioButton
                 Accessible.checked: page.selectedCategory === modelData.key
@@ -180,6 +198,7 @@ ContentPage {
                     text: chip.modelData.title
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
+                    font.weight: chip.toggled ? Font.DemiBold : Font.Normal
                     color: Appearance.colors.colOnSecondaryContainer
                 }
             }
@@ -225,9 +244,14 @@ ContentPage {
 
     ContentSection {
         icon: "keyboard"
+        shape: MaterialShape.Shape.Gem
         title: Translation.tr("Shortcuts (%1)").arg(page.filteredGroups.length)
 
-        StyledIndeterminateProgressBar { Layout.fillWidth: true; visible: NiriKeybinds.loading }
+        MaterialLoadingIndicator {
+            Layout.alignment: Qt.AlignHCenter
+            visible: NiriKeybinds.loading
+            loading: NiriKeybinds.loading
+        }
         StyledText {
             Layout.fillWidth: true
             visible: NiriKeybinds.errorText !== "" || (NiriConfig.bindError !== "" && !page.editorMounted)
@@ -262,23 +286,22 @@ ContentPage {
         }
     }
 
-    RowLayout {
+    Item {
         parent: page
         anchors { right: parent.right; bottom: parent.bottom; margins: 20 }
-        spacing: 10
-        RippleButtonWithIcon {
-            materialIcon: "keyboard"
-            mainText: Translation.tr("Cheatsheet")
-            implicitHeight: 48
-            buttonRadius: Appearance.rounding.large
-            onClicked: Quickshell.execDetached(["niri", "msg", "action", "show-hotkey-overlay"])
+        implicitWidth: addShortcutFab.implicitWidth
+        implicitHeight: addShortcutFab.implicitHeight
+
+        StyledRectangularShadow {
+            target: addShortcutFab
         }
-        RippleButtonWithIcon {
-            materialIcon: "add"
-            mainText: Translation.tr("Add shortcut")
-            implicitHeight: 48
-            buttonRadius: Appearance.rounding.large
-            colBackground: Appearance.colors.colPrimaryContainer
+
+        FloatingActionButton {
+            id: addShortcutFab
+            anchors.fill: parent
+            expanded: true
+            iconText: "add"
+            buttonText: Translation.tr("Add shortcut")
             enabled: NiriConfig.ready && !NiriConfig.savingBind
             onClicked: page.edit(null, -1)
         }
@@ -315,7 +338,23 @@ ContentPage {
         modal: true
         padding: 24
         closePolicy: NiriConfig.savingBind ? Popup.NoAutoClose : Popup.CloseOnEscape | Popup.CloseOnPressOutside
-        background: Rectangle { color: Appearance.colors.colLayer1; radius: Appearance.rounding.large }
+        enter: Transition {
+            NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
+        }
+        exit: Transition {
+            NumberAnimation { property: "opacity"; from: 1; to: 0; duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
+        }
+        background: Item {
+            StyledRectangularShadow { target: removeDialogBg }
+            Rectangle {
+                id: removeDialogBg
+                anchors.fill: parent
+                color: Appearance.colors.colLayer1
+                radius: Appearance.rounding.large
+                border.width: 1
+                border.color: Appearance.colors.colLayer0Border
+            }
+        }
         contentItem: ColumnLayout {
             spacing: 16
             StyledText { text: Translation.tr("Remove shortcut?"); font.pixelSize: Appearance.font.pixelSize.larger }

@@ -43,7 +43,9 @@ GroupButton {
                     iconSize: Appearance.font.pixelSize.larger
                     color: root.colText
 
-                    Behavior on color { ColorAnimation { duration: 180 } }
+                    Behavior on color {
+                        animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                    }
                 }
             }
         }
@@ -62,7 +64,9 @@ GroupButton {
                 color: root.colText
                 text: root.buttonText
 
-                Behavior on color { ColorAnimation { duration: 180 } }
+                Behavior on color {
+                    animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                }
             }
         }
     }

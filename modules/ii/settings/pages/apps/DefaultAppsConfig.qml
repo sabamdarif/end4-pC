@@ -38,22 +38,29 @@ ContentPage {
         shape: MaterialShape.Shape.Circle
         title: Translation.tr("Default applications")
 
-        Rectangle {
+        ColumnLayout {
             Layout.fillWidth: true
-            implicitHeight: defaultAppsCol.implicitHeight + 28
-            radius: Appearance.rounding.normal
-            color: Appearance.colors.colLayer1
+            spacing: 2
 
-            ColumnLayout {
-                id: defaultAppsCol
-                anchors { fill: parent; margins: 14 }
-                spacing: 8
+            Repeater {
+                model: page.defaultAppRoles
+                delegate: Rectangle {
+                    required property var modelData
+                    required property int index
+                    readonly property bool isFirst: index === 0
+                    readonly property bool isLast: index === page.defaultAppRoles.length - 1
 
-                Repeater {
-                    model: page.defaultAppRoles
-                    delegate: ConfigComboBox {
-                        required property var modelData
-                        Layout.fillWidth: true
+                    Layout.fillWidth: true
+                    implicitHeight: Math.max(64, roleCombo.implicitHeight + 24)
+                    color: Appearance.colors.colLayer1
+                    topLeftRadius: isFirst ? Appearance.rounding.normal : Appearance.rounding.unsharpenmore
+                    topRightRadius: topLeftRadius
+                    bottomLeftRadius: isLast ? Appearance.rounding.normal : Appearance.rounding.unsharpenmore
+                    bottomRightRadius: bottomLeftRadius
+
+                    ConfigComboBox {
+                        id: roleCombo
+                        anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; margins: 8 }
                         buttonIcon: modelData.icon
                         text: modelData.label
                         model: page.defaultAppModel(modelData.key)

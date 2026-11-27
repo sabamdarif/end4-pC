@@ -147,7 +147,8 @@ TabButton {
                 }
             }
             text: buttonText
-            font.pixelSize: 14
+            font.pixelSize: Appearance.font.pixelSize.small
+            font.weight: toggled ? Font.DemiBold : Font.Normal
             color: Appearance.colors.colOnLayer1
         }
     }

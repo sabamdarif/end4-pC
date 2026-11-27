@@ -28,7 +28,7 @@ ContentPage {
         Layout.leftMargin: 16
         Layout.rightMargin: 16
 
-        radius: 24
+        radius: Appearance.rounding.large
         color: Appearance.colors.colLayer1
 
         RowLayout {
@@ -42,7 +42,7 @@ ContentPage {
                 Layout.alignment: Qt.AlignVCenter
                 implicitWidth: 110
                 implicitHeight: 110
-                radius: 20
+                radius: Appearance.rounding.normal
                 color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.9)
 
                 IconImage {
@@ -69,7 +69,7 @@ ContentPage {
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: "Kernel " + (SystemInfo.kernelVersion || "Loading...")
+                    text: Translation.tr("Kernel %1").arg(SystemInfo.kernelVersion || Translation.tr("Loading..."))
                     font.pixelSize: Appearance.font.pixelSize.normal
                     font.weight: Font.Medium
                     color: Appearance.colors.colSubtext
@@ -117,16 +117,16 @@ ContentPage {
             AboutCard {
                 icon: "planner_review"
                 iconShape: MaterialShape.Shape.Pentagon
-                label: "CPU"
-                value: SystemInfo.cpu || "Loading..."
+                label: Translation.tr("CPU")
+                value: SystemInfo.cpu || Translation.tr("Loading...")
                 Layout.fillWidth: true
             }
 
             AboutCard {
                 icon: "monitor"
                 iconShape: MaterialShape.Shape.ClamShell
-                label: "GPU"
-                value: SystemInfo.gpu || "N/A"
+                label: Translation.tr("GPU")
+                value: SystemInfo.gpu || Translation.tr("N/A")
                 Layout.fillWidth: true
             }
         }
@@ -139,40 +139,40 @@ ContentPage {
 
             AboutCard {
                 icon: "memory"
-                label: "Memory"
-                value: SystemInfo.memory || "Loading..."
+                label: Translation.tr("Memory")
+                value: SystemInfo.memory || Translation.tr("Loading...")
                 Layout.fillWidth: true
             }
 
             AboutCard {
                 icon: "storage"
                 iconShape: MaterialShape.Shape.Cookie6Sided
-                label: "Disk"
-                value: SystemInfo.disk || "Loading..."
+                label: Translation.tr("Disk")
+                value: SystemInfo.disk || Translation.tr("Loading...")
                 Layout.fillWidth: true
             }
 
             AboutCard {
                 icon: "terminal"
-                label: "Shell"
+                label: Translation.tr("Shell")
                 iconShape: MaterialShape.Shape.Gem
-                value: SystemInfo.shell || "Loading..."
+                value: SystemInfo.shell || Translation.tr("Loading...")
                 Layout.fillWidth: true
             }
 
             AboutCard {
                 icon: "package_2"
-                label: "Packages"
+                label: Translation.tr("Packages")
                 iconShape: MaterialShape.Shape.Sunny
-                value: SystemInfo.packages || "Loading..."
+                value: SystemInfo.packages || Translation.tr("Loading...")
                 Layout.fillWidth: true
             }
 
             AboutCard {
                 icon: "update"
-                label: "Updates"
+                label: Translation.tr("Updates")
                 iconShape: MaterialShape.Shape.Cookie9Sided
-                value: Updates.checking ? "Checking..." : (Updates.count === 0 ? "Up to date" : `${Updates.count}`)
+                value: Updates.checking ? Translation.tr("Checking...") : (Updates.count === 0 ? Translation.tr("Up to date") : `${Updates.count}`)
                 Layout.fillWidth: true
                 clickAction: () => {
                     runSystemUpdate()
@@ -181,9 +181,9 @@ ContentPage {
 
             AboutCard {
                 icon: "timelapse"
-                label: "Uptime"
+                label: Translation.tr("Uptime")
                 iconShape: MaterialShape.Shape.Cookie12Sided
-                value: DateTime.uptime || "Loading..."
+                value: DateTime.uptime || Translation.tr("Loading...")
                 Layout.fillWidth: true
             }
         }

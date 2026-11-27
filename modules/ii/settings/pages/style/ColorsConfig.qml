@@ -130,52 +130,64 @@ ContentPage {
                             { value: "scheme-vibrant",     displayName: Translation.tr("Vibrant"),     icon: "colors" },
                         ]
 
-                        delegate: Rectangle {
+                        delegate: RippleButton {
+                            id: schemeCard
                             required property var modelData
+                            readonly property bool isSelected: Config.options.appearance.palette.type === modelData.value
+
                             Layout.fillWidth: true
                             implicitWidth: 120
                             implicitHeight: Math.max(72, schemeIcon.implicitHeight + schemeLabel.implicitHeight + 24)
-                            radius: Appearance.rounding.large
+                            padding: 0
+                            buttonRadius: Appearance.rounding.large
+                            buttonRadiusPressed: Appearance.rounding.small
+                            toggled: isSelected
+                            colBackground: Appearance.colors.colSecondaryContainer
+                            colBackgroundHover: Appearance.colors.colSecondaryContainerHover
+                            colRipple: Appearance.colors.colSecondaryContainerActive
+                            colBackgroundToggled: Appearance.colors.colPrimary
+                            colBackgroundToggledHover: Appearance.colors.colPrimaryHover
+                            colRippleToggled: Appearance.colors.colPrimaryActive
 
-                            property bool isSelected: Config.options.appearance.palette.type === modelData.value
-                            property bool hovered: hoverArea.containsMouse
-
-                            color: isSelected ? Appearance.colors.colPrimary
-                                : hovered ? Appearance.colors.colSecondaryContainerHover
-                                : Appearance.colors.colSecondaryContainer
-
-                            MaterialSymbol {
-                                id: schemeIcon
-                                anchors.top: parent.top
-                                anchors.left: parent.left
-                                anchors.margins: 10
-                                text: modelData.icon
-                                iconSize: Appearance.font.pixelSize.larger
-                                color: parent.isSelected ? Appearance.colors.colOnPrimary : Appearance.colors.colOnSecondaryContainer
+                            onClicked: {
+                                Config.options.appearance.palette.type = modelData.value
+                                Quickshell.execDetached(["bash", Directories.wallpaperSwitchScriptPath, "--noswitch"])
                             }
 
-                            StyledText {
-                                id: schemeLabel
-                                anchors.bottom: parent.bottom
-                                anchors.left: parent.left
-                                anchors.right: parent.right
-                                anchors.margins: 10
-                                text: modelData.displayName
-                                font.pixelSize: Appearance.font.pixelSize.smaller
-                                font.weight: Font.Medium
-                                horizontalAlignment: Text.AlignRight
-                                wrapMode: Text.Wrap
-                                color: parent.isSelected ? Appearance.colors.colOnPrimary : Appearance.colors.colOnSecondaryContainer
-                            }
-
-                            MouseArea {
-                                id: hoverArea
+                            contentItem: Item {
                                 anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    Config.options.appearance.palette.type = modelData.value
-                                    Quickshell.execDetached(["bash", Directories.wallpaperSwitchScriptPath, "--noswitch"])
+
+                                MaterialSymbol {
+                                    id: schemeIcon
+                                    anchors.top: parent.top
+                                    anchors.left: parent.left
+                                    anchors.margins: 10
+                                    text: schemeCard.modelData.icon
+                                    iconSize: Appearance.font.pixelSize.larger
+                                    fill: schemeCard.isSelected ? 1 : 0
+                                    color: schemeCard.isSelected ? Appearance.colors.colOnPrimary : Appearance.colors.colOnSecondaryContainer
+
+                                    Behavior on color {
+                                        animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                                    }
+                                }
+
+                                StyledText {
+                                    id: schemeLabel
+                                    anchors.bottom: parent.bottom
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.margins: 10
+                                    text: schemeCard.modelData.displayName
+                                    font.pixelSize: Appearance.font.pixelSize.smaller
+                                    font.weight: schemeCard.isSelected ? Font.DemiBold : Font.Medium
+                                    horizontalAlignment: Text.AlignRight
+                                    wrapMode: Text.Wrap
+                                    color: schemeCard.isSelected ? Appearance.colors.colOnPrimary : Appearance.colors.colOnSecondaryContainer
+
+                                    Behavior on color {
+                                        animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                                    }
                                 }
                             }
                         }

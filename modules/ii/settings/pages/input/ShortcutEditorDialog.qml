@@ -30,6 +30,7 @@ Dialog {
     property string savingAction: ""
     property var bindProperties: ({})
     property bool recording: false
+    property bool confirmingReset: false
     readonly property var currentKey: root.group?.keys[root.keyIndex] ?? null
     readonly property bool hasChanges: root.originalKey === "" || keyField.text !== root.originalKey ||
         actionField.text !== root.initialCommand || root.actionType !== root.initialType ||
@@ -81,6 +82,7 @@ Dialog {
 
     function loadKey(index) {
         root.recording = false
+        root.confirmingReset = false
         root.keyIndex = index
         const key = root.group?.keys[index] ?? null
         root.originalKey = key?.key ?? ""
@@ -142,12 +144,15 @@ Dialog {
         }, NiriKeybinds.modKey)
     }
 
-    onClosed: root.recording = false
+    onClosed: {
+        root.recording = false
+        root.confirmingReset = false
+    }
     Connections {
         target: NiriConfig
         function onBindSaveCompleted(success) {
             if (!root.visible || !success) return
-            if (resetConfirm.visible) resetConfirm.close()
+            root.confirmingReset = false
             root.saved(root.savingAction || root.originalAction)
             root.close()
         }
@@ -157,7 +162,23 @@ Dialog {
         window: keyField.QsWindow.window
         enabled: root.visible && root.recording
     }
-    background: Rectangle { color: Appearance.colors.colLayer1; radius: Appearance.rounding.large }
+    enter: Transition {
+        NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
+    }
+    exit: Transition {
+        NumberAnimation { property: "opacity"; from: 1; to: 0; duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
+    }
+    background: Item {
+        StyledRectangularShadow { target: editorDialogBg }
+        Rectangle {
+            id: editorDialogBg
+            anchors.fill: parent
+            color: Appearance.colors.colLayer1
+            radius: Appearance.rounding.large
+            border.width: 1
+            border.color: Appearance.colors.colLayer0Border
+        }
+    }
     contentItem: ColumnLayout {
         spacing: 16
         StyledText {
@@ -325,12 +346,22 @@ Dialog {
                         spacing: 6
                         Repeater {
                             model: root.options
-                            delegate: DialogButton {
+                            delegate: RippleButtonWithIcon {
                                 id: option
                                 required property var modelData
                                 readonly property bool selected: root.bindProperties[modelData.key] ?? modelData.defaultValue
-                                buttonText: (selected ? "✓ " : "") + modelData.title
-                                colBackground: selected ? Appearance.colors.colSecondaryContainer : "transparent"
+                                toggled: selected
+                                materialIcon: selected ? "check" : "radio_button_unchecked"
+                                materialIconFill: selected
+                                mainText: modelData.title
+                                buttonRadius: selected ? Appearance.rounding.full : Appearance.rounding.small
+                                buttonRadiusPressed: Appearance.rounding.verysmall
+                                colBackground: Appearance.colors.colLayer2
+                                colBackgroundHover: Appearance.colors.colLayer2Hover
+                                colRipple: Appearance.colors.colLayer2Active
+                                colBackgroundToggled: Appearance.colors.colSecondaryContainer
+                                colBackgroundToggledHover: Appearance.colors.colSecondaryContainerHover
+                                colRippleToggled: Appearance.colors.colSecondaryContainerActive
                                 onClicked: root.setProperty(modelData.key, !selected === modelData.defaultValue ? undefined : !selected)
                             }
                         }
@@ -355,13 +386,54 @@ Dialog {
                 }
             }
         }
+        Revealer {
+            vertical: true
+            reveal: root.confirmingReset
+            Layout.fillWidth: true
+
+            Rectangle {
+                width: parent.width
+                implicitHeight: resetBannerCol.implicitHeight + 24
+                radius: Appearance.rounding.normal
+                color: Appearance.colors.colErrorContainer
+
+                ColumnLayout {
+                    id: resetBannerCol
+                    anchors { fill: parent; margins: 12 }
+                    spacing: 8
+
+                    StyledText {
+                        Layout.fillWidth: true
+                        text: Translation.tr("Remove your override for %1 and restore the shortcut from your original config?").arg(root.originalKey)
+                        color: Appearance.colors.colOnErrorContainer
+                        wrapMode: Text.Wrap
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Item { Layout.fillWidth: true }
+                        DialogButton {
+                            buttonText: Translation.tr("Cancel")
+                            enabled: !NiriConfig.savingBind
+                            onClicked: root.confirmingReset = false
+                        }
+                        DialogButton {
+                            buttonText: NiriConfig.savingBind ? Translation.tr("Resetting…") : Translation.tr("Reset")
+                            colText: Appearance.m3colors.m3error
+                            enabled: !NiriConfig.savingBind
+                            onClicked: NiriConfig.removeBindOverride(root.originalKey, NiriKeybinds.modKey)
+                        }
+                    }
+                }
+            }
+        }
         RowLayout {
             Layout.fillWidth: true
             DialogButton {
-                visible: root.currentKey?.isOverride ?? false
+                visible: (root.currentKey?.isOverride ?? false) && !root.confirmingReset
                 buttonText: Translation.tr("Reset override")
                 enabled: !NiriConfig.savingBind
-                onClicked: resetConfirm.open()
+                onClicked: root.confirmingReset = true
             }
             Item { Layout.fillWidth: true }
             DialogButton { buttonText: Translation.tr("Cancel"); enabled: !NiriConfig.savingBind; onClicked: root.close() }
@@ -369,35 +441,6 @@ Dialog {
                 buttonText: NiriConfig.savingBind ? Translation.tr("Saving…") : root.group ? Translation.tr("Save") : Translation.tr("Add")
                 enabled: NiriConfig.ready && root.hasChanges && !NiriConfig.savingBind && keyField.text.trim() !== "" && actionField.text.trim() !== ""
                 onClicked: root.save()
-            }
-        }
-    }
-    Dialog {
-        id: resetConfirm
-        parent: Overlay.overlay
-        anchors.centerIn: parent
-        width: Math.min(440, parent.width - 32)
-        modal: true
-        padding: 24
-        closePolicy: NiriConfig.savingBind ? Popup.NoAutoClose : Popup.CloseOnEscape | Popup.CloseOnPressOutside
-        background: Rectangle { color: Appearance.colors.colLayer1; radius: Appearance.rounding.large }
-        contentItem: ColumnLayout {
-            spacing: 16
-            StyledText { text: Translation.tr("Reset override?"); font.pixelSize: Appearance.font.pixelSize.larger }
-            StyledText {
-                Layout.fillWidth: true
-                text: Translation.tr("Remove your override for %1 and restore the shortcut from your original config?").arg(root.originalKey)
-                wrapMode: Text.Wrap
-            }
-            StyledText { Layout.fillWidth: true; visible: NiriConfig.bindError !== ""; text: NiriConfig.bindError; wrapMode: Text.Wrap; color: Appearance.m3colors.m3error }
-            RowLayout {
-                Item { Layout.fillWidth: true }
-                DialogButton { buttonText: Translation.tr("Cancel"); enabled: !NiriConfig.savingBind; onClicked: resetConfirm.close() }
-                DialogButton {
-                    buttonText: Translation.tr("Reset")
-                    enabled: !NiriConfig.savingBind
-                    onClicked: NiriConfig.removeBindOverride(root.originalKey, NiriKeybinds.modKey)
-                }
             }
         }
     }

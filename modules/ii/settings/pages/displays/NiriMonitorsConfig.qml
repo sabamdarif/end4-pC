@@ -98,7 +98,7 @@ ContentPage {
                     text: Translation.tr("Scale")
                     value: Math.round((monitorConfig.monitors[monitorCanvas.selectedIndex]?.scale ?? 1.0) * 100)
                     from: 50; to: 300; stepSize: 25
-                    onValueChanged: {
+                    onValueModified: {
                         const newVal = value / 100.0
                         if (newVal === (monitorConfig.monitors[monitorCanvas.selectedIndex]?.scale ?? 1.0)) return
                         monitorConfig.updateMonitor(monitorCanvas.selectedIndex, { scale: newVal })
@@ -111,7 +111,7 @@ ContentPage {
                     text: Translation.tr("Position X")
                     value: monitorConfig.monitors[monitorCanvas.selectedIndex]?.x ?? 0
                     from: 0; to: 7680; stepSize: 1
-                    onValueChanged: {
+                    onValueModified: {
                         if (value === (monitorConfig.monitors[monitorCanvas.selectedIndex]?.x ?? 0)) return
                         monitorConfig.updateMonitor(monitorCanvas.selectedIndex, { x: value })
                         monitorConfig.applyAndSave(monitorCanvas.selectedIndex)
@@ -123,7 +123,7 @@ ContentPage {
                     text: Translation.tr("Position Y")
                     value: monitorConfig.monitors[monitorCanvas.selectedIndex]?.y ?? 0
                     from: 0; to: 4320; stepSize: 1
-                    onValueChanged: {
+                    onValueModified: {
                         if (value === (monitorConfig.monitors[monitorCanvas.selectedIndex]?.y ?? 0)) return
                         monitorConfig.updateMonitor(monitorCanvas.selectedIndex, { y: value })
                         monitorConfig.applyAndSave(monitorCanvas.selectedIndex)
@@ -140,6 +140,7 @@ ContentPage {
 
         GroupedList {
             ConfigSwitch {
+                id: nightLightSwitch
                 buttonIcon: "check"
                 text: Translation.tr("Night Light")
                 description: Translation.tr("Warmer colors reduce eye strain at night")
@@ -147,6 +148,12 @@ ContentPage {
                 onCheckedChanged: {
                     if (checked !== Wlsunset.temperatureActive) {
                         Wlsunset.toggleTemperature(checked)
+                    }
+                }
+                Connections {
+                    target: Wlsunset
+                    function onTemperatureActiveChanged() {
+                        nightLightSwitch.checked = Wlsunset.temperatureActive
                     }
                 }
             }

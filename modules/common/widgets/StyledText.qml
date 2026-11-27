@@ -4,6 +4,7 @@ import QtQuick
 Text {
     id: root
     property bool animateChange: false
+    property bool tabularNums: false
     property real animationDistanceX: 0
     property real animationDistanceY: 6
 
@@ -16,14 +17,15 @@ Text {
         hintingPreference: Font.PreferDefaultHinting
         family: defaultFont
         pixelSize: Appearance?.font.pixelSize.small ?? 15
-        variableAxes: shouldUseNumberFont ? ({}) : Appearance.font.variableAxes.main
+        variableAxes: shouldUseNumberFont ? Appearance.font.variableAxes.numbers : Appearance.font.variableAxes.main
+        features: root.tabularNums ? ({ "tnum": 1 }) : ({})
     }
     color: Appearance?.m3colors.m3onBackground ?? "black"
     linkColor: Appearance?.m3colors.m3primary
 
     component Anim: NumberAnimation {
         target: root
-        duration: 300 / 2
+        duration: 150
         easing.type: Easing.BezierSpline
         easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve
     }

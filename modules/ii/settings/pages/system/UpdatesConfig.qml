@@ -29,7 +29,7 @@ ContentPage {
                 from: 60
                 to: 1440
                 stepSize: 60
-                onValueChanged: {
+                onValueModified: {
                     Config.options.updates.checkInterval = value;
                 }
             }

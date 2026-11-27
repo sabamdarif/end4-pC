@@ -38,9 +38,22 @@ Dialog {
     onClosed: root.clearImage()
     Component.onDestruction: root.clearImage()
 
-    background: Rectangle {
-        radius: Appearance.rounding.large
-        color: Appearance.colors.colLayer1
+    enter: Transition {
+        NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
+    }
+    exit: Transition {
+        NumberAnimation { property: "opacity"; from: 1; to: 0; duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
+    }
+    background: Item {
+        StyledRectangularShadow { target: qrDialogBg }
+        Rectangle {
+            id: qrDialogBg
+            anchors.fill: parent
+            radius: Appearance.rounding.large
+            color: Appearance.colors.colLayer1
+            border.width: 1
+            border.color: Appearance.colors.colLayer0Border
+        }
     }
     Process {
         id: generateProc
@@ -87,7 +100,11 @@ Dialog {
             font.pixelSize: Appearance.font.pixelSize.larger
             wrapMode: Text.Wrap
         }
-        StyledIndeterminateProgressBar { Layout.fillWidth: true; visible: generateProc.running }
+        MaterialLoadingIndicator {
+            Layout.alignment: Qt.AlignHCenter
+            visible: generateProc.running
+            loading: generateProc.running
+        }
         Image {
             Layout.alignment: Qt.AlignHCenter
             Layout.preferredWidth: 260

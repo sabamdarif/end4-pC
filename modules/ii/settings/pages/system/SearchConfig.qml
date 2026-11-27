@@ -185,7 +185,7 @@ ContentPage {
                     from: 1
                     to: 20
                     stepSize: 1
-                    onValueChanged: {
+                    onValueModified: {
                         Config.options.regionSelector.circle.strokeWidth = value;
                     }
                 }
@@ -197,7 +197,7 @@ ContentPage {
                     from: 0
                     to: 100
                     stepSize: 5
-                    onValueChanged: {
+                    onValueModified: {
                         Config.options.regionSelector.circle.padding = value;
                     }
                 }

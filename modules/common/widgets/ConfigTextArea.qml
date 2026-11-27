@@ -77,13 +77,13 @@ RowLayout {
         border.color: textArea.activeFocus ? root.colBorderFocused : root.colBorder
 
         Behavior on color {
-            ColorAnimation { duration: Appearance.animation.elementMoveFast.duration }
+            animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
         }
         Behavior on border.color {
-            ColorAnimation { duration: Appearance.animation.elementMoveFast.duration }
+            animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
         }
         Behavior on border.width {
-            NumberAnimation { duration: Appearance.animation.elementMoveFast.duration }
+            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
         }
 
         HoverHandler {
@@ -112,37 +112,33 @@ RowLayout {
                 hintingPreference: Font.PreferFullHinting
                 variableAxes: Appearance.font.variableAxes.main
             }
+
+            MouseArea {
+                anchors.fill: parent
+                acceptedButtons: Qt.NoButton
+                cursorShape: Qt.IBeamCursor
+            }
         }
     }
 
-    Rectangle {
+    RippleButton {
         id: confirmBtn
         visible: root.confirmButtonVisible
         Layout.preferredWidth: 40
         Layout.preferredHeight: 40
         Layout.alignment: Qt.AlignVCenter
-        radius: Appearance.rounding.small
-        color: confirmMouseArea.pressed
-            ? root.colConfirmBackgroundActive
-            : (confirmMouseArea.containsMouse ? root.colConfirmBackgroundHover : root.colConfirmBackground)
+        buttonRadius: Appearance.rounding.small
+        buttonRadiusPressed: Appearance.rounding.verysmall
+        colBackground: root.colConfirmBackground
+        colBackgroundHover: root.colConfirmBackgroundHover
+        colRipple: root.colConfirmBackgroundActive
+        onClicked: root.confirmClicked()
 
-        Behavior on color {
-            ColorAnimation { duration: Appearance.animation.elementMoveFast.duration }
-        }
-
-        MaterialSymbol {
+        contentItem: MaterialSymbol {
             anchors.centerIn: parent
             text: root.confirmButtonIcon
             iconSize: Appearance.font.pixelSize.large
             color: root.colOnConfirmBackground
-        }
-
-        MouseArea {
-            id: confirmMouseArea
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: root.confirmClicked()
         }
     }
 }

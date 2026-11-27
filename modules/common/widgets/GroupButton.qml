@@ -14,7 +14,7 @@ Button {
     property bool toggled
     property string buttonText
     property real buttonRadius: Appearance?.rounding?.small ?? 8
-    property real buttonRadiusPressed: Appearance?.rounding?.small ?? 6
+    property real buttonRadiusPressed: Appearance?.rounding?.verysmall ?? 6
     property var downAction // When left clicking (down)
     property var releaseAction // When left clicking (release)
     property var altAction // When right clicking
@@ -73,10 +73,10 @@ Button {
     }
 
     Behavior on leftRadius {
-        animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+        animation: Appearance.animation.elementMoveSmall.numberAnimation.createObject(this)
     }
     Behavior on rightRadius {
-        animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+        animation: Appearance.animation.elementMoveSmall.numberAnimation.createObject(this)
     }
 
     property alias mouseArea: buttonMouseArea

@@ -11,7 +11,7 @@ RowLayout {
     spacing: 10
 
     property string icon: "palette"
-    property string text: "Color"
+    property string text: Translation.tr("Color")
     property string currentValue: ""
     property var options: ["primary", "secondary", "tertiary", "primaryContainer", "secondaryContainer", "tertiaryContainer", "layer1", "layer0"]
     property bool showLabel: true
@@ -44,52 +44,58 @@ RowLayout {
 
         Repeater {
             model: root.options
-            delegate: Item {
+            delegate: RippleButton {
                 id: slot
                 required property string modelData
                 readonly property bool isSelected: root.currentValue === modelData
 
                 implicitWidth: 40
                 implicitHeight: 40
+                buttonRadius: Appearance.rounding.full
+                buttonRadiusPressed: Appearance.rounding.small
+                colBackground: "transparent"
+                onClicked: root.selected(slot.modelData)
 
-                Rectangle {
-                    id: ring
-                    anchors.centerIn: parent
-                    width: slot.isSelected ? parent.width : parent.width - 8
-                    height: slot.isSelected ? parent.height : parent.height - 8
-                    radius: slot.isSelected ? Appearance.rounding.normal : width / 2
-                    color: "transparent"
-                    border.width: slot.isSelected ? 2 : 0
-                    border.color: Appearance.colors.colOnLayer0
-
-                    Behavior on radius {
-                        animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
-                    }
-                    Behavior on width {
-                        animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
-                    }
-                    Behavior on height {
-                        animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
-                    }
-                }
-
-                Rectangle {
-                    id: swatch
-                    anchors.centerIn: parent
-                    width: slot.isSelected ? parent.width - 8 : parent.width - 8
-                    height: slot.isSelected ? parent.height - 8 : parent.height - 8
-                    radius: slot.isSelected ? Appearance.rounding.normal - 4 : width / 2 
-                    color: Appearance.colors["col" + slot.modelData.charAt(0).toUpperCase() + slot.modelData.slice(1)]
-
-                    Behavior on radius {
-                        animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
-                    }
-                }
-
-                MouseArea {
+                contentItem: Item {
                     anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.selected(slot.modelData)
+
+                    Rectangle {
+                        id: ring
+                        anchors.centerIn: parent
+                        width: slot.isSelected ? parent.width : parent.width - 8
+                        height: slot.isSelected ? parent.height : parent.height - 8
+                        radius: slot.isSelected ? Appearance.rounding.normal : width / 2
+                        color: "transparent"
+                        border.width: slot.isSelected ? 2 : 0
+                        border.color: Appearance.colors.colOnLayer0
+
+                        Behavior on radius {
+                            animation: Appearance.animation.elementMoveSmall.numberAnimation.createObject(this)
+                        }
+                        Behavior on width {
+                            animation: Appearance.animation.elementMoveSmall.numberAnimation.createObject(this)
+                        }
+                        Behavior on height {
+                            animation: Appearance.animation.elementMoveSmall.numberAnimation.createObject(this)
+                        }
+                    }
+
+                    Rectangle {
+                        id: swatch
+                        anchors.centerIn: parent
+                        width: parent.width - 8
+                        height: parent.height - 8
+                        radius: slot.isSelected ? Appearance.rounding.normal - 4 : width / 2
+                        color: Appearance.colors["col" + slot.modelData.charAt(0).toUpperCase() + slot.modelData.slice(1)]
+
+                        Behavior on radius {
+                            animation: Appearance.animation.elementMoveSmall.numberAnimation.createObject(this)
+                        }
+                    }
+                }
+
+                StyledToolTip {
+                    text: slot.modelData
                 }
             }
         }

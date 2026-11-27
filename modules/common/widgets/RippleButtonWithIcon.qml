@@ -14,13 +14,20 @@ RippleButton {
             visible: text !== ""
             text: buttonWithIconRoot.mainText
             font.pixelSize: Appearance.font.pixelSize.small
-            color: Appearance.colors.colOnSecondaryContainer
+            font.weight: Font.Medium
+            color: buttonWithIconRoot.toggled ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnLayer2
         }
     }
-    implicitHeight: 35
-    horizontalPadding: 10
-    buttonRadius: Appearance.rounding.small
+    implicitHeight: 38
+    horizontalPadding: 14
+    buttonRadius: Appearance.rounding.full
+    buttonRadiusPressed: Appearance.rounding.small
     colBackground: Appearance.colors.colLayer2
+    colBackgroundHover: Appearance.colors.colLayer2Hover
+    colRipple: Appearance.colors.colLayer2Active
+    colBackgroundToggled: Appearance.colors.colSecondaryContainer
+    colBackgroundToggledHover: Appearance.colors.colSecondaryContainerHover
+    colRippleToggled: Appearance.colors.colSecondaryContainerActive
 
     contentItem: RowLayout {
         Item {

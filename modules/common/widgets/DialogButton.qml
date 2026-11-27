@@ -14,6 +14,7 @@ RippleButton {
     implicitHeight: 36
     implicitWidth: buttonTextWidget.implicitWidth + padding * 2
     buttonRadius: Appearance?.rounding.full ?? 9999
+    buttonRadiusPressed: Appearance?.rounding.small ?? 8
 
     property color colEnabled: Appearance?.colors.colPrimary ?? "#65558F"
     property color colDisabled: Appearance?.m3colors.m3outline ?? "#8D8C96"
@@ -30,6 +31,7 @@ RippleButton {
         text: buttonText
         horizontalAlignment: Text.AlignHCenter
         font.pixelSize: Appearance?.font.pixelSize.small ?? 12
+        font.weight: Font.Medium
         color: root.enabled ? root.colEnabled : root.colDisabled
 
         Behavior on color {

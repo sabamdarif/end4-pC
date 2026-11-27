@@ -238,24 +238,19 @@ ShellRoot {
         function checkSearchControls() {
             const search = findNamed(page.item, "shortcutSearchField");
             const reload = findNamed(page.item, "shortcutReloadButton");
-            if (!search || !reload || search.background.height <= 0 || reload.height !== search.background.height || reload.width !== search.background.height)
+            if (!search || !reload || search.height <= 0 || reload.height !== search.height || reload.width !== search.height)
                 console.error("ASSERTION_FAILED", "reload must be square and match search height");
-            if (search && (search.background.filled !== false || !search.background.placeholderHasText))
-                console.error("ASSERTION_FAILED", "search must use the Material outlined field");
-            if (reload && reload.buttonRadius >= reload.height / 2)
-                console.error("ASSERTION_FAILED", "reload must have small corners, not a circular outline");
+            if (search && (!search.background || search.background.radius < search.height / 2))
+                console.error("ASSERTION_FAILED", "search must use the pill ToolbarTextField");
+            if (reload && reload.buttonRadius < reload.height / 2)
+                console.error("ASSERTION_FAILED", "reload must use pill radius matching search");
         }
         function checkFocusedSearchHint() {
             const search = findNamed(page.item, "shortcutSearchField");
             if (!search.activeFocus)
                 console.error("ASSERTION_FAILED", "search must have focus for the hint check");
-            const hint = search.children.find(child => child.text === search.placeholderText);
-            if (!hint || hint.scale >= 1) return false;
-            if (!hint.visible)
-                console.error("ASSERTION_FAILED", "floating search hint must stay visible");
-            if (!search.background.controlHasActiveFocus || search.background.placeholderTextWidth <= 0 ||
-                !hint || Math.abs(search.background.placeholderTextWidth - Math.min(hint.width, hint.implicitWidth) * hint.scale) > 1)
-                console.error("ASSERTION_FAILED", "outline gap must follow the floating label width");
+            if (!search.background || search.background.border.width !== 0)
+                console.error("ASSERTION_FAILED", "pill search field must stay borderless");
             return true;
         }
         function findRow(item) {

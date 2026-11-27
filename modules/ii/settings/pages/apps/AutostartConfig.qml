@@ -137,9 +137,10 @@ ContentPage {
                         }
 
                         RippleButton {
-                            Layout.preferredWidth: 36
-                            Layout.preferredHeight: 36
+                            Layout.preferredWidth: 40
+                            Layout.preferredHeight: 40
                             buttonRadius: width / 2
+                            buttonRadiusPressed: Appearance.rounding.verysmall
                             colBackground: ColorUtils.transparentize(Appearance.colors.colError, 0.85)
                             colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colError, 0.6)
                             colRipple: ColorUtils.transparentize(Appearance.colors.colError, 0.5)
@@ -273,24 +274,22 @@ ContentPage {
                                 font.pixelSize: Appearance.font.pixelSize.smaller
                                 color: Appearance.colors.colSubtext
                                 elide: Text.ElideRight
-                                MouseArea {
-                                    id: niriSourceHoverArea
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    acceptedButtons: Qt.NoButton
-                                    StyledToolTip {
-                                        extraVisibleCondition: false
-                                        alternativeVisibleCondition: niriSourceHoverArea.containsMouse
-                                        text: niriEntryRow.modelData.file
-                                    }
+                                HoverHandler {
+                                    id: niriSourceHoverHandler
+                                }
+                                StyledToolTip {
+                                    extraVisibleCondition: false
+                                    alternativeVisibleCondition: niriSourceHoverHandler.hovered
+                                    text: niriEntryRow.modelData.file
                                 }
                             }
                         }
 
                         RippleButton {
-                            Layout.preferredWidth: 36
-                            Layout.preferredHeight: 36
+                            Layout.preferredWidth: 40
+                            Layout.preferredHeight: 40
                             buttonRadius: width / 2
+                            buttonRadiusPressed: Appearance.rounding.verysmall
                             colBackground: ColorUtils.transparentize(Appearance.colors.colError, 0.85)
                             colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colError, 0.6)
                             colRipple: ColorUtils.transparentize(Appearance.colors.colError, 0.5)
@@ -414,27 +413,24 @@ ContentPage {
                                 font.pixelSize: Appearance.font.pixelSize.smaller
                                 color: Appearance.colors.colSubtext
                             }
-                            MouseArea {
-                                id: xdgSourceHoverArea
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                acceptedButtons: Qt.NoButton
-                                StyledToolTip {
-                                    extraVisibleCondition: false
-                                    alternativeVisibleCondition: xdgSourceHoverArea.containsMouse
-                                    text: xdgEntryRow.modelData.path
-                                }
+                            HoverHandler {
+                                id: xdgSourceHoverHandler
+                            }
+                            StyledToolTip {
+                                extraVisibleCondition: false
+                                alternativeVisibleCondition: xdgSourceHoverHandler.hovered
+                                text: xdgEntryRow.modelData.path
                             }
                         }
 
                         RippleButton {
-                            // A system entry can't be deleted — the switch
-                            // already masks it, a delete button would just
-                            // be the same action with a scarier label
+                            // A system entry can't be deleted because the switch
+                            // already masks it; a delete button would duplicate it
                             visible: !xdgEntryRow.modelData.hasSystem
-                            Layout.preferredWidth: 36
-                            Layout.preferredHeight: 36
+                            Layout.preferredWidth: 40
+                            Layout.preferredHeight: 40
                             buttonRadius: width / 2
+                            buttonRadiusPressed: Appearance.rounding.verysmall
                             colBackground: ColorUtils.transparentize(Appearance.colors.colError, 0.85)
                             colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colError, 0.6)
                             colRipple: ColorUtils.transparentize(Appearance.colors.colError, 0.5)

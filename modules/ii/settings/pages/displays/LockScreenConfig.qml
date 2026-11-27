@@ -45,7 +45,7 @@ ContentPage {
                 value: Config.options.lock.suspendDelaySec
                 from: 5; to: 600; stepSize: 5
                 enabled: Config.options.lock.suspendOnLock
-                onValueChanged: { Config.options.lock.suspendDelaySec = value }
+                onValueModified: { Config.options.lock.suspendDelaySec = value }
             }
             ConfigSwitch {
                 buttonIcon: "widgets"
@@ -111,14 +111,14 @@ ContentPage {
                     text: Translation.tr("Samples")
                     value: Config.options.lock.blur.size
                     from: 20; to: 200; stepSize: 10
-                    onValueChanged: { Config.options.lock.blur.size = value }
+                    onValueModified: { Config.options.lock.blur.size = value }
                 }
                 ConfigSpinBox {
                     icon: "loupe"
                     text: Translation.tr("Extra wallpaper zoom (%)")
                     value: Config.options.lock.blur.extraZoom * 100
                     from: 1; to: 150; stepSize: 2
-                    onValueChanged: { Config.options.lock.blur.extraZoom = value / 100 }
+                    onValueModified: { Config.options.lock.blur.extraZoom = value / 100 }
                 }
             }
         }

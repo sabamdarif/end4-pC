@@ -10,6 +10,7 @@ StyledFlickable {
     property bool forceWidth: false
     property real bottomContentPadding: 90
     property real horizontalPadding: 24
+    property string wipFeature: ""
 
     default property alias data: contentColumn.data
 
@@ -54,6 +55,10 @@ StyledFlickable {
             horizontalCenter: parent.horizontalCenter
         }
         spacing: 24
+    }
+
+    WipOverlay {
+        featureId: root.wipFeature
     }
 
 }

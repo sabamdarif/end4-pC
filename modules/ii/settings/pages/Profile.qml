@@ -107,54 +107,58 @@ ContentPage {
 
                         Repeater {
                             model: avatarFolderModel
-                            delegate: Rectangle {
+                            delegate: RippleButton {
+                                id: avatarOption
                                 required property string fileName
                                 required property string filePath
-                                width: 64
-                                height: 64
-                                radius: width / 2
-                                color: Appearance.colors.colLayer2
+                                readonly property bool isSelected: FileUtils.trimFileProtocol(filePath.toString()) === Config.options.profile.avatarPicture
 
-                                property bool isSelected: FileUtils.trimFileProtocol(filePath.toString()) === Config.options.profile.avatarPicture
+                                implicitWidth: 64
+                                implicitHeight: 64
+                                padding: 0
+                                buttonRadius: width / 2
+                                buttonRadiusPressed: Appearance.rounding.small
+                                colBackground: Appearance.colors.colLayer2
+                                colBackgroundHover: Appearance.colors.colLayer2Hover
+                                colRipple: Appearance.colors.colLayer2Active
+                                onClicked: Config.options.profile.avatarPicture = FileUtils.trimFileProtocol(filePath.toString())
 
-                                Image {
-                                    id: avatarImage
+                                contentItem: Item {
                                     anchors.fill: parent
-                                    source: filePath
-                                    fillMode: Image.PreserveAspectCrop
-                                    sourceSize.width: avatarImage.width * 2
-                                    sourceSize.height: avatarImage.height * 2
-                                    layer.enabled: true
-                                    layer.effect: OpacityMask {
-                                        maskSource: Rectangle {
-                                            width: 64; height: width; radius: width / 2 
+
+                                    Image {
+                                        id: avatarImage
+                                        anchors.fill: parent
+                                        source: avatarOption.filePath
+                                        fillMode: Image.PreserveAspectCrop
+                                        sourceSize.width: avatarImage.width * 2
+                                        sourceSize.height: avatarImage.height * 2
+                                        layer.enabled: true
+                                        layer.effect: OpacityMask {
+                                            maskSource: Rectangle {
+                                                width: 64; height: width; radius: width / 2
+                                            }
                                         }
                                     }
-                                }
 
-                                Rectangle {
-                                    visible: parent.isSelected
-                                    anchors.right: parent.right
-                                    anchors.bottom: parent.bottom
-                                    anchors.rightMargin: 2
-                                    anchors.bottomMargin: 2
-                                    width: 20
-                                    height: width
-                                    radius: width / 2
-                                    color: Appearance.colors.colPrimary
+                                    Rectangle {
+                                        visible: avatarOption.isSelected
+                                        anchors.right: parent.right
+                                        anchors.bottom: parent.bottom
+                                        anchors.rightMargin: 2
+                                        anchors.bottomMargin: 2
+                                        width: 20
+                                        height: width
+                                        radius: width / 2
+                                        color: Appearance.colors.colPrimary
 
-                                    MaterialSymbol {
-                                        anchors.centerIn: parent
-                                        text: "check"
-                                        iconSize: Appearance.font.pixelSize.small
-                                        color: Appearance.colors.colOnPrimary
+                                        MaterialSymbol {
+                                            anchors.centerIn: parent
+                                            text: "check"
+                                            iconSize: Appearance.font.pixelSize.small
+                                            color: Appearance.colors.colOnPrimary
+                                        }
                                     }
-                                }
-
-                                MouseArea {
-                                    anchors.fill: parent
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: Config.options.profile.avatarPicture = FileUtils.trimFileProtocol(filePath.toString())
                                 }
                             }
                         }
@@ -391,41 +395,52 @@ ContentPage {
                                 }
                             }
 
-                            // Delete confirm area — destructive, so it spells
-                            // out the username and what will happen
-                            ColumnLayout {
-                                visible: userRow.confirmingDelete
+                            // Delete confirm area: destructive, so it spells out the username
+                            Revealer {
+                                vertical: true
+                                reveal: userRow.confirmingDelete
                                 Layout.fillWidth: true
-                                Layout.leftMargin: 40
-                                Layout.rightMargin: 8
-                                Layout.bottomMargin: 6
-                                spacing: 4
 
-                                StyledText {
-                                    Layout.fillWidth: true
-                                    wrapMode: Text.Wrap
-                                    color: Appearance.m3colors.m3error
-                                    text: Translation.tr("This permanently deletes the user account \"%1\". This cannot be undone.").arg(userRow.modelData.username)
-                                }
-                                ConfigSwitch {
-                                    id: removeHomeSwitch
-                                    buttonIcon: "folder_delete"
-                                    text: Translation.tr("Also delete the home directory (%1)").arg(userRow.modelData.home)
-                                    checked: false
-                                }
-                                RowLayout {
-                                    Layout.fillWidth: true
-                                    Item { Layout.fillWidth: true }
-                                    DialogButton {
-                                        buttonText: Translation.tr("Cancel")
-                                        onClicked: userRow.confirmingDelete = false
+                                ColumnLayout {
+                                    width: parent.width
+                                    Layout.leftMargin: 40
+                                    Layout.rightMargin: 8
+                                    Layout.bottomMargin: 6
+                                    spacing: 4
+
+                                    StyledText {
+                                        Layout.fillWidth: true
+                                        Layout.leftMargin: 40
+                                        Layout.rightMargin: 8
+                                        wrapMode: Text.Wrap
+                                        color: Appearance.m3colors.m3error
+                                        text: Translation.tr("This permanently deletes the user account \"%1\". This cannot be undone.").arg(userRow.modelData.username)
                                     }
-                                    DialogButton {
-                                        buttonText: Translation.tr("Delete %1").arg(userRow.modelData.username)
-                                        colText: Appearance.m3colors.m3error
-                                        onClicked: {
-                                            userRow.confirmingDelete = false
-                                            Users.deleteUser(userRow.modelData.username, removeHomeSwitch.checked)
+                                    ConfigSwitch {
+                                        id: removeHomeSwitch
+                                        Layout.leftMargin: 40
+                                        Layout.rightMargin: 8
+                                        buttonIcon: "folder_delete"
+                                        text: Translation.tr("Also delete the home directory (%1)").arg(userRow.modelData.home)
+                                        checked: false
+                                    }
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        Layout.leftMargin: 40
+                                        Layout.rightMargin: 8
+                                        Layout.bottomMargin: 6
+                                        Item { Layout.fillWidth: true }
+                                        DialogButton {
+                                            buttonText: Translation.tr("Cancel")
+                                            onClicked: userRow.confirmingDelete = false
+                                        }
+                                        DialogButton {
+                                            buttonText: Translation.tr("Delete %1").arg(userRow.modelData.username)
+                                            colText: Appearance.m3colors.m3error
+                                            onClicked: {
+                                                userRow.confirmingDelete = false
+                                                Users.deleteUser(userRow.modelData.username, removeHomeSwitch.checked)
+                                            }
                                         }
                                     }
                                 }
@@ -489,23 +504,6 @@ ContentPage {
                         text: Translation.tr("Administrator (wheel group)")
                         checked: false
                     }
-                    StyledText {
-                        visible: newUserField.value.trim() !== "" && !Users.isValidUsername(newUserField.value.trim())
-                        Layout.leftMargin: 8
-                        Layout.fillWidth: true
-                        wrapMode: Text.Wrap
-                        color: Appearance.m3colors.m3error
-                        font.pixelSize: Appearance.font.pixelSize.smaller
-                        text: Translation.tr("Invalid username: must start with a lowercase letter or _, followed by lowercase letters, digits, - or _")
-                    }
-                    StyledText {
-                        visible: Users.userExists(newUserField.value.trim())
-                        Layout.leftMargin: 8
-                        Layout.fillWidth: true
-                        color: Appearance.m3colors.m3error
-                        font.pixelSize: Appearance.font.pixelSize.smaller
-                        text: Translation.tr("A user with this name already exists")
-                    }
                     RowLayout {
                         id: createUserRow
                         property bool confirming: false
@@ -544,6 +542,24 @@ ContentPage {
                         Item { Layout.fillWidth: true }
                     }
                 }
+
+                StyledText {
+                    visible: newUserField.value.trim() !== "" && !Users.isValidUsername(newUserField.value.trim())
+                    Layout.leftMargin: 8
+                    Layout.fillWidth: true
+                    wrapMode: Text.Wrap
+                    color: Appearance.m3colors.m3error
+                    font.pixelSize: Appearance.font.pixelSize.smaller
+                    text: Translation.tr("Invalid username: must start with a lowercase letter or _, followed by lowercase letters, digits, - or _")
+                }
+                StyledText {
+                    visible: Users.userExists(newUserField.value.trim())
+                    Layout.leftMargin: 8
+                    Layout.fillWidth: true
+                    color: Appearance.m3colors.m3error
+                    font.pixelSize: Appearance.font.pixelSize.smaller
+                    text: Translation.tr("A user with this name already exists")
+                }
             }
 
             StyledText {
@@ -559,7 +575,7 @@ ContentPage {
             StyledText {
                 Layout.leftMargin: 8
                 Layout.fillWidth: true
-                text: Translation.tr("User changes use pkexec — a system authentication prompt will appear")
+                text: Translation.tr("User changes use pkexec, so a system authentication prompt will appear")
                 font.pixelSize: Appearance.font.pixelSize.smaller
                 color: Appearance.colors.colSubtext
                 wrapMode: Text.Wrap

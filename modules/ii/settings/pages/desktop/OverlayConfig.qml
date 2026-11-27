@@ -61,60 +61,50 @@ ContentPage {
         ContentSubsection {
             title: Translation.tr("Crosshair")
 
-            Rectangle {
-                id: crosshairCard
-                Layout.fillWidth: true
-                implicitHeight: crosshairCol.implicitHeight + 28
-                radius: Appearance.rounding.normal
-                color: Appearance.colors.colLayer1
-
-                ColumnLayout {
-                    id: crosshairCol
-                    anchors { fill: parent; margins: 14 }
-                    spacing: 8
-
-                    ConfigTextArea {
-                        id: crosshairCodeField
-                        Layout.fillWidth: true
-                        buttonIcon: "point_scan"
-                        text: Translation.tr("Crosshair code")
-                        placeholderText: Translation.tr("Crosshair code (in Valorant's format)")
-                        value: Config.options.crosshair.code
-                        onValueChanged: {
-                            crosshairCodeDebounceTimer.restart();
-                        }
-
-                        Timer {
-                            id: crosshairCodeDebounceTimer
-                            interval: 1000
-                            repeat: false
-                            onTriggered: {
-                                Config.options.crosshair.code = crosshairCodeField.value;
-                            }
-                        }
+            GroupedList {
+                ConfigTextArea {
+                    id: crosshairCodeField
+                    Layout.fillWidth: true
+                    buttonIcon: "point_scan"
+                    text: Translation.tr("Crosshair code")
+                    placeholderText: Translation.tr("Crosshair code (in Valorant's format)")
+                    value: Config.options.crosshair.code
+                    onValueChanged: {
+                        crosshairCodeDebounceTimer.restart();
                     }
 
-                    RowLayout {
-                        Layout.fillWidth: true
-                        StyledText {
-                            Layout.leftMargin: 8
-                            Layout.fillWidth: true
-                            text: Translation.tr("Press Super+G to open the overlay and pin the crosshair")
-                            font.pixelSize: Appearance.font.pixelSize.smaller
-                            color: Appearance.colors.colSubtext
-                            wrapMode: Text.Wrap
+                    Timer {
+                        id: crosshairCodeDebounceTimer
+                        interval: 1000
+                        repeat: false
+                        onTriggered: {
+                            Config.options.crosshair.code = crosshairCodeField.value;
                         }
-                        RippleButtonWithIcon {
-                            id: editorButton
-                            Layout.fillWidth: true
-                            Layout.rightMargin: 6
-                            Layout.preferredHeight: 40
-                            buttonRadius: Appearance.rounding.normal
-                            materialIcon: "open_in_new"
-                            mainText: Translation.tr("Open editor")
-                            onClicked: {
-                                Qt.openUrlExternally(`https://www.vcrdb.net/builder?c=${Config.options.crosshair.code}`);
-                            }
+                    }
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    Layout.leftMargin: 8
+                    Layout.rightMargin: 8
+                    spacing: 10
+
+                    StyledText {
+                        Layout.fillWidth: true
+                        text: Translation.tr("Press Super+G to open the overlay and pin the crosshair")
+                        font.pixelSize: Appearance.font.pixelSize.smaller
+                        color: Appearance.colors.colSubtext
+                        wrapMode: Text.Wrap
+                    }
+                    RippleButtonWithIcon {
+                        id: editorButton
+                        Layout.preferredHeight: 40
+                        buttonRadius: Appearance.rounding.normal
+                        buttonRadiusPressed: Appearance.rounding.small
+                        materialIcon: "open_in_new"
+                        mainText: Translation.tr("Open editor")
+                        onClicked: {
+                            Qt.openUrlExternally(`https://www.vcrdb.net/builder?c=${Config.options.crosshair.code}`);
                         }
                     }
                 }

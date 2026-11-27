@@ -74,7 +74,7 @@ Scope {
 
                         MaterialSymbol {
                             text: "settings"
-                            iconSize: 20
+                            iconSize: Appearance.font.pixelSize.larger
                             color: Appearance.colors.colOnLayer1
                         }
 
@@ -91,12 +91,13 @@ Scope {
                             implicitWidth: 32
                             implicitHeight: 32
                             buttonRadius: width / 2
+                            buttonRadiusPressed: Appearance.rounding.verysmall
                             onClicked: settingsWindow.maximized = !settingsWindow.maximized
                             contentItem: MaterialSymbol {
                                 anchors.centerIn: parent
                                 horizontalAlignment: Text.AlignHCenter
                                 text: settingsWindow.maximized ? "collapse_content" : "expand_content"
-                                iconSize: 18
+                                iconSize: Appearance.font.pixelSize.large
                                 color: Appearance.colors.colOnLayer1
                             }
                             StyledToolTip {
@@ -105,17 +106,23 @@ Scope {
                         }
 
                         RippleButton {
+                            id: closeBtn
                             implicitWidth: 32
                             implicitHeight: 32
                             buttonRadius: width / 2
+                            buttonRadiusPressed: Appearance.rounding.verysmall
                             colBackgroundHover: Appearance.m3colors.m3error
+                            colRipple: Appearance.colors.colErrorActive
                             onClicked: settingsWindow.hide()
                             contentItem: MaterialSymbol {
                                 anchors.centerIn: parent
                                 horizontalAlignment: Text.AlignHCenter
                                 text: "close"
-                                iconSize: 18
-                                color: Appearance.colors.colOnLayer1
+                                iconSize: Appearance.font.pixelSize.large
+                                color: closeBtn.hovered ? Appearance.colors.colOnError : Appearance.colors.colOnLayer1
+                                Behavior on color {
+                                    animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                                }
                             }
                             StyledToolTip {
                                 text: Translation.tr("Close")

@@ -96,8 +96,12 @@ Flow {
                     ? Appearance.colors.colOnPrimary
                     : root.shapeColor
                 Behavior on color {
-                    ColorAnimation { duration: 180 }
+                    animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
                 }
+            }
+
+            StyledToolTip {
+                text: shapeButton.modelData
             }
 
             onClicked: root.selected(shapeButton.modelData)

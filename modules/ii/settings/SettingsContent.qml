@@ -7,6 +7,7 @@ import Qt5Compat.GraphicalEffects
 import qs
 import qs.services
 import qs.modules.common
+import qs.modules.common.functions
 import qs.modules.ii.settings
 import qs.modules.common.widgets
 
@@ -232,29 +233,33 @@ Item {
                     spacing: 10
                     expanded: root.railExpanded
 
-                    Item {
+                    RippleButton {
                         id: profileHeader
                         visible: navRail.expanded
                         Layout.fillWidth: true
                         Layout.margins: 5
                         Layout.topMargin: 15
-                        implicitHeight: profileRow.implicitHeight
+                        padding: 6
+                        implicitHeight: profileRow.implicitHeight + 12
+                        buttonRadius: Appearance.rounding.normal
+                        buttonRadiusPressed: Appearance.rounding.small
+                        toggled: root.showingProfile
+                        colBackground: ColorUtils.transparentize(Appearance.colors.colLayer1Hover, 1)
+                        colBackgroundHover: Appearance.colors.colLayer1Hover
+                        colBackgroundToggled: Appearance.colors.colSecondaryContainer
+                        colBackgroundToggledHover: Appearance.colors.colSecondaryContainerHover
+                        colRipple: Appearance.colors.colLayer1Active
+                        colRippleToggled: Appearance.colors.colSecondaryContainerActive
+                        onClicked: root.selectLeaf("users")
 
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root.selectLeaf("users")
-                        }
-
-                        RowLayout {
+                        contentItem: RowLayout {
                             id: profileRow
-                            anchors.fill: parent
                             spacing: 10
 
                             Rectangle {
                                 id: avatarRect
-                                width: 48
-                                height: 48
+                                Layout.preferredWidth: 48
+                                Layout.preferredHeight: 48
                                 radius: width / 2
                                 color: Appearance.colors.colPrimaryContainer
 
@@ -297,8 +302,8 @@ Item {
                                 StyledText {
                                     text: Config.options.profile.displayName === "" ? SystemInfo.username : Config.options.profile.displayName
                                     font.pixelSize: Appearance.font.pixelSize.normal
-                                    color: Appearance.colors.colOnLayer1
-                                    font.weight: Font.Medium
+                                    color: root.showingProfile ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnLayer1
+                                    font.weight: root.showingProfile ? Font.DemiBold : Font.Medium
                                     elide: Text.ElideRight
                                     Layout.maximumWidth: 100
                                 }
@@ -341,18 +346,25 @@ Item {
                         Layout.preferredHeight: settingsSearchField.implicitHeight
                         z: 10
 
-                        MaterialTextField {
+                        ToolbarTextField {
                             id: settingsSearchField
                             anchors { left: parent.left; right: parent.right }
+                            Layout.fillHeight: false
+                            implicitHeight: 44
+                            leadingIcon: "search"
+                            clearable: true
+                            colBackground: Appearance.colors.colLayer2
+                            colBackgroundFocused: Appearance.colors.colLayer3
                             placeholderText: Translation.tr("Search settings")
-                            leftPadding: 36
-                            rightPadding: 12
-                            selectByMouse: true
                             text: root.settingsSearchQuery
                             onTextEdited: {
                                 root.settingsSearchQuery = text
                                 root.settingsSearchIndex = 0
                                 root.updateSettingsSearch()
+                            }
+                            onCleared: {
+                                root.settingsSearchQuery = ""
+                                root.settingsSearchResults = []
                             }
                             onActiveFocusChanged: if (activeFocus) root.updateSettingsSearch()
                             Keys.onPressed: event => {
@@ -372,24 +384,32 @@ Item {
                                     event.accepted = true
                                 }
                             }
-
-                            MaterialSymbol {
-                                anchors { left: parent.left; leftMargin: 11; verticalCenter: parent.verticalCenter }
-                                text: "search"
-                                iconSize: 18
-                                color: Appearance.colors.colSubtext
-                            }
                         }
 
-                        Rectangle {
-                            visible: settingsSearchField.activeFocus && root.settingsSearchQuery.trim() !== ""
+                        Item {
+                            id: searchResultsOverlay
+                            readonly property bool open: settingsSearchField.activeFocus && root.settingsSearchQuery.trim() !== ""
+                            visible: opacity > 0
+                            opacity: open ? 1 : 0
                             anchors { top: settingsSearchField.bottom; left: parent.left; right: parent.right; topMargin: 4 }
                             implicitHeight: Math.min(Math.max(40, root.settingsSearchResults.length * 44) + 8, 300)
-                            color: Appearance.colors.colLayer1Blurred
-                            radius: Appearance.rounding.small
-                            border.width: 1
-                            border.color: Appearance.colors.colLayer0Border
-                            clip: true
+
+                            Behavior on opacity {
+                                animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                            }
+
+                            StyledRectangularShadow {
+                                target: searchResultsPopup
+                            }
+
+                            Rectangle {
+                                id: searchResultsPopup
+                                anchors.fill: parent
+                                color: Appearance.colors.colLayer1Blurred
+                                radius: Appearance.rounding.small
+                                border.width: 1
+                                border.color: Appearance.colors.colLayer0Border
+                                clip: true
 
                             WindowGlass {
                                 anchors.fill: parent
@@ -417,6 +437,8 @@ Item {
                                     required property var modelData
                                     width: ListView.view.width
                                     height: 44
+                                    buttonRadius: Appearance.rounding.small
+                                    buttonRadiusPressed: Appearance.rounding.verysmall
                                     colBackground: index === root.settingsSearchIndex
                                         ? Appearance.colors.colSecondaryContainer
                                         : "transparent"
@@ -427,7 +449,7 @@ Item {
                                         spacing: 8
                                         MaterialSymbol {
                                             text: modelData.icon
-                                            iconSize: 18
+                                            iconSize: Appearance.font.pixelSize.larger
                                             color: Appearance.colors.colOnLayer1
                                         }
                                         ColumnLayout {
@@ -485,6 +507,7 @@ Item {
                                 color: Appearance.colors.colSubtext
                                 font.pixelSize: Appearance.font.pixelSize.small
                             }
+                            }
                         }
                     }
 
@@ -492,6 +515,7 @@ Item {
                         id: configButton
                         implicitHeight: 40
                         buttonRadius: Appearance.rounding.small
+                        buttonRadiusPressed: Appearance.rounding.verysmall
                         Layout.fillWidth: navRail.expanded
                         Layout.alignment: navRail.expanded ? Qt.AlignVCenter : Qt.AlignHCenter
                         Layout.preferredWidth: navRail.expanded ? -1 : 40
@@ -507,15 +531,10 @@ Item {
                             Qt.openUrlExternally(Qt.resolvedUrl(Directories.shellConfigPath));
                         }
 
-                        MouseArea {
-                            anchors.fill: parent
-                            acceptedButtons: Qt.RightButton
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                Quickshell.clipboardText = Directories.shellConfigPath;
-                                configButton.justCopied = true;
-                                revertTextTimer.restart()
-                            }
+                        altAction: () => {
+                            Quickshell.clipboardText = Directories.shellConfigPath;
+                            configButton.justCopied = true;
+                            revertTextTimer.restart();
                         }
 
                         Timer {
@@ -535,7 +554,7 @@ Item {
 
                             MaterialSymbol {
                                 text: configButton.justCopied ? "check" : "edit"
-                                iconSize: 20
+                                iconSize: Appearance.font.pixelSize.larger
                                 color: Appearance.colors.colOnPrimaryContainer
                                 Layout.alignment: Qt.AlignVCenter
                             }
@@ -543,6 +562,7 @@ Item {
                             StyledText {
                                 visible: navRail.expanded
                                 text: configButton.justCopied ? Translation.tr("Path copied") : "config.json"
+                                animateChange: true
                                 font.pixelSize: Appearance.font.pixelSize.small
                                 font.weight: Font.Medium
                                 color: Appearance.colors.colOnPrimaryContainer
@@ -661,7 +681,7 @@ Item {
                             property bool isActive: root.currentLeaf === modelData.key && !root.showingProfile
                             opacity: isActive ? 1 : 0
                             enabled: isActive
-                            visible: isActive
+                            visible: opacity > 0
                             anchors.topMargin: isActive ? 0 : 12
 
                             onLoaded: {
@@ -682,10 +702,10 @@ Item {
                             }
 
                             Behavior on opacity {
-                                NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                                animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
                             }
                             Behavior on anchors.topMargin {
-                                NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                                animation: Appearance.animation.elementMoveEnter.numberAnimation.createObject(this)
                             }
                         }
                     }
@@ -699,7 +719,7 @@ Item {
                         property bool isActive: root.showingProfile
                         opacity: isActive ? 1 : 0
                         enabled: isActive
-                        visible: isActive
+                        visible: opacity > 0
                         anchors.topMargin: isActive ? 0 : 12
 
                         onIsActiveChanged: {
@@ -711,10 +731,10 @@ Item {
                         }
 
                         Behavior on opacity {
-                            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
                         }
                         Behavior on anchors.topMargin {
-                            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                            animation: Appearance.animation.elementMoveEnter.numberAnimation.createObject(this)
                         }
                     }
                 }

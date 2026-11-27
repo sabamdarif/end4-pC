@@ -28,10 +28,7 @@ ContentPage {
         Rectangle {
             Layout.fillWidth: true
             implicitHeight: wrapperCol.implicitHeight + 16
-            topLeftRadius: Appearance.rounding.verylarge
-            topRightRadius: Appearance.rounding.verylarge
-            bottomLeftRadius: Appearance.rounding.normal
-            bottomRightRadius: Appearance.rounding.normal
+            radius: Appearance.rounding.verylarge
             color: Appearance.colors.colLayer1
 
             ColumnLayout {
@@ -66,57 +63,48 @@ ContentPage {
                     Layout.fillWidth: true
                     spacing: 8
 
-                    Rectangle {
+                    RowLayout {
                         Layout.fillWidth: true
                         implicitHeight: 24
-                        radius: Appearance.rounding.normal
-                        color: "transparent"
-
-                        RowLayout {
-                            anchors.centerIn: parent
-                            spacing: 8
-                            MaterialSymbol {
-                                text: "desktop_windows"
-                                iconSize: Appearance.font.pixelSize.larger
-                                color: Appearance.colors.colPrimary
-                            }
-                            StyledText {
-                                text: Translation.tr("Desktop")
-                                font.pixelSize: Appearance.font.pixelSize.normal
-                                font.weight: Font.Medium
-                                color: Appearance.colors.colOnLayer1
-                            }
+                        spacing: 8
+                        Item { Layout.fillWidth: true }
+                        MaterialSymbol {
+                            text: "desktop_windows"
+                            iconSize: Appearance.font.pixelSize.larger
+                            color: Appearance.colors.colPrimary
                         }
+                        StyledText {
+                            text: Translation.tr("Desktop")
+                            font.pixelSize: Appearance.font.pixelSize.normal
+                            font.weight: Font.Medium
+                            color: Appearance.colors.colOnLayer1
+                        }
+                        Item { Layout.fillWidth: true }
                     }
 
-                    Rectangle {
+                    RowLayout {
                         Layout.fillWidth: true
                         implicitHeight: 24
-                        radius: Appearance.rounding.normal
-                        color: "transparent"
-
-                        RowLayout {
-                            anchors.centerIn: parent
-                            spacing: 8
-                            MaterialSymbol {
-                                text: "lock"
-                                iconSize: Appearance.font.pixelSize.larger
-                                color: Appearance.colors.colPrimary
-                            }
-                            StyledText {
-                                text: Translation.tr("Lockscreen")
-                                font.pixelSize: Appearance.font.pixelSize.normal
-                                font.weight: Font.Medium
-                                color: Appearance.colors.colOnLayer1
-                            }
+                        spacing: 8
+                        Item { Layout.fillWidth: true }
+                        MaterialSymbol {
+                            text: "lock"
+                            iconSize: Appearance.font.pixelSize.larger
+                            color: Appearance.colors.colPrimary
                         }
+                        StyledText {
+                            text: Translation.tr("Lockscreen")
+                            font.pixelSize: Appearance.font.pixelSize.normal
+                            font.weight: Font.Medium
+                            color: Appearance.colors.colOnLayer1
+                        }
+                        Item { Layout.fillWidth: true }
                     }
                 }
             }
         }
 
         GroupedList {
-            Layout.topMargin: -2
 
             ConfigSwitch {
                 id: syncWallpaperSwitch
@@ -242,8 +230,8 @@ ContentPage {
                     buttonIcon: "battery_saver"
                     text: Translation.tr("Pause on battery")
                     checked: Config.options.background.liveWallpaper.pauseOnBattery
-                    onClicked: {
-                        Config.options.background.liveWallpaper.pauseOnBattery = !Config.options.background.liveWallpaper.pauseOnBattery;
+                    onCheckedChanged: {
+                        Config.options.background.liveWallpaper.pauseOnBattery = checked;
                     }
                 }
                 ConfigSpinBox {
@@ -254,7 +242,7 @@ ContentPage {
                     from: 0
                     to: 100
                     stepSize: 5
-                    onValueChanged: {
+                    onValueModified: {
                         Config.options.background.liveWallpaper.pauseBelowPercent = value;
                     }
                 }
@@ -271,8 +259,8 @@ ContentPage {
                     buttonIcon: "check"
                     text: Translation.tr("Enable")
                     checked: Config.options.background.centeredWallpaper
-                    onClicked: {
-                        Config.options.background.centeredWallpaper = !Config.options.background.centeredWallpaper;
+                    onCheckedChanged: {
+                        Config.options.background.centeredWallpaper = checked;
                     }
                 }
                 ConfigSwitch {
@@ -363,7 +351,7 @@ ContentPage {
                     from: 1
                     to: 1440
                     stepSize: 5
-                    onValueChanged: {
+                    onValueModified: {
                         if (slideshowSwitch.checked) {
                             const newInterval = value * 60000;
                             page.lastSlideshowInterval = newInterval;
@@ -387,7 +375,7 @@ ContentPage {
                     from: 3
                     to: 10
                     stepSize: 1
-                    onValueChanged: {
+                    onValueModified: {
                         Config.options.wallpaperSelector.columns = value;
                     }
                 }

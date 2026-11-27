@@ -22,6 +22,8 @@ ComboBox {
     background: Rectangle {
         radius: root.buttonRadius
         color: (root.down && !root.popup.visible) ? root.colBackgroundActive : root.hovered ? root.colBackgroundHover : root.colBackground
+        border.width: root.visualFocus ? 2 : 0
+        border.color: Appearance.colors.colPrimary
 
         Behavior on color {
             animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
@@ -43,7 +45,10 @@ ComboBox {
 
         rotation: root.popup.visible ? 180 : 0
         Behavior on rotation {
-            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+            NumberAnimation {
+                duration: Appearance.animation.menuDecel.duration
+                easing.type: Appearance.animation.menuDecel.type
+            }
         }
     }
 
