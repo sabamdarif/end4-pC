@@ -82,6 +82,80 @@ Manually exercise affected UI. Test scripts and command integrations independent
 
 `README.md` is the source of truth for user-visible installation and usage. Update it with behavior changes. Keep contributor-only architecture, invariants, and workflow here.
 
+## Material 3 Expressive UI/UX
+
+Follow Android Material 3 Expressive principles using `Appearance` (`modules/common/Appearance.qml`) and `modules/common/widgets/`. Apply expression selectively by hierarchy:
+
+- **Quiet (default)**: settings forms, dense lists, utility rows, static containers.
+- **Clear**: navigation selection, active tabs, secondary containers, toggle states.
+- **Expressive (sparingly)**: at most 1 primary CTA per action group, key state transitions, media/progress focal points, and hero indicators.
+
+### Core Rules & Anti-Patterns
+
+- **No raw clickable rectangles**: never build buttons or interactive rows out of bare `Rectangle` + `MouseArea`. Use `RippleButton`, `GroupButton`, `DialogListItem`, `ToolbarButton`, or `StateOverlay`/`StateLayer` with `PointingHandCursor`.
+- **No hardcoded tokens**: bind `Appearance.colors.*`, `Appearance.rounding.*`, `Appearance.font.*`, and `Appearance.animation.*`. Never hardcode hex colors, pixel radii, font sizes, or custom easing durations when a token fits.
+- **Tonal elevation first**: express hierarchy with `colLayer0`..`colLayer4` (`m3surfaceContainer*`) before borders or shadows. Reserve `StyledRectangularShadow` for floating layers (`StyledPopup`, `Toolbar`, `FloatingActionButton`, `WindowDialog`).
+- **Compositor blur boundary**: only top-level shell surfaces (`colLayer0Blurred`/`colLayer1Blurred` + `BackgroundEffect.blurRegion`) and `WindowGlass` use translucency. Keep inner cards, settings rows, forms, and dialogs solid tonal surfaces, never ad-hoc frosted glass.
+- **Containment discipline**: avoid nested cards (max 2 containment levels from surface to content). Prefer `GroupedList` or `ContentSection` spacing over wrapping every item in individual boxes, and never stack modals.
+- **Stable geometry**: render borders, focus rings, and selection highlights inside fixed bounds (`outline` / `colPrimary`) so hover, focus, or error states never shift adjacent items.
+
+### Motion Physics (`Appearance.animation` & `Appearance.animationCurves`)
+
+Split motion strictly into **Spatial** (position, size, scale, corner radius, rotation; overshoots) and **Effects** (color, opacity, ripple fade; zero overshoot):
+
+| Role | Token | Curve / Timing | Use For |
+|---|---|---|---|
+| Small spatial | `elementMoveSmall` | `expressiveFastSpatial` `[0.42, 1.67, 0.21, 0.90]`, 350 ms | Switches, small buttons, `ShapeCanvas` morphs, `Carousel` item resize |
+| Default spatial | `elementMove` | `expressiveDefaultSpatial` `[0.38, 1.21, 0.22, 1.00]`, 500 ms | List `add`/`remove`/`displaced`, drawers, sheets, radio dot scale |
+| Slow spatial | `expressiveSlowSpatial` | `[0.39, 1.29, 0.35, 0.98]`, 650 ms | Full-panel or large layout transitions |
+| Click bounce | `clickBounce` | `expressiveDefaultSpatial`, 400 ms (`alwaysRunToEnd`) | `GroupButton` press/release width & scale bounce |
+| Effects | `elementMoveFast` | `expressiveEffects` `[0.34, 0.80, 0.34, 1.00]`, 200 ms | Color, opacity, state layers, wave amplitude toggles (150 ms for micro fades) |
+| Enter / Exit | `elementMoveEnter` / `Exit` | `emphasizedDecel` 400 ms / `emphasizedAccel` 200 ms | Entering/exiting elements, progress value smoothing |
+| Resize / Scroll | `elementResize` / `scroll` | `emphasized` 300 ms / `standardDecel` 200 ms | Container resizing, smooth wheel scrolling |
+| Utilitarian | `menuDecel` | `Easing.OutExpo`, 350 ms | Dropdown/split-chevron `180` deg rotation, dense utility transitions (no bounce) |
+
+- All animations must be interruptible (`Behavior` or state-driven) and converge to the current state.
+- Never run perpetual idle animations (only active loading/playback waves), never hover-lift cards, and never move a hit target away from the pointer on hover.
+
+### Click, Press, Hover & Focus Feedback
+
+- **Required states**: cover `default`, `hovered` (`0.08` state layer), `focused` (`0.10`), `pressed` (`0.10`), `dragged` (`0.16`), `selected`/`toggled`, `disabled` (`opacity: 0.4` or `colLayer2Disabled`/`colOnLayer2Disabled`), `loading`, and `error` (`colError*`).
+- **Press morph & ripple**: standard buttons (`RippleButton`) show radial press ripple + `colLayer*Hover`/`Active` color transitions (`elementMoveFast`) and can tighten `buttonRadiusPressed < buttonRadius`.
+- **Hover & focus**: hover is supplementary only; never hide essential actions behind hover. Keyboard-focusable controls must show a distinct focus border/ring in all themes (`colOutline` / `colPrimary`, `>= 3:1` contrast).
+
+### Shapes & Corner Morphing (`Appearance.rounding` & `shapes/`)
+
+- **Radius scale**: `unsharpen` (2), `unsharpenmore` (6), `verysmall` (8), `small` (12), `normal` (17), `large` (23), `verylarge` (30), `full` (9999). Match role-mates; do not make every element a capsule.
+- **Optical concentricity**: nested items use `innerRadius = Math.max(Appearance.rounding.unsharpen, outerRadius - padding)`.
+- **State morphing**: pill/round buttons (`full`) morph toward `small`/`verysmall` while pressed; toggle buttons swap between `full` (round) and `small`/`normal` (square) on selection.
+- **Connected button groups**: `2` px spacing, outer ends `full` (or container radius), shared inner corners `unsharpen`..`unsharpenmore`, morphing only the active/pressed item to `full` without pushing neighbors.
+- **35-shape library (`MaterialShape` / `ShapeCanvas`)**: use polygons/cookies/clovers for section badges (`MaterialShapeWrappedMaterialSymbol`), avatars, cover masks, and `MaterialLoadingIndicator`. Never crop readable text inside novelty shapes.
+
+### Colors & Typography (`Appearance.colors` & `Appearance.font`)
+
+- **Color hierarchy**: `colPrimary`/`colOnPrimary` for primary emphasis (max 1 filled CTA per group); `colSecondaryContainer`/`colOnSecondaryContainer` for active pills, tabs, and toggles; `colTertiaryContainer` for paired accent actions (`ToolbarPairedFab`); `colError*` strictly for errors/destructive states. Maintain `>= 4.5:1` text contrast and `>= 3:1` UI/icon/track contrast (`colOutline` for interactive bounds, `colOutlineVariant` only for subtle dividers).
+- **Fonts & variable axes**: use `StyledText` with `Appearance.font.pixelSize.*` (`smallest` 10 .. `hugeass` 23) and `Appearance.font.family.*` (`main`/`title`/`numbers`: `"Google Sans Flex"`, `iconMaterial`: `"Material Symbols Rounded"`, `monospace`/`iconNerd`: `"JetBrains Mono NF"`, `reading`: `"Readex Pro"`, `expressive`: `"Space Grotesk"`).
+- **Dynamic weight/width & numerals**: apply `Appearance.font.variableAxes` (`main` `wght: 450, wdth: 100`; `title` `wght: 550`), bump `wght` on active/emphasized headers, badges, or unread counts, and use tabular figures (`font.features: { "tnum": 1 }` / `numbers` family) on clocks, timers, and updating counters to stop jitter. Use `StyledText.animateChange: true` for dynamic status swaps. Never clip wrapped or scaled text in fixed-height boxes.
+
+### Component Implementation Rules
+
+| Element | Canonical Widget(s) | Required M3 Expressive Behavior |
+|---|---|---|
+| **Buttons / Icon Buttons** | `RippleButton`, `ToolbarButton`, `IconToolbarButton`, `DialogButton` | `PointingHandCursor`, ripple + hover/active color mix, `buttonRadiusPressed` morph on press, `StyledToolTip` for icon-only controls, `fill` `0 -> 1` (outlined -> filled icon) when toggled. Keep touch/click target `>= 40..48` px where layout allows. |
+| **Standard Button Groups** | `ButtonGroup`, `VerticalButtonGroup` + `GroupButton` | `clickBounce` width/height spring + `buttonRadiusPressed` morph on press; adjacent siblings expand/compress cleanly (`clickIndex` neighbor push). Avoid text-only/borderless buttons inside groups. |
+| **Connected / Segmented Groups** | `ConfigSelectionArray`, `SelectionGroupButton` | `2` px inner gap, outer corners `full`, inner corners `unsharpenmore`, active item morphs to `full` + `colSecondaryContainer` (or `colPrimary`) without shifting neighbors. |
+| **FAB & Split Actions** | `FloatingActionButton` (56 px, `16` px radius, `colPrimaryContainer`), `ToolbarPairedFab` (48 px, `colTertiaryContainer`) | Max 1 FAB per view for primary creation/action (never destructive/minor). Split button pairs use `2` px gap, `4..8` px inner corners that morph on press, and `180` deg chevron rotation via standard easing (`menuDecel`/`elementMoveFast`). Avoid legacy `Fab.qml`. |
+| **Switches & Radios** | `StyledSwitch` (`ConfigSwitch`), `StyledRadioButton` | Switches act immediately (never add a Save button): ON uses `colPrimary` track + `colOnPrimary` thumb with `check` icon; OFF uses `m3surfaceContainerHighest` track + `2` px `colOutline` border + `colOutline` thumb with `close` icon; thumb stretches on press and slides with `expressiveFastSpatial`. Radios animate inner dot scale with `elementMove` and show hover/focus halo. |
+| **Sliders** | `StyledSlider` (`ConfigSlider`) | Use `Configuration` (`S` default in settings, `Wavy`, `XS`..`XL`), full pill outer track ends (`trackWidth / 2`) + `unsharpen` (`2` px) inner corners with clear gaps on both sides of the tall `4` px vertical handle (narrows and grows slightly on press), `stopIndicatorValues` dots for discrete/end contrast, `StyledToolTip` value bubble on drag, and `WavyLine` active track for media/expressive sliders. |
+| **Progress & Loading** | `MaterialLoadingIndicator`, `ConnectingWave`, `StyledProgressBar`, `CircularProgress`, `WaterWaveProgress`, `ClippedProgressBar` | Wait `< 200 ms`: no indicator. Wait `200 ms..5 s` or indeterminate refresh: `MaterialLoadingIndicator` (7 morphing shapes; contained `colPrimaryContainer` over media/content) or `ConnectingWave`. Determinate / `> 5 s`: `StyledProgressBar` (`wavy: true` for media, flat `4` px for compact slots, `valueBarGap`, end stop dot) or `CircularProgress`/`WaterWaveProgress` (wavy when active, smooth flat ring when paused). Never block whole screens for local ops. |
+| **Toolbars & Tabs** | `Toolbar`, `ToolbarTabBar`, `IconAndTextToolbarButton` | Pill container (`56` px height, `colLayer1Blurred`, `StyledRectangularShadow`), staggered stretch-and-settle `colSecondaryContainer` tab pill indicator, rounded icons inside rounded toolbars (no square icon buttons inside floating pill toolbars). Never show bottom toolbar alongside a bottom dock/nav bar on the same edge. |
+| **Lists, Cards & Settings** | `ContentPage`, `ContentSection`, `GroupedList`, `StyledListView`, `StyledFlickable`, `DialogListItem` | Settings use `ContentPage` + `ContentSection` + `GroupedList` (`colLayer1` cards, `normal` outer / `unsharpenmore` inner radii, `2` px gap) + `Config*` controls. Dynamic lists use `StyledListView` (`elementMove` transitions, `scroll` wheel behavior) and `DialogListItem` / `RippleButton` rows. Never leave hidden items as blank `GroupedList` slots. |
+| **Dialogs, Sheets & Popups** | `DialogSheet`, `WindowDialog`, `StyledPopup`, `StyledComboBox`, `StyledComboBoxSearch` | Sidebar sheets use `DialogSheet` (`600` px max height, `busy` bar, `DialogButton` footer). Anchored bar popups use `StyledPopup` (`dismissOnOutsideClick`, `BackgroundEffect.blurRegion`, `WindowGlass`). Dropdowns use `StyledComboBox*` (pill trigger, rotating chevron, `StyledListView`). |
+| **Text Fields & SpinBoxes** | `MaterialTextField`, `MaterialTextArea`, `ToolbarTextField`, `StyledSpinBox` (`ConfigSpinBox`) | Keep persistent labels/placeholders and `IBeamCursor`; highlight errors with `colError` without clearing user text; save SpinBox changes via `valueModified` only. |
+| **Carousels & Edge-Hugging UI** | `Carousel`, `AndroidClock`, circular gauges | `Carousel` resizes items via `elementMoveSmall` on focus/hover. Circular/pill edge widgets maintain concentric spacing (`innerRadius = outerRadius - padding`) without clipping at high font scales. |
+
+Do not introduce new dependencies on legacy widget duplicates (`SettingsPage`, `SettingsSection`, `Setting*Row`, `Fab`, `FlowButtonGroup`, `StyledPopupMenu`, `ListRow`); migrate touched UI to the canonical widgets above.
+
 ## Architecture
 
 ```text
