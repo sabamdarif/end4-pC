@@ -165,6 +165,7 @@ shell.qml -> panelFamilies/ -> modules/ii/ -> modules/common/ and services/ -> s
 - `shell.qml`: initializes services and loads the selected panel family.
 - `panelFamilies/IllogicalImpulseFamily.qml`: registers top-level panels through `PanelLoader`.
 - `modules/ii/`: feature UI, including the bar, settings, launchers, sidebars, lock screen, wallpaper picker, and toggles.
+- Desktop widgets live under `modules/ii/background/`. The separate gaming/tool overlay and its IPC target are removed; keep the shared widget canvas for desktop widgets.
 - `modules/common/`: shared configuration, functions, models, utilities, and widgets.
 - `services/`: singleton state and system integrations.
 - `scripts/`: Python and shell helpers for integrations unsuitable for QML.

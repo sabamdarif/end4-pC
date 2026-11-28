@@ -94,6 +94,7 @@ Only pull when the working tree is clean and there are no unpushed local commits
 ### Usage and migration notes
 
 - **Fresh setups:** The shell starts directly without a welcome screen. Customize it through Settings using the keybind above.
+- **Widget overlay:** The gaming/tool overlay and its settings page have been removed. Old `overlay toggle` shortcuts no longer work. Desktop widgets, the side-panel volume mixer, and saved notes are unchanged.
 - **Settings:** Below 900 px, the navigation rail collapses after selecting a page. Click a group icon to reopen it. Keyboard selection scrolls search results into view, and searchable dropdowns select the highlighted filtered item.
 - **Keyboard shortcuts:** **Input → Shortcuts** uses dux-shell's grouped shortcut layout, category filters, shortcut-aware search and popup editor. Add shell actions, compositor actions, application commands or shell commands, and use **New key** to add another key for an action. Edits preserve niri bind options and are validated before saving to `~/.config/niri/qssettings/binds.kdl`. Your own config files stay untouched. Removing or resetting an override restores any original shortcut; changing its key does not remove an original config bind. If setup is missing, **Copy includes** provides the lines to add at the end of `config.kdl`.
 - **Colors and Theme:** The wallpaper preview and compact scheme selector stack on narrow windows. Light and dark mode labels stay inside their buttons.
@@ -296,7 +297,6 @@ Only the core list is needed for the shell to start and work. Feature-gated pack
 | File pickers | `kdialog` or `yad` | kdialog, yad |
 | File search | `fd` | fd |
 | GPU detection (System info) | `glxinfo`, `lspci` | mesa-utils, pciutils |
-| FPS limiter overlay | `mangohud` | mangohud |
 | Fingerprint availability | `fprintd-list` | fprintd |
 | Keyboard layout test | `wtype` | wtype |
 | Update checks | `checkupdates`, `paru` or `yay`, `flatpak` | pacman-contrib, paru or yay, flatpak |

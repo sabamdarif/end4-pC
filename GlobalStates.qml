@@ -16,13 +16,11 @@ Singleton {
     }
     property bool barOpen: true
     property bool clipboardOpen: false
-    property bool crosshairOpen: false
     property bool sidebarRightOpen: false
     property bool mediaControlsOpen: false
     property bool osdBrightnessOpen: false
     property bool settingsOpen: false
     property bool osdVolumeOpen: false
-    property bool overlayOpen: false
     property bool overviewOpen: false
     property bool regionSelectorOpen: false
     property bool screenLocked: false
