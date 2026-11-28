@@ -7,6 +7,7 @@ import qs.modules.common.functions
 import qs.modules.common.widgets
 import qs.modules.common.widgets.widgetCanvas
 import qs.modules.ii.background.widgets
+import "."
 
 AbstractBackgroundWidget {
     id: root
@@ -16,28 +17,15 @@ AbstractBackgroundWidget {
     implicitHeight: contentColumn.implicitHeight
     implicitWidth: contentColumn.implicitWidth
 
-    readonly property string clockStyle: GlobalStates.screenLocked ? Config.options.background.widgets.clock.styleLocked : Config.options.background.widgets.clock.style
-    readonly property bool forceCenter: GlobalStates.screenLocked
-    readonly property bool shouldShow: (!Config.options.background.widgets.clock.showOnlyWhenLocked || GlobalStates.screenLocked)
-    readonly property string customClockColorKey: Config.options.background.widgets.clock.color ?? ""
-    readonly property color resolvedClockColor: {
-        if (customClockColorKey === "") return root.colText;
-        const propName = "col" + customClockColorKey.charAt(0).toUpperCase() + customClockColorKey.slice(1);
-        return Appearance.colors[propName] ?? root.colText;
-    }
+    readonly property string clockStyle: Config.options.background.widgets.clock.style
+    // No placement strategy: drag on the desktop, centered on the lock screen.
+    placementStrategy: "free"
     property bool wallpaperSafetyTriggered: false
     needsColText: clockStyle === "digital"
-    x: forceCenter ? ((root.screenWidth - root.width) / 2) : targetX
-    y: forceCenter ? ((root.screenHeight - root.height) / 2) : targetY
-    visibleWhenLocked: true
-
-    function restoreXYBinding() {
-        root.x = Qt.binding(() => root.forceCenter ? ((root.screenWidth - root.width) / 2) : root.targetX);
-        root.y = Qt.binding(() => root.forceCenter ? ((root.screenHeight - root.height) / 2) : root.targetY);
-    }
+    visibleWhenLocked: false
 
     property var textHorizontalAlignment: {
-        if (!Config.options.background.widgets.clock.digital.adaptiveAlignment || root.forceCenter || Config.options.background.widgets.clock.digital.vertical) 
+        if (!Config.options.background.widgets.clock.digital.adaptiveAlignment || Config.options.background.widgets.clock.digital.vertical)
             return Text.AlignHCenter;
         if (root.x < root.scaledScreenWidth / 3)
             return Text.AlignLeft;
@@ -51,40 +39,10 @@ AbstractBackgroundWidget {
         anchors.centerIn: parent
         spacing: 10
 
-        FadeLoader {
-            id: cookieClockLoader
+        ClockContent {
             anchors.horizontalCenter: parent.horizontalCenter
-            shown: root.clockStyle === "cookie" && (root.shouldShow)
-            fade: false
-            sourceComponent: CookieClock {
-                anchors.horizontalCenter: parent.horizontalCenter
-            }
-        }
-
-        FadeLoader {
-            id: digitalClockLoader
-            anchors.horizontalCenter: parent.horizontalCenter
-            shown: root.clockStyle === "digital" && (root.shouldShow)
-            fade: false
-            sourceComponent: DigitalClock {
-                colText: root.resolvedClockColor
-                textHorizontalAlignment: root.textHorizontalAlignment
-            }
-        }
-
-        FadeLoader {
-            id: pixelClockLoader
-            anchors.horizontalCenter: parent.horizontalCenter
-            shown: root.clockStyle === "pixel" && (root.shouldShow)
-            fade: false
-            sourceComponent: PixelClock {}
-        }
-
-        FadeLoader {
-            id: quoteLoader
-            anchors.horizontalCenter: parent.horizontalCenter
-            shown: Config.options.background.widgets.clock.quote.enable && root.clockStyle === "pixel" && Config.options.background.widgets.clock.quote.text !== "" && root.shouldShow
-            sourceComponent: CookieQuote {}
+            colText: root.colText
+            textHorizontalAlignment: root.textHorizontalAlignment
         }
 
         StatusRow {

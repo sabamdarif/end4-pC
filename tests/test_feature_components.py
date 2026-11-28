@@ -74,11 +74,22 @@ Singleton {
                 fixture_path = f"{name}Fixture.qml"
                 (root / fixture_path).write_text(popup)
                 paths = [fixture_path if path == source_path else path for path in paths]
+            lock_surface = "modules/ii/lock/LockSurface.qml"
+            if lock_surface in paths:
+                # Offscreen Qt cannot create the tray's layer popup; keep the lock UI intact.
+                source = (REPOSITORY / lock_surface).read_text().replace("Bar.SysTray {", '''Item {
+            property bool showSeparator
+            property bool showOverflowMenu
+            property var pinnedItems
+''', 1)
+                (root / "LockSurface.qml").write_text("import qs.modules.ii.lock\n" + source)
+                paths = ["LockSurface.qml" if path == lock_surface else path for path in paths]
             loaders = "\n".join('Loader { id: loader' + str(index) + '; '
                 + ('width: item ? item.implicitWidth : 0; height: item ? item.implicitHeight : 0;' if path.endswith("ScreenTimeWidget.qml") else 'anchors.fill: parent;')
                 + ' Component.onCompleted: setSource("' + path + '", '
                 + ('{screenWidth: 1920, screenHeight: 1080, scaledScreenWidth: 1920, scaledScreenHeight: 1080, wallpaperScale: 1, x: 0, y: 0}'
-                   if path.endswith("ScreenTimeWidget.qml") else '{partition: {device: "/dev/ui-test", label: "USMAN", size: 42948624384, filesystem: "exfat", mountPoint: "", total: null}}'
+                   if path.endswith(("ScreenTimeWidget.qml", "ClockWidget.qml")) else '{context: fixtureContext}'
+                   if path.endswith("LockSurface.qml") else '{partition: {device: "/dev/ui-test", label: "USMAN", size: 42948624384, filesystem: "exfat", mountPoint: "", total: null}}'
                    if path.endswith("DrivePartitionRow.qml") else '{}')
                 + '); onLoaded: { console.log("LOADED", source); '
                 + ('item.show = true;' if path.endswith("Dialog.qml") and "sidebarRight" in path else '') + '} }' for index, path in enumerate(paths))
@@ -89,6 +100,10 @@ import Quickshell
 import qs.modules.ii.sidebarRight.drives
 import qs.modules.ii.sidebarRight.screentime
 import qs.modules.ii.background.widgets
+import qs.modules.ii.background.widgets.clock
+import qs.modules.ii.bar
+import qs.modules.ii.lock
+import qs.modules.common.panels.lock
 import qs.services
 import qs.modules.common
 import qs
@@ -98,7 +113,7 @@ ShellRoot {
         visible: true
         width: 980
         height: 800
-''' + loaders + interaction + '''
+''' + ('LockContext { id: fixtureContext }\n' if any(path.endswith("LockSurface.qml") for path in paths) else '') + loaders + interaction + '''
     }
     Timer { interval: 1200; running: true; onTriggered: Qt.quit() }
 }
@@ -121,6 +136,143 @@ ShellRoot {
         self.load_components(["modules/ii/settings/pages/network/WifiQrDialog.qml",
                               "modules/ii/settings/pages/network/WifiConfig.qml",
                               "modules/ii/settings/pages/network/WifiProfileEditor.qml"])
+
+    def test_lock_clock_reuses_desktop_styles_and_shared_settings(self):
+        self.load_components(["modules/ii/lock/LockSurface.qml",
+                              "modules/ii/background/widgets/clock/ClockWidget.qml"], '''
+        property int step: 0
+        function check(condition, message) { if (!condition) console.error("ASSERTION_FAILED", message); }
+        function clockContent(node) {
+            if ("resolvedClockColor" in node) return node;
+            for (const child of node.children || []) {
+                const found = fixtureWindow.clockContent(child);
+                if (found) return found;
+            }
+            return null;
+        }
+        Timer {
+            interval: 180; running: true; repeat: true
+            onTriggered: {
+                const entry = Config.options.background.widgets.clock;
+                const lock = fixtureWindow.clockContent(loader0.item);
+                const desktop = fixtureWindow.clockContent(loader1.item);
+                if (fixtureWindow.step === 0) {
+                    fixtureWindow.check(!!lock && !!desktop, "both surfaces load shared clock visuals");
+                    entry.style = "pixel";
+                    entry.styleLocked = "pixel";
+                    entry.pixel.orientation = "horizontal";
+                } else if (fixtureWindow.step === 1) {
+                    fixtureWindow.check(lock.clockStyle === "pixel" && desktop.clockStyle === "pixel", "pixel style is shared");
+                    fixtureWindow.check(lock.children[2].item.glyphTopLeft === DateTime.digitH0, "lock uses the actual pixel clock");
+                    fixtureWindow.check(lock.children[2].item.implicitWidth === 420, "lock respects horizontal pixel orientation");
+                    fixtureWindow.check(lock.implicitWidth === desktop.implicitWidth && lock.implicitHeight === desktop.implicitHeight,
+                        "matching styles have matching dimensions");
+                    entry.styleLocked = "digital";
+                    entry.digital.vertical = true;
+                    entry.digital.font.size = 120;
+                    entry.color = "tertiary";
+                } else if (fixtureWindow.step === 2) {
+                    fixtureWindow.check(lock.clockStyle === "digital" && desktop.clockStyle === "pixel", "locked style is independent");
+                    const digital = lock.children[1].item;
+                    fixtureWindow.check(digital.isVertical && digital.children[0].font.pixelSize === 120, "lock respects digital layout and font");
+                    fixtureWindow.check(digital.colText === Appearance.colors.colTertiary, "lock resolves the configured color token");
+                    entry.styleLocked = "cookie";
+                    entry.cookie.sides = 10;
+                } else {
+                    fixtureWindow.check(lock.clockStyle === "cookie" && !!lock.children[0].item, "lock loads the actual cookie clock");
+                    fixtureWindow.check(desktop.clockStyle === "pixel", "locked style changes do not change the desktop");
+                    fixtureWindow.check(!("draggable" in lock), "lock visuals cannot drag or save desktop placement");
+                    stop();
+                }
+                fixtureWindow.step++;
+            }
+        }
+''')
+
+    def test_lock_clock_visibility_and_bounds(self):
+        self.load_components(["modules/ii/lock/LockSurface.qml",
+                              "modules/ii/background/widgets/clock/ClockWidget.qml"], '''
+        property int step: 0
+        function check(condition, message) { if (!condition) console.error("ASSERTION_FAILED", message); }
+        function clockContent(node) {
+            if ("resolvedClockColor" in node) return node;
+            for (const child of node.children || []) {
+                const found = fixtureWindow.clockContent(child);
+                if (found) return found;
+            }
+            return null;
+        }
+        Timer {
+            interval: 150; running: true; repeat: true
+            onTriggered: {
+                const entry = Config.options.background.widgets.clock;
+                const lock = fixtureWindow.clockContent(loader0.item);
+                const desktop = fixtureWindow.clockContent(loader1.item);
+                if (fixtureWindow.step === 0) {
+                    fixtureWindow.check(!!lock, "lock clock is enabled by default");
+                    fixtureWindow.check(loader1.item.placementStrategy === "free", "desktop clock is placed by dragging");
+                    entry.disableOnLock = true;
+                } else if (fixtureWindow.step === 1) {
+                    fixtureWindow.check(!lock, "disableOnLock unloads the lock clock");
+                    fixtureWindow.check(!!desktop && entry.enable, "disabling the lock clock leaves the desktop enabled");
+                    entry.disableOnLock = false;
+                    entry.styleLocked = "digital";
+                    entry.digital.font.size = 700;
+                    entry.digital.vertical = true;
+                    loader0.item.width = 480;
+                    loader0.item.height = 480;
+                } else if (fixtureWindow.step === 2) {
+                    fixtureWindow.check(!!lock, "turning the switch off restores the clock");
+                    const clockLoader = lock.parent;
+                    const area = clockLoader.parent;
+                    fixtureWindow.check(clockLoader.width * clockLoader.scale <= area.width + 1, "large clock fits horizontally");
+                    fixtureWindow.check(clockLoader.height * clockLoader.scale <= area.height + 1, "large clock stays above the unlock controls");
+                    fixtureWindow.check(entry.x === 60 && entry.y === 144, "lock layout leaves saved desktop placement unchanged");
+                    entry.enable = false;
+                } else if (fixtureWindow.step === 3) {
+                    fixtureWindow.check(!lock, "global clock disable also unloads the lock clock");
+                    entry.enable = true;
+                } else {
+                    fixtureWindow.check(!!lock, "global clock enable restores the lock clock");
+                    stop();
+                }
+                fixtureWindow.step++;
+            }
+        }
+''')
+
+    def test_clock_settings_include_locked_styles_and_lock_disable(self):
+        self.load_components(["modules/ii/settings/pages/desktop/ClockConfig.qml"], '''
+        function check(condition, message) { if (!condition) console.error("ASSERTION_FAILED", message); }
+        function descendants(node, found, visited) {
+            if (visited.has(node)) return;
+            visited.add(node);
+            found.push(node);
+            for (const child of [...(node.children || []), ...(node.data || [])]) descendants(child, found, visited);
+        }
+        Timer {
+            interval: 700; running: true
+            onTriggered: {
+                const entry = Config.options.background.widgets.clock;
+                entry.style = "digital";
+                entry.styleLocked = "pixel";
+                const nodes = [];
+                fixtureWindow.descendants(loader0.item, nodes, new Set());
+                const section = nodes.find(node => "stylePresent" in node);
+                const toggle = nodes.find(node => "checkable" in node && node.text === "Disable for lock screen");
+                const lockedStyle = nodes.find(node => "options" in node && node.text === "Clock style (locked)");
+                const orientation = nodes.find(node => "options" in node && node.text === "Pixel clock orientation");
+                fixtureWindow.check(!!toggle && !toggle.checked, "lock disable switch defaults off");
+                fixtureWindow.check(section.pixelPresent && orientation.visible, "pixel settings appear for a locked-only pixel style");
+                toggle.click();
+                fixtureWindow.check(entry.disableOnLock && entry.enable, "switch saves only the lock disable preference");
+                fixtureWindow.check(!lockedStyle.enabled && !section.pixelPresent, "disabled lock-only style is not treated as active");
+                fixtureWindow.check(section.digitalPresent, "desktop style settings remain available");
+                entry.disableOnLock = false;
+                fixtureWindow.check(!toggle.checked && lockedStyle.enabled && section.pixelPresent, "external changes preserve control bindings");
+            }
+        }
+''')
 
     def test_desktop_text_custom_fonts_and_manual_colors(self):
         self.load_components(["modules/ii/settings/pages/desktop/WidgetsConfig.qml"], '''

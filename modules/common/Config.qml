@@ -179,13 +179,12 @@ Singleton {
                     }
                     property JsonObject clock: JsonObject {
                         property bool enable: true
-                        property bool showOnlyWhenLocked: false
-                        property string placementStrategy: "free" // "free", "leastBusy", "mostBusy"
+                        property bool disableOnLock: false
                         property real x: 60
                         property real y: 144
-                        property string style: "cookie"        // Options: "cookie", "digital"
+                        property string style: "cookie"        // "cookie", "digital", "pixel"
                         property string color: ""
-                        property string styleLocked: "pixel"   // Options: "cookie", "digital"
+                        property string styleLocked: "pixel"   // "cookie", "digital", "pixel"
                         property JsonObject cookie: JsonObject {
                             property int sides: 14
                             property string dialNumberStyle: "numbers" // Options: "dots" , "numbers", "full" , "none"

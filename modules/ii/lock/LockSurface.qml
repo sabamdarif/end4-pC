@@ -10,9 +10,11 @@ import qs.modules.common.widgets
 import qs.modules.common.functions
 import qs.modules.common.panels.lock
 import qs.modules.ii.bar as Bar
+import qs.modules.ii.background.widgets.clock
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.SystemTray
+import "."
 
 MouseArea {
     id: root
@@ -196,40 +198,31 @@ MouseArea {
     //     }
     // }
 
-    // Clock and date centered at the top
-    Column {
+    Item {
+        id: lockClockArea
         anchors {
-            horizontalCenter: parent.horizontalCenter
+            left: parent.left
+            right: parent.right
             top: parent.top
+            bottom: lockscreenMediaController.active ? lockscreenMediaController.top : mainIsland.top
+            leftMargin: 24
+            rightMargin: 24
             topMargin: Math.max(36, parent.height * 0.08)
-        }
-        spacing: -14
-        opacity: root.toolbarOpacity
-        scale: root.toolbarScale
-
-        StyledText {
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: DateTime.time.split(":")[0].padStart(2, "0")
-            color: Appearance.colors.colPrimary
-            font.pixelSize: Math.min(130, Math.max(72, root.height * 0.13))
-            font.weight: Font.Light
+            bottomMargin: 24
         }
 
-        StyledText {
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: (DateTime.time.split(":")[1] ?? "00").split(" ")[0].padStart(2, "0")
-            color: Appearance.colors.colPrimary
-            font.pixelSize: Math.min(130, Math.max(72, root.height * 0.13))
-            font.weight: Font.Light
-        }
+        Loader {
+            id: lockClockLoader
+            anchors.centerIn: parent
+            active: Config.options.background.widgets.clock.enable
+                && !Config.options.background.widgets.clock.disableOnLock
+            opacity: root.toolbarOpacity
+            scale: Math.max(0, Math.min(1, parent.width / Math.max(1, width), parent.height / Math.max(1, height))) * root.toolbarScale
 
-        StyledText {
-            anchors.horizontalCenter: parent.horizontalCenter
-            topPadding: 20
-            text: DateTime.longDate
-            color: Appearance.colors.colPrimary
-            font.pixelSize: Appearance.font.pixelSize.normal
-            font.weight: Font.Medium
+            sourceComponent: ClockContent {
+                clockStyle: Config.options.background.widgets.clock.styleLocked
+                colText: Config.options.lock.blur.enable ? Appearance.colors.colOnLayer0 : Appearance.colors.colPrimary
+            }
         }
     }
 

@@ -90,8 +90,8 @@ WidgetCanvas {
     }
     FadeLoader {
         shown: Config.options.background.widgets.clock.enable
-            && (GlobalStates.screenLocked
-                || Config.options.background.screenList.length === 0
+            && !GlobalStates.screenLocked
+            && (Config.options.background.screenList.length === 0
                 || Config.options.background.screenList.includes(root.panel.screen.name))
         sourceComponent: ClockWidget {
             screenWidth: root.panel.screen.width

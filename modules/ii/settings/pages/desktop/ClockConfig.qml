@@ -17,10 +17,10 @@ ContentPage {
         title: Translation.tr("Clock")
 
         function stylePresent(styleName) {
-            if (!Config.options.background.widgets.clock.showOnlyWhenLocked && Config.options.background.widgets.clock.style === styleName) {
+            if (Config.options.background.widgets.clock.style === styleName) {
                 return true;
             }
-            if (Config.options.background.widgets.clock.styleLocked === styleName) {
+            if (!Config.options.background.widgets.clock.disableOnLock && Config.options.background.widgets.clock.styleLocked === styleName) {
                 return true;
             }
             return false;
@@ -28,6 +28,7 @@ ContentPage {
 
         readonly property bool digitalPresent: stylePresent("digital")
         readonly property bool cookiePresent: stylePresent("cookie")
+        readonly property bool pixelPresent: stylePresent("pixel")
 
         GroupedList {
             ConfigSwitch {
@@ -41,37 +42,11 @@ ContentPage {
 
             ConfigSwitch {
                 buttonIcon: "lock_clock"
-                text: Translation.tr("Show only when locked")
-                checked: Config.options.background.widgets.clock.showOnlyWhenLocked
+                text: Translation.tr("Disable for lock screen")
+                checked: Config.options.background.widgets.clock.disableOnLock
                 onCheckedChanged: {
-                    Config.options.background.widgets.clock.showOnlyWhenLocked = checked;
+                    Config.options.background.widgets.clock.disableOnLock = checked;
                 }
-            }
-            ConfigSelectionArray {
-                text: Translation.tr("Placement strategy")
-                icon: "move"
-                Layout.fillWidth: false
-                currentValue: Config.options.background.widgets.clock.placementStrategy
-                onSelected: newValue => {
-                    Config.options.background.widgets.clock.placementStrategy = newValue;
-                }
-                options: [
-                    {
-                        displayName: Translation.tr("Draggable"),
-                        icon: "drag_pan",
-                        value: "free"
-                    },
-                    {
-                        displayName: Translation.tr("Least busy"),
-                        icon: "category",
-                        value: "leastBusy"
-                    },
-                    {
-                        displayName: Translation.tr("Most busy"),
-                        icon: "shapes",
-                        value: "mostBusy"
-                    },
-                ]
             }
             ConfigSelectionArray {
                 text: Translation.tr("Clock style")
@@ -101,6 +76,7 @@ ContentPage {
             ConfigSelectionArray {
                 text: Translation.tr("Clock style (locked)")
                 icon: "shield_watch"
+                enabled: !Config.options.background.widgets.clock.disableOnLock
                 currentValue: Config.options.background.widgets.clock.styleLocked
                 onSelected: newValue => {
                     Config.options.background.widgets.clock.styleLocked = newValue;
@@ -495,13 +471,11 @@ ContentPage {
         }
 
         ContentSubsection {
-            visible: Config.options.background.widgets.clock.style === "pixel"
+            visible: settingsClock.pixelPresent
             title: Translation.tr("Pixel Clock Settings")
             GroupedList {
-                visible: Config.options.background.widgets.clock.style === "pixel"
                 ConfigSelectionArray {
                     text: Translation.tr("Pixel clock orientation")
-                    visible: Config.options.background.widgets.clock.style === "pixel"
                     icon: "screen_rotation"
                     currentValue: Config.options.background.widgets.clock.pixel.orientation
                     onSelected: newValue => {
