@@ -112,9 +112,9 @@ Install Matugen with `scheme-smart` support (4.2 or newer). The shell sets up Ma
 bash scripts/colors/switchwall.sh --noswitch
 ```
 
-Existing app templates and edits are preserved. Default declarations live in `~/.config/matugen/configs/defaults.toml`, below your own configuration in priority. Template filenames are generic, such as `kitty.conf`, `gtk4-colors.css` and `terminal-colors.json`. Previous prefixed files are migrated without overwriting existing generic files. The old auto-generated `config.toml` setup is migrated from `config.toml.orig`, keeping backups. Afterwards, edit **`~/.config/matugen/config.toml` directly**, not `.orig`. Template toggles filter each invocation without rewriting your configuration. The shell template cannot be disabled individually; use **Shell & utilities** instead.
+Existing app templates and edits are preserved. When `~/.config/matugen/config.toml` does not exist yet, setup writes the default configuration there; existing `config.toml` files are never overwritten (only `quickshell` and `quickshell-seed` fall back in memory if omitted). Template filenames are generic, such as `kitty.conf`, `gtk4-colors.css` and `terminal-colors.json`. Previous prefixed files are migrated without overwriting existing generic files. The old auto-generated `config.toml` setup is migrated from `config.toml.orig`, keeping backups. Afterwards, edit **`~/.config/matugen/config.toml` directly**, not `.orig`. Template toggles filter each invocation without rewriting your configuration. The shell template cannot be disabled individually; use **Shell & utilities** instead.
 
-You can also drop additional `*.toml` configurations directly into `~/.config/matugen/` or `~/.config/matugen/configs/`, without registering them anywhere. For example, `~/.config/matugen/my-app.toml`:
+To add more apps, append `[templates.<name>]` blocks directly to `~/.config/matugen/config.toml`, for example:
 
 ```toml
 [templates.my_app]
@@ -124,7 +124,7 @@ output_path = "~/.config/my-app/colors.conf"
 
 The input file must contain a Matugen template. A raw template alone cannot specify where its generated output belongs.
 
-Configurations merge in this order: `configs/defaults.toml`, `config.toml`, root-level TOML files alphabetically, then other `configs/` TOML files alphabetically. Later values override earlier ones, including individual template fields. Relative paths resolve from the **Matugen directory**, even for files in `configs/`. Added, edited and removed configs update the settings template list automatically; their colors apply on the next wallpaper change or **Regenerate now**. Hidden temporary files and `.orig`/backup files are ignored. Invalid configs are reported instead of replacing the last working shell palette.
+Relative paths resolve from the **Matugen directory**. Editing `config.toml` updates the settings template list automatically, and changes apply on the next wallpaper change or **Regenerate now**. Invalid configs are reported instead of replacing the last working shell palette.
 
 - **Terminals:** Kitty uses `~/.local/state/quickshell/user/generated/terminal/kitty-theme.conf`. Include that file in Kitty's config. Ghostty uses `theme = Matugen`. ANSI colors come from Matugen's built-in filters, not the old Python harmonization settings. **Force dark mode in terminal** also applies to the configured Ghostty, Foot, Alacritty and WezTerm templates. Existing open terminals receive color escape sequences.
 - **Qt:** Install `qt6ct` for Qt 6 and `qt5ct` for Qt 5. The shell selects `Matugen.colors` and enables the custom palette in both configuration files, without changing an existing widget style. Launch Qt 6 apps with `QT_QPA_PLATFORMTHEME=qt6ct` and Qt 5 apps with `QT_QPA_PLATFORMTHEME=qt5ct`. Restart apps after changing the platform theme. KDE apps also get a native `MatugenKDE.colors` scheme selected through `kwriteconfig6`, when installed.

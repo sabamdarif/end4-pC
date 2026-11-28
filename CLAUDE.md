@@ -231,15 +231,16 @@ reuses it for the launcher's `settings:` search, so neither keeps its own page l
 
 - `scripts/colors/switchwall.sh` owns wallpaper changes and invokes `scripts/colors/matugen.py`.
   Matugen is the only palette generator; Python only installs, filters and publishes templates.
-- `$XDG_CONFIG_HOME/matugen/config.toml` is user-editable. `tomllib` merges `configs/defaults.toml`,
-  `config.toml`, sorted root TOML files, then sorted other `configs/` TOML files. Later fields win;
-  all relative paths resolve from the Matugen directory. Hidden temporary and backup files are ignored.
-  `SystemTheming` watches both directories and their TOML files without polling or rewriting them.
-  `appearance.matugenDisabled` filters invocations; wallpaper theming flags gate terminal and Qt templates.
-- Default templates in `scripts/colors/matugen/` install into the user's Matugen directory.
-  `shell.qml` initializes `SystemTheming`, which runs setup after `Config.ready`. Normal generation
-  also ensures setup. Generic filenames preserve existing custom files during prefixed-name migration.
-  User config edits and templates are never replaced by bundled defaults. Old generated configurations
+- `$XDG_CONFIG_HOME/matugen/config.toml` is the single user-editable Matugen configuration.
+  `SystemTheming` watches `config.toml` directly without polling or rewriting it, and
+  `load_config()` falls back in memory only for `quickshell` and `quickshell-seed` when an
+  existing `config.toml` omits them. `appearance.matugenDisabled` filters invocations;
+  wallpaper theming flags gate terminal and Qt templates.
+- Default templates and initial `config.toml` in `scripts/colors/matugen/` install into
+  the user's Matugen directory when missing. `shell.qml` initializes `SystemTheming`, which
+  runs setup after `Config.ready`. Normal generation also ensures setup. Generic filenames
+  preserve existing custom files during prefixed-name migration. Existing `config.toml`
+  edits and templates are never replaced by bundled defaults. Old generated configurations
   migrate from `.orig` once, retaining backups.
 - Setup grants a persistent user-wide Flatpak override for read-only GTK 3/4 config access while
   shell/app theming is enabled. It checks existing permissions before writing and leaves app-specific

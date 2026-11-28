@@ -74,49 +74,55 @@ def atomic_write(path, text):
             temporary.unlink(missing_ok=True)
 
 
-def config_files(config_path):
-    directory = config_path.parent
-    defaults = directory / "configs/defaults.toml"
-    return ([defaults] if defaults.is_file() else []) + ([config_path] if config_path.is_file() else []) + [
-        path for path in sorted(directory.glob("*.toml")) if path != config_path and not path.name.startswith(".")
-    ] + [path for path in sorted((directory / "configs").glob("*.toml"))
-         if path != defaults and not path.name.startswith(".")]
+def default_config():
+    defaults = tomllib.loads((DEFAULTS / "config.toml").read_text())
+    replacements = (
+        ("@CONFIG@", str(xdg("XDG_CONFIG_HOME", ".config"))),
+        ("@STATE@", str(xdg("XDG_STATE_HOME", ".local/state"))),
+        ("@DATA@", str(xdg("XDG_DATA_HOME", ".local/share"))),
+    )
+    for template in defaults["templates"].values():
+        for key in ("input_path", "output_path"):
+            for token, path in replacements:
+                template[key] = template[key].replace(token, path)
+    return defaults
 
 
-def merge_config(target, source):
-    for key, value in source.items():
-        if isinstance(value, dict) and isinstance(target.get(key), dict):
-            merge_config(target[key], value)
-        else:
-            target[key] = copy.deepcopy(value)
+def parse_config_text(text, path):
+    try:
+        config = tomllib.loads(text)
+    except ValueError as error:
+        raise ValueError(f"{path}: {error}") from error
+    if not isinstance(config.get("config", {}), dict) or not isinstance(config.get("templates", {}), dict):
+        raise ValueError(f"{path}: config and templates must be TOML tables")
+    templates = copy.deepcopy(config.get("templates", {}))
+    for name, template in templates.items():
+        if not isinstance(template, dict):
+            raise ValueError(f"{path}: template {name!r} must be a TOML table")
+        if "output_path" in template and not isinstance(template["output_path"], str):
+            raise ValueError(f"{path}: template {name!r} has an invalid output_path")
+    return {"config": copy.deepcopy(config.get("config", {})), "templates": templates}
 
 
-def load_config(config_path, defaults=None):
-    result = copy.deepcopy(defaults) if defaults is not None else {"config": {}, "templates": {}}
-    for path in config_files(config_path):
-        try:
-            config = tomllib.loads(path.read_text())
-        except ValueError as error:
-            raise ValueError(f"{path}: {error}") from error
-        if not isinstance(config.get("config", {}), dict) or not isinstance(config.get("templates", {}), dict):
-            raise ValueError(f"{path}: config and templates must be TOML tables")
-        for name, template in config.get("templates", {}).items():
-            if not isinstance(template, dict):
-                raise ValueError(f"{path}: template {name!r} must be a TOML table")
-            if "output_path" in template and not isinstance(template["output_path"], str):
-                raise ValueError(f"{path}: template {name!r} has an invalid output_path")
-        merge_config(result, config)
+def load_config(config_path):
+    if not config_path.is_file():
+        return {"config": {}, "templates": {}}
+    result = parse_config_text(config_path.read_text(), config_path)
+    defaults = default_config()["templates"]
+    for name in ("quickshell", "quickshell-seed"):
+        if name not in result["templates"]:
+            result["templates"][name] = copy.deepcopy(defaults[name])
     for name, template in result["templates"].items():
         if not isinstance(template.get("input_path"), str):
             raise ValueError(f"Template {name!r} needs an input_path")
     return result
 
 
-def migrate_templates(template_dir, sources):
+def migrate_templates(template_dir, source):
     for old_name, name in LEGACY_NAMES.items():
         old = template_dir / old_name
         target = template_dir / name
-        referenced = any(old_name in text for text in sources.values())
+        referenced = old_name in source
         if old.is_file():
             if target.exists() and old.read_bytes() != target.read_bytes() and referenced:
                 target = target.with_name(f"{target.stem}-custom{target.suffix}")
@@ -129,53 +135,41 @@ def migrate_templates(template_dir, sources):
                 backup.parent.mkdir(exist_ok=True)
                 if not backup.exists():
                     old.rename(backup)
-        for path, text in sources.items():
-            sources[path] = text.replace("/" + old_name, "/" + target.name)
+        source = source.replace("/" + old_name, "/" + target.name)
+    return source
 
 
 def install(config_path):
     config_path.parent.mkdir(parents=True, exist_ok=True)
-    source = config_path.read_text() if config_path.exists() else "[config]\n"
-    original = config_path.with_suffix(".toml.orig")
-    if source.startswith("# ! AUTO-GENERATED by the shell settings app") and original.exists():
-        backup = config_path.with_suffix(".toml.pre-matugen-only")
-        if not backup.exists():
-            shutil.copyfile(config_path, backup)
-        source = original.read_text()
-    config = tomllib.loads(source)
-    defaults = tomllib.loads((DEFAULTS / "config.toml").read_text())
-    for template in defaults["templates"].values():
-        for key in ("input_path", "output_path"):
-            for token, path in (("@CONFIG@", xdg("XDG_CONFIG_HOME", ".config")),
-                                ("@STATE@", xdg("XDG_STATE_HOME", ".local/state")),
-                                ("@DATA@", xdg("XDG_DATA_HOME", ".local/share"))):
-                template[key] = template[key].replace(token, str(path))
-    load_config(config_path, defaults)
     template_dir = config_path.parent / "templates"
     template_dir.mkdir(exist_ok=True)
-    (config_path.parent / "configs").mkdir(exist_ok=True)
-    sources = {path: path.read_text() for path in config_files(config_path)}
-    sources[config_path] = source
-    migrate_templates(template_dir, sources)
     for path in DEFAULTS.iterdir():
         if path.name == "config.toml":
             continue
         target = template_dir / path.name
         if not target.exists():
             shutil.copyfile(path, target)
+    defaults = default_config()
+    if not config_path.exists():
+        atomic_write(config_path, dump_config(defaults))
+        return
+    original_text = config_path.read_text()
+    source = original_text
+    original = config_path.with_suffix(".toml.orig")
+    if source.startswith("# ! AUTO-GENERATED by the shell settings app") and original.exists():
+        backup = config_path.with_suffix(".toml.pre-matugen-only")
+        if not backup.exists():
+            shutil.copyfile(config_path, backup)
+        source = original.read_text()
+    config = parse_config_text(source, config_path)
+    source = migrate_templates(template_dir, source)
     # Only migrate the shell-owned path; hand-written app templates stay untouched.
-    legacy = config.get("templates", {}).get("quickshell", {}).get("input_path", "")
+    legacy = config["templates"].get("quickshell", {}).get("input_path", "")
     if "/scripts/colors/matugen/quickshell-colors.json" in legacy:
-        sources[config_path] = sources[config_path].replace(legacy, defaults["templates"]["quickshell"]["input_path"])
-    for path, text in sources.items():
-        tomllib.loads(text)
-        if not path.exists() or text != path.read_text():
-            atomic_write(path, text)
-    defaults_path = config_path.parent / "configs/defaults.toml"
-    header = "# Default templates. Override these in config.toml or another TOML file.\n"
-    legacy_defaults = header + "\n".join(f"{json.dumps(k)} = {toml_value(v)}" for k, v in defaults.items()) + "\n"
-    if not defaults_path.exists() or defaults_path.read_text() == legacy_defaults:
-        atomic_write(defaults_path, header + dump_config(defaults))
+        source = source.replace(legacy, defaults["templates"]["quickshell"]["input_path"])
+    parse_config_text(source, config_path)
+    if source != original_text:
+        atomic_write(config_path, source)
 
 
 def ensure_flatpak_styles():

@@ -1,7 +1,6 @@
 pragma Singleton
 
 import QtQuick
-import Qt.labs.folderlistmodel
 import Quickshell
 import Quickshell.Io
 import qs.services
@@ -95,38 +94,15 @@ Singleton {
         }
     }
 
-    component ConfigDirectory: FolderListModel {
-        nameFilters: ["*.toml"]
-        showDirs: false
-        showHidden: false
-        onCountChanged: root.refreshTemplates()
-    }
-
-    ConfigDirectory {
-        id: mainConfigs
-        folder: Qt.resolvedUrl(`${Directories.config}/matugen`)
-    }
-
-    ConfigDirectory {
-        id: extraConfigs
-        folder: Qt.resolvedUrl(`${Directories.config}/matugen/configs`)
-    }
-
-    component ConfigWatcher: FileView {
-        required property url fileUrl
-        path: fileUrl
+    FileView {
+        id: matugenConfigFile
+        path: Qt.resolvedUrl(`${Directories.config}/matugen/config.toml`)
         watchChanges: true
-        onFileChanged: root.refreshTemplates()
-    }
-
-    Instantiator {
-        model: mainConfigs
-        delegate: ConfigWatcher {}
-    }
-
-    Instantiator {
-        model: extraConfigs
-        delegate: ConfigWatcher {}
+        printErrors: false
+        onFileChanged: {
+            reload()
+            root.refreshTemplates()
+        }
     }
 
     Process {
