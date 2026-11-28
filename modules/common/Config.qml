@@ -305,6 +305,7 @@ Singleton {
                         property real z: 0
                         property string content: "Hello world"
                         property string fontFamily: "Caveat"
+                        property bool useCustomFont: false
                         property int fontSize: 72
                         property string color: "" // "" = automatic, otherwise an Appearance color name
                         property string alignment: "center" // "left", "center", "right"

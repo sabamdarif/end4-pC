@@ -175,6 +175,12 @@ and advanced properties remain intact. Rules added in Settings retain their own 
 
 ## Feature usage
 
+### Desktop text widget
+
+In Settings → Desktop → Widgets, enable **Text** and choose a handwriting font,
+or select **Custom** to show a searchable dropdown of installed fonts with previews.
+Turn off **Automatic colors** to show the manual color choices.
+
 ### Wi-Fi sharing
 
 In Settings → Wi-Fi, use the QR button beside a saved network or **Share via QR**

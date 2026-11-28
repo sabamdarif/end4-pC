@@ -6,6 +6,7 @@ import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
 import Quickshell
+import "."
 
 ContentPage {
     id: page
@@ -323,6 +324,7 @@ ContentPage {
             visible: settingsCustomText.entry.enable
 
             readonly property var entry: Config.options.background.widgets.customText
+            readonly property bool useCustomFont: entry.useCustomFont || !Fonts.handwritingFamilies.includes(entry.fontFamily)
 
             GroupedList {
                 ConfigSwitch {
@@ -370,38 +372,31 @@ ContentPage {
                 title: Translation.tr("Font")
 
                 ConfigSelectionArray {
-                    currentValue: settingsCustomText.entry.fontFamily
+                    currentValue: settingsCustomText.useCustomFont ? "" : settingsCustomText.entry.fontFamily
                     onSelected: newValue => {
-                        settingsCustomText.entry.fontFamily = newValue;
+                        settingsCustomText.entry.useCustomFont = newValue === "";
+                        if (newValue !== "")
+                            settingsCustomText.entry.fontFamily = newValue;
                     }
                     options: Fonts.handwritingFamilies.map(family => ({
                         displayName: family,
                         value: family
-                    }))
+                    })).concat([{ displayName: Translation.tr("Custom"), value: "" }])
                 }
 
                 GroupedList {
+                    visible: settingsCustomText.useCustomFont
                     Layout.topMargin: 6
-                    ConfigTextArea {
-                        id: customTextFontField
+                    ConfigComboBox {
                         Layout.fillWidth: true
                         buttonIcon: "font_download"
                         text: Translation.tr("Other font")
-                        placeholderText: Translation.tr("Any installed font family")
-                        value: Fonts.handwritingFamilies.includes(settingsCustomText.entry.fontFamily) ? "" : settingsCustomText.entry.fontFamily
-
-                        Timer {
-                            id: customTextFontDebounce
-                            interval: 500
-                            repeat: false
-                            onTriggered: {
-                                if (customTextFontField.value.trim() !== "")
-                                    settingsCustomText.entry.fontFamily = customTextFontField.value.trim()
-                            }
-                        }
-
-                        onValueChanged: {
-                            if (textArea.activeFocus) customTextFontDebounce.restart()
+                        searchable: true
+                        previewFont: true
+                        model: Fonts.fontModelFor(settingsCustomText.entry.fontFamily)
+                        currentValue: settingsCustomText.entry.fontFamily
+                        onSelected: newValue => {
+                            settingsCustomText.entry.fontFamily = newValue;
                         }
                     }
                 }
@@ -454,20 +449,18 @@ ContentPage {
                     buttonIcon: "auto_awesome"
                     text: Translation.tr("Automatic colors")
                     checked: settingsCustomText.entry.color === ""
-                    onCheckedChanged: {
-                        if (checked) {
-                            settingsCustomText.entry.color = ""
-                        }
+                    onClicked: {
+                        settingsCustomText.entry.color = checked ? "" : "primary";
                     }
                 }
 
                 ColorSelectionArray {
+                    visible: !customTextAutoColorSwitch.checked
                     icon: "palette"
                     text: Translation.tr("Color")
                     currentValue: settingsCustomText.entry.color
                     onSelected: newValue => {
                         settingsCustomText.entry.color = newValue
-                        customTextAutoColorSwitch.checked = false
                     }
                 }
             }

@@ -122,6 +122,58 @@ ShellRoot {
                               "modules/ii/settings/pages/network/WifiConfig.qml",
                               "modules/ii/settings/pages/network/WifiProfileEditor.qml"])
 
+    def test_desktop_text_custom_fonts_and_manual_colors(self):
+        self.load_components(["modules/ii/settings/pages/desktop/WidgetsConfig.qml"], '''
+        function check(condition, message) { if (!condition) console.error("ASSERTION_FAILED", message); }
+        function descendants(node, found, visited) {
+            if (visited.has(node)) return;
+            visited.add(node);
+            found.push(node);
+            for (const child of [...(node.children || []), ...(node.data || [])]) descendants(child, found, visited);
+        }
+        Timer {
+            interval: 700; running: true
+            onTriggered: {
+                const entry = Config.options.background.widgets.customText;
+                entry.enable = true;
+                const nodes = [];
+                fixtureWindow.descendants(loader0.item, nodes, new Set());
+                const fonts = nodes.find(node => "options" in node && node.options.some(option => option.displayName === "Custom"));
+                const otherFont = nodes.find(node => "searchable" in node && node.text === "Other font");
+                const autoColors = nodes.find(node => "checkable" in node && node.text === "Automatic colors");
+                const colors = nodes.find(node => "options" in node && node.text === "Color");
+                fixtureWindow.check(!otherFont.visible, "preset fonts hide the custom dropdown");
+                fonts.selected("");
+                fixtureWindow.check(entry.useCustomFont && otherFont.visible, "Custom reveals the dropdown");
+                fixtureWindow.check(entry.fontFamily === "Caveat", "entering Custom preserves the font");
+                fixtureWindow.check(otherFont.searchable && otherFont.previewFont, "dropdown supports search and font previews");
+                fixtureWindow.check(Fonts.installedFamilies.every(family => otherFont.model.some(item => item.value === family)), "dropdown lists every installed font");
+                const installed = Fonts.installedFamilies.find(family => !Fonts.handwritingFamilies.includes(family));
+                fixtureWindow.check(!!installed, "an installed non-preset font is available");
+                otherFont.comboBox.activated(otherFont.model.findIndex(item => item.value === installed));
+                fixtureWindow.check(entry.fontFamily === installed && fonts.currentValue === "", "installed font selection stays Custom");
+                otherFont.selected("Caveat");
+                fixtureWindow.check(entry.useCustomFont && otherFont.visible && fonts.currentValue === "", "a bundled font can also be selected in Custom mode");
+                fonts.selected("Pacifico");
+                fixtureWindow.check(!entry.useCustomFont && !otherFont.visible && entry.fontFamily === "Pacifico", "preset selection exits Custom mode");
+                entry.fontFamily = "Previously configured font";
+                fixtureWindow.check(otherFont.visible && fonts.currentValue === "", "legacy custom fonts open in Custom mode");
+                fixtureWindow.check(otherFont.model.some(item => item.value === entry.fontFamily), "unavailable saved fonts are preserved");
+                fixtureWindow.check(autoColors.checked && !colors.visible, "automatic colors hide manual choices");
+                autoColors.click();
+                fixtureWindow.check(!autoColors.checked && colors.visible && entry.color === "primary", "turning off automatic colors enables a manual color");
+                colors.selected("tertiary");
+                fixtureWindow.check(entry.color === "tertiary" && colors.visible, "manual color selection is saved");
+                autoColors.click();
+                fixtureWindow.check(autoColors.checked && !colors.visible && entry.color === "", "automatic colors clear the manual selection");
+                entry.color = "secondary";
+                fixtureWindow.check(!autoColors.checked && colors.visible, "external color changes retain the switch binding");
+                entry.color = "";
+                fixtureWindow.check(autoColors.checked && !colors.visible, "external automatic colors hide manual choices again");
+            }
+        }
+''')
+
     def test_window_rule_components_load(self):
         self.load_components(["modules/ii/settings/pages/compositor/WindowRuleEditorDialog.qml",
                               "modules/ii/settings/pages/compositor/WindowRulesConfig.qml"])
